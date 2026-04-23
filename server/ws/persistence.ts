@@ -27,6 +27,9 @@ export function schedulePersist(docId: string, ydoc: Y.Doc) {
       console.error("[persistence] failed to save Y.Doc for", docId, err);
     }
   }, DEBOUNCE_MS);
+  // Don't keep the Node event loop alive solely for a pending flush;
+  // close handlers explicitly call flushPersist() when we need durability.
+  timer.unref();
 
   pending.set(docId, timer);
 }

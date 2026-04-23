@@ -18,23 +18,31 @@ interface Room {
   persistListener: (update: Uint8Array) => void;
 }
 
-const rooms = new Map<string, Room>();
+// Map holds a Promise<Room> so that concurrent connects for the same docId
+// all await the same construction and never create divergent rooms.
+const rooms = new Map<string, Promise<Room>>();
 
-async function getOrCreateRoom(docId: string): Promise<Room> {
-  let room = rooms.get(docId);
-  if (room) return room;
+function createRoom(docId: string): Promise<Room> {
+  return (async () => {
+    const ydoc = new Y.Doc();
+    const existingState = await loadDocState(docId);
+    if (existingState) Y.applyUpdate(ydoc, existingState);
 
-  const ydoc = new Y.Doc();
-  const existingState = await loadDocState(docId);
-  if (existingState) Y.applyUpdate(ydoc, existingState);
+    const awareness = new awarenessProtocol.Awareness(ydoc);
+    const persistListener = () => schedulePersist(docId, ydoc);
+    ydoc.on("update", persistListener);
 
-  const awareness = new awarenessProtocol.Awareness(ydoc);
-  const persistListener = () => schedulePersist(docId, ydoc);
-  ydoc.on("update", persistListener);
+    return { ydoc, awareness, connections: new Set(), persistListener };
+  })();
+}
 
-  room = { ydoc, awareness, connections: new Set(), persistListener };
-  rooms.set(docId, room);
-  return room;
+function getOrCreateRoom(docId: string): Promise<Room> {
+  let roomPromise = rooms.get(docId);
+  if (!roomPromise) {
+    roomPromise = createRoom(docId);
+    rooms.set(docId, roomPromise);
+  }
+  return roomPromise;
 }
 
 interface AuthedRequest extends FastifyRequest {
@@ -120,14 +128,11 @@ export function registerYjsHandler(app: FastifyInstance) {
         }: { added: number[]; updated: number[]; removed: number[] },
         origin: unknown,
       ) => {
-        // Track IDs introduced/removed by this socket. Yjs passes the socket
-        // as origin when we call applyAwarenessUpdate(_, _, socket).
         if (origin === socket) {
           added.forEach((id) => controlledClientIds.add(id));
           removed.forEach((id) => controlledClientIds.delete(id));
-          return; // don't echo our own updates
+          return;
         }
-        // Broadcast peer awareness change to this socket
         const changed = added.concat(updated, removed);
         const encoder = encoding.createEncoder();
         encoding.writeVarUint(encoder, MSG_AWARENESS);
@@ -150,7 +155,6 @@ export function registerYjsHandler(app: FastifyInstance) {
 
           if (messageType === MSG_SYNC) {
             if (!canEdit) {
-              // view-only clients: respond to step 1 with step 2, ignore everything else
               const subType = decoding.readVarUint(decoder);
               if (subType === syncProtocol.messageYjsSyncStep1) {
                 const state = decoding.readVarUint8Array(decoder);
@@ -162,11 +166,6 @@ export function registerYjsHandler(app: FastifyInstance) {
               return;
             }
 
-            // Edit path: apply the sync message. readSyncMessage handles
-            // step1/step2/update sub-types, applies updates to room.ydoc
-            // (which fires the "update" event → docUpdateHandler broadcasts
-            // a framed writeUpdate to every other peer), and writes any
-            // needed reply (e.g. step2 after step1) to `encoder`.
             const encoder = encoding.createEncoder();
             encoding.writeVarUint(encoder, MSG_SYNC);
             syncProtocol.readSyncMessage(decoder, encoder, room.ydoc, socket);
@@ -204,6 +203,11 @@ export function registerYjsHandler(app: FastifyInstance) {
         if (room.connections.size === 0) {
           try {
             await flushPersist(docId, room.ydoc);
+          } catch (err) {
+            req.log.error(
+              { err, docId },
+              "flush on disconnect failed; state may be lost",
+            );
           } finally {
             room.ydoc.off("update", room.persistListener);
             room.ydoc.destroy();

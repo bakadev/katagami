@@ -1,6 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
-import { validateCreatorTokenForProject } from "../auth/creator-token.js";
+import {
+  validateCreatorTokenForProject,
+  getCreatorTokenHeader,
+} from "../auth/creator-token.js";
 import type { ApiError } from "../../shared/types.js";
 
 export async function projectAdminRoutes(app: FastifyInstance) {
@@ -8,10 +11,7 @@ export async function projectAdminRoutes(app: FastifyInstance) {
     "/api/projects/:id",
     async (req, reply) => {
       const { id } = req.params;
-      const token = req.headers["x-creator-token"];
-      const tokenStr = typeof token === "string" ? token : undefined;
-
-      const ok = await validateCreatorTokenForProject(id, tokenStr);
+      const ok = await validateCreatorTokenForProject(id, getCreatorTokenHeader(req));
       if (!ok) {
         const err: ApiError = {
           error: "forbidden",

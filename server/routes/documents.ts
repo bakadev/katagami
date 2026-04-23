@@ -1,9 +1,16 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
 import { validatePermissionToken } from "../auth/permission-token.js";
-import { validateCreatorTokenForDocument } from "../auth/creator-token.js";
+import {
+  validateCreatorTokenForDocument,
+  getCreatorTokenHeader,
+} from "../auth/creator-token.js";
 import { randomToken } from "../lib/random.js";
-import type { DocumentMetadataResponse, ApiError } from "../../shared/types.js";
+import type {
+  DocumentMetadataResponse,
+  ApiError,
+  PermissionTokens,
+} from "../../shared/types.js";
 
 export async function documentRoutes(app: FastifyInstance) {
   app.get<{ Params: { id: string }; Querystring: { key?: string } }>(
@@ -43,10 +50,7 @@ export async function documentRoutes(app: FastifyInstance) {
 
   app.delete<{ Params: { id: string } }>("/api/docs/:id", async (req, reply) => {
     const { id } = req.params;
-    const token = req.headers["x-creator-token"];
-    const tokenStr = typeof token === "string" ? token : undefined;
-
-    const ok = await validateCreatorTokenForDocument(id, tokenStr);
+    const ok = await validateCreatorTokenForDocument(id, getCreatorTokenHeader(req));
     if (!ok) {
       const err: ApiError = {
         error: "forbidden",
@@ -63,10 +67,7 @@ export async function documentRoutes(app: FastifyInstance) {
     "/api/docs/:id/rotate-keys",
     async (req, reply) => {
       const { id } = req.params;
-      const token = req.headers["x-creator-token"];
-      const tokenStr = typeof token === "string" ? token : undefined;
-
-      const ok = await validateCreatorTokenForDocument(id, tokenStr);
+      const ok = await validateCreatorTokenForDocument(id, getCreatorTokenHeader(req));
       if (!ok) {
         const err: ApiError = {
           error: "forbidden",
@@ -89,7 +90,8 @@ export async function documentRoutes(app: FastifyInstance) {
         }),
       ]);
 
-      return reply.send({ editToken, viewToken });
+      const body: PermissionTokens = { editToken, viewToken };
+      return reply.send(body);
     },
   );
 }

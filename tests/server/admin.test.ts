@@ -77,6 +77,17 @@ describe("admin routes", () => {
       const res = await app.inject({ method: "DELETE", url: `/api/docs/${documentId}` });
       expect(res.statusCode).toBe(403);
     });
+
+    it("returns 403 with the wrong creator token", async () => {
+      const res = await app.inject({
+        method: "DELETE",
+        url: `/api/docs/${documentId}`,
+        headers: { "x-creator-token": "not-the-right-token" },
+      });
+      expect(res.statusCode).toBe(403);
+      const doc = await db.document.findUnique({ where: { id: documentId } });
+      expect(doc).not.toBeNull();
+    });
   });
 
   describe("POST /api/docs/:id/rotate-keys", () => {

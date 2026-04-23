@@ -1,4 +1,10 @@
+import type { FastifyRequest } from "fastify";
 import { db } from "../db.js";
+
+export function getCreatorTokenHeader(req: FastifyRequest): string | undefined {
+  const token = req.headers["x-creator-token"];
+  return typeof token === "string" ? token : undefined;
+}
 
 export async function validateCreatorTokenForProject(
   projectId: string,

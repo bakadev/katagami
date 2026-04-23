@@ -1,5 +1,10 @@
 export type PermissionLevel = "edit" | "view";
 
+export interface PermissionTokens {
+  editToken: string;
+  viewToken: string;
+}
+
 export interface CreateProjectResponse {
   project: {
     id: string;
@@ -8,10 +13,7 @@ export interface CreateProjectResponse {
   document: {
     id: string;
   };
-  permissions: {
-    editToken: string;
-    viewToken: string;
-  };
+  permissions: PermissionTokens;
   creatorToken: string;
 }
 

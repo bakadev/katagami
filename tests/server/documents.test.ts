@@ -33,6 +33,12 @@ describe("GET /api/docs/:id", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.document.id).toBe(documentId);
+    expect(body.document.projectId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body.document.title).toBeNull();
+    expect(typeof body.document.createdAt).toBe("string");
+    expect(Number.isNaN(Date.parse(body.document.createdAt))).toBe(false);
+    expect(typeof body.document.updatedAt).toBe("string");
+    expect(Number.isNaN(Date.parse(body.document.updatedAt))).toBe(false);
     expect(body.permissionLevel).toBe("edit");
   });
 

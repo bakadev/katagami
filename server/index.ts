@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { env } from "./env.js";
 import { healthRoutes } from "./routes/health.js";
 import { projectRoutes } from "./routes/projects.js";
+import { documentRoutes } from "./routes/documents.js";
 import type { ApiError } from "../shared/types.js";
 
 export async function buildServer() {
@@ -13,6 +14,7 @@ export async function buildServer() {
   await app.register(cors, { origin: true, credentials: true });
   await app.register(healthRoutes);
   await app.register(projectRoutes);
+  await app.register(documentRoutes);
 
   app.setErrorHandler((err, req, reply) => {
     req.log.error(err);

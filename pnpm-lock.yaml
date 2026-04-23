@@ -23,6 +23,9 @@ importers:
       fastify:
         specifier: ^5.1.0
         version: 5.8.5
+      lib0:
+        specifier: ^0.2.117
+        version: 0.2.117
       react:
         specifier: ^19.0.0
         version: 19.2.5

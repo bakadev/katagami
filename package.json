@@ -26,6 +26,7 @@
     "@prisma/client": "^5.22.0",
     "dotenv": "^17.4.2",
     "fastify": "^5.1.0",
+    "lib0": "^0.2.117",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.1.1",

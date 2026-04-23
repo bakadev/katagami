@@ -1,0 +1,32 @@
+export type PermissionLevel = "edit" | "view";
+
+export interface CreateProjectResponse {
+  project: {
+    id: string;
+    name: string | null;
+  };
+  document: {
+    id: string;
+  };
+  permissions: {
+    editToken: string;
+    viewToken: string;
+  };
+  creatorToken: string;
+}
+
+export interface DocumentMetadataResponse {
+  document: {
+    id: string;
+    projectId: string;
+    title: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  permissionLevel: PermissionLevel;
+}
+
+export interface ApiError {
+  error: string;
+  message: string;
+}

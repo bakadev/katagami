@@ -4,6 +4,7 @@ import { env } from "./env.js";
 import { healthRoutes } from "./routes/health.js";
 import { projectRoutes } from "./routes/projects.js";
 import { documentRoutes } from "./routes/documents.js";
+import { projectAdminRoutes } from "./routes/project-admin.js";
 import type { ApiError } from "../shared/types.js";
 
 export async function buildServer() {
@@ -15,6 +16,7 @@ export async function buildServer() {
   await app.register(healthRoutes);
   await app.register(projectRoutes);
   await app.register(documentRoutes);
+  await app.register(projectAdminRoutes);
 
   app.setErrorHandler((err, req, reply) => {
     req.log.error(err);

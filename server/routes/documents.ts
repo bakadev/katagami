@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
 import { validatePermissionToken } from "../auth/permission-token.js";
+import { validateCreatorTokenForDocument } from "../auth/creator-token.js";
+import { randomToken } from "../lib/random.js";
 import type { DocumentMetadataResponse, ApiError } from "../../shared/types.js";
 
 export async function documentRoutes(app: FastifyInstance) {
@@ -36,6 +38,58 @@ export async function documentRoutes(app: FastifyInstance) {
         permissionLevel: level,
       };
       return reply.send(body);
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>("/api/docs/:id", async (req, reply) => {
+    const { id } = req.params;
+    const token = req.headers["x-creator-token"];
+    const tokenStr = typeof token === "string" ? token : undefined;
+
+    const ok = await validateCreatorTokenForDocument(id, tokenStr);
+    if (!ok) {
+      const err: ApiError = {
+        error: "forbidden",
+        message: "Invalid or missing creator token",
+      };
+      return reply.code(403).send(err);
+    }
+
+    await db.document.delete({ where: { id } });
+    return reply.code(204).send();
+  });
+
+  app.post<{ Params: { id: string } }>(
+    "/api/docs/:id/rotate-keys",
+    async (req, reply) => {
+      const { id } = req.params;
+      const token = req.headers["x-creator-token"];
+      const tokenStr = typeof token === "string" ? token : undefined;
+
+      const ok = await validateCreatorTokenForDocument(id, tokenStr);
+      if (!ok) {
+        const err: ApiError = {
+          error: "forbidden",
+          message: "Invalid or missing creator token",
+        };
+        return reply.code(403).send(err);
+      }
+
+      const editToken = randomToken(32);
+      const viewToken = randomToken(32);
+
+      await db.$transaction([
+        db.permission.update({
+          where: { documentId_level: { documentId: id, level: "edit" } },
+          data: { token: editToken },
+        }),
+        db.permission.update({
+          where: { documentId_level: { documentId: id, level: "view" } },
+          data: { token: viewToken },
+        }),
+      ]);
+
+      return reply.send({ editToken, viewToken });
     },
   );
 }

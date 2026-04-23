@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String?
+  creatorToken  String    @map("creator_token")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  documents     Document[]
+
+  @@map("projects")
+  @@index([creatorToken])
+}
+
+model Document {
+  id          String    @id @default(uuid()) @db.Uuid
+  projectId   String    @map("project_id") @db.Uuid
+  title       String?
+  yjsState    Bytes     @default("") @map("yjs_state")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshots   Snapshot[]
+  permissions Permission[]
+
+  @@map("documents")
+  @@index([projectId])
+}
+
+model Snapshot {
+  id           String    @id @default(uuid()) @db.Uuid
+  documentId   String    @map("document_id") @db.Uuid
+  yjsState     Bytes     @map("yjs_state")
+  takenAt      DateTime  @default(now()) @map("taken_at")
+  takenByName  String?   @map("taken_by_name")
+
+  document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("snapshots")
+  @@index([documentId, takenAt])
+}
+
+model Permission {
+  documentId   String    @map("document_id") @db.Uuid
+  level        String    // 'edit' | 'view'
+  token        String    @unique
+
+  document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, level])
+  @@map("permissions")
+  @@index([token])
+}

@@ -6,6 +6,7 @@ import * as awarenessProtocol from "y-protocols/awareness";
 import { encoding, decoding } from "lib0";
 import { validatePermissionToken } from "../auth/permission-token.js";
 import type { PermissionLevel } from "../../shared/types.js";
+import { loadDocState, schedulePersist, flushPersist } from "./persistence.js";
 
 const MSG_SYNC = 0;
 const MSG_AWARENESS = 1;
@@ -14,18 +15,25 @@ interface Room {
   ydoc: Y.Doc;
   awareness: awarenessProtocol.Awareness;
   connections: Set<WebSocket>;
+  persistListener: (update: Uint8Array) => void;
 }
 
 const rooms = new Map<string, Room>();
 
-function getOrCreateRoom(docId: string): Room {
+async function getOrCreateRoom(docId: string): Promise<Room> {
   let room = rooms.get(docId);
-  if (!room) {
-    const ydoc = new Y.Doc();
-    const awareness = new awarenessProtocol.Awareness(ydoc);
-    room = { ydoc, awareness, connections: new Set() };
-    rooms.set(docId, room);
-  }
+  if (room) return room;
+
+  const ydoc = new Y.Doc();
+  const existingState = await loadDocState(docId);
+  if (existingState) Y.applyUpdate(ydoc, existingState);
+
+  const awareness = new awarenessProtocol.Awareness(ydoc);
+  const persistListener = () => schedulePersist(docId, ydoc);
+  ydoc.on("update", persistListener);
+
+  room = { ydoc, awareness, connections: new Set(), persistListener };
+  rooms.set(docId, room);
   return room;
 }
 
@@ -52,12 +60,18 @@ export function registerYjsHandler(app: FastifyInstance) {
         (req as AuthedRequest).permLevel = level;
       },
     },
-    (socket, req) => {
+    async (socket, req) => {
       const { docId } = req.params;
       const permLevel = (req as AuthedRequest).permLevel;
       const canEdit = permLevel === "edit";
 
-      const room = getOrCreateRoom(docId);
+      // Buffer messages that arrive while we're loading the room from Postgres.
+      const earlyMessages: Array<ArrayBuffer | Buffer> = [];
+      const earlyHandler = (data: ArrayBuffer | Buffer) => earlyMessages.push(data);
+      socket.on("message", earlyHandler);
+
+      const room = await getOrCreateRoom(docId);
+      socket.off("message", earlyHandler);
       room.connections.add(socket);
 
       // Tracks awareness clientIDs this socket introduced, so we can
@@ -171,7 +185,12 @@ export function registerYjsHandler(app: FastifyInstance) {
         }
       });
 
-      socket.on("close", () => {
+      // Replay any messages that arrived while we were loading the room.
+      for (const msg of earlyMessages) {
+        socket.emit("message", msg);
+      }
+
+      socket.on("close", async () => {
         room.ydoc.off("update", docUpdateHandler);
         room.awareness.off("update", awarenessUpdateHandler);
         if (controlledClientIds.size > 0) {
@@ -183,9 +202,14 @@ export function registerYjsHandler(app: FastifyInstance) {
         }
         room.connections.delete(socket);
         if (room.connections.size === 0) {
-          room.ydoc.destroy();
-          room.awareness.destroy();
-          rooms.delete(docId);
+          try {
+            await flushPersist(docId, room.ydoc);
+          } finally {
+            room.ydoc.off("update", room.persistListener);
+            room.ydoc.destroy();
+            room.awareness.destroy();
+            rooms.delete(docId);
+          }
         }
       });
     },

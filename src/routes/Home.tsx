@@ -14,6 +14,7 @@ export default function Home() {
       if (!res.ok) throw new Error(`Server ${res.status}`);
       const body = await res.json();
       // Persist creator token (done properly in Task 12)
+      setLoading(false);
       navigate(
         `/p/${body.project.id}/d/${body.document.id}?key=${body.permissions.editToken}`,
       );

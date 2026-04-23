@@ -5,8 +5,9 @@
     "types": ["node"],
     "outDir": "dist/server",
     "rootDir": ".",
-    "module": "ES2022",
-    "noEmit": false
+    "module": "Node16",
+    "noEmit": false,
+    "moduleResolution": "node16"
   },
   "include": ["server", "shared", "prisma"]
 }

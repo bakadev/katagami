@@ -7,7 +7,7 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     pool: "forks",
-    singleFork: true,
+    maxWorkers: 1,
   },
   resolve: {
     alias: {

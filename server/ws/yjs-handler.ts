@@ -1,10 +1,11 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { WebSocket } from "ws";
 import * as Y from "yjs";
 import * as syncProtocol from "y-protocols/sync";
 import * as awarenessProtocol from "y-protocols/awareness";
 import { encoding, decoding } from "lib0";
 import { validatePermissionToken } from "../auth/permission-token.js";
+import type { PermissionLevel } from "../../shared/types.js";
 
 const MSG_SYNC = 0;
 const MSG_AWARENESS = 1;
@@ -28,11 +29,8 @@ function getOrCreateRoom(docId: string): Room {
   return room;
 }
 
-function broadcast(room: Room, message: Uint8Array, exclude?: WebSocket) {
-  for (const conn of room.connections) {
-    if (conn === exclude) continue;
-    if (conn.readyState === 1) conn.send(message);
-  }
+interface AuthedRequest extends FastifyRequest {
+  permLevel?: PermissionLevel;
 }
 
 export function registerYjsHandler(app: FastifyInstance) {
@@ -45,21 +43,28 @@ export function registerYjsHandler(app: FastifyInstance) {
         const { key } = req.query as { key?: string };
         const level = await validatePermissionToken(docId, key);
         if (!level) {
-          await reply.code(403).send({ error: "forbidden" });
-        } else {
-          // Attach level to request for use in handler
-          (req as typeof req & { permLevel: string }).permLevel = level;
+          await reply.code(403).send({
+            error: "forbidden",
+            message: "Invalid or missing permission token",
+          });
+          return;
         }
+        (req as AuthedRequest).permLevel = level;
       },
     },
     (socket, req) => {
       const { docId } = req.params;
-      const canEdit = (req as typeof req & { permLevel: string }).permLevel === "edit";
+      const permLevel = (req as AuthedRequest).permLevel;
+      const canEdit = permLevel === "edit";
 
       const room = getOrCreateRoom(docId);
       room.connections.add(socket);
 
-      // Send sync step 1
+      // Tracks awareness clientIDs this socket introduced, so we can
+      // remove them when the socket disconnects.
+      const controlledClientIds = new Set<number>();
+
+      // Send sync step 1 to kick off state exchange
       {
         const encoder = encoding.createEncoder();
         encoding.writeVarUint(encoder, MSG_SYNC);
@@ -67,7 +72,7 @@ export function registerYjsHandler(app: FastifyInstance) {
         socket.send(encoding.toUint8Array(encoder));
       }
 
-      // Send current awareness states
+      // Send current awareness states to the new connection
       const awarenessStates = room.awareness.getStates();
       if (awarenessStates.size > 0) {
         const encoder = encoding.createEncoder();
@@ -101,7 +106,14 @@ export function registerYjsHandler(app: FastifyInstance) {
         }: { added: number[]; updated: number[]; removed: number[] },
         origin: unknown,
       ) => {
-        if (origin === socket) return;
+        // Track IDs introduced/removed by this socket. Yjs passes the socket
+        // as origin when we call applyAwarenessUpdate(_, _, socket).
+        if (origin === socket) {
+          added.forEach((id) => controlledClientIds.add(id));
+          removed.forEach((id) => controlledClientIds.delete(id));
+          return; // don't echo our own updates
+        }
+        // Broadcast peer awareness change to this socket
         const changed = added.concat(updated, removed);
         const encoder = encoding.createEncoder();
         encoding.writeVarUint(encoder, MSG_AWARENESS);
@@ -116,49 +128,59 @@ export function registerYjsHandler(app: FastifyInstance) {
       room.awareness.on("update", awarenessUpdateHandler);
 
       socket.on("message", (data: ArrayBuffer | Buffer) => {
-        const buf = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data);
-        const decoder = decoding.createDecoder(buf);
-        const messageType = decoding.readVarUint(decoder);
+        try {
+          const buf =
+            data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data);
+          const decoder = decoding.createDecoder(buf);
+          const messageType = decoding.readVarUint(decoder);
 
-        if (messageType === MSG_SYNC) {
-          if (!canEdit) {
-            // view-only clients: respond to step 1 with step 2, ignore everything else
-            const subType = decoding.readVarUint(decoder);
-            if (subType === syncProtocol.messageYjsSyncStep1) {
-              const state = decoding.readVarUint8Array(decoder);
-              const encoder2 = encoding.createEncoder();
-              encoding.writeVarUint(encoder2, MSG_SYNC);
-              syncProtocol.writeSyncStep2(encoder2, room.ydoc, state);
-              socket.send(encoding.toUint8Array(encoder2));
+          if (messageType === MSG_SYNC) {
+            if (!canEdit) {
+              // view-only clients: respond to step 1 with step 2, ignore everything else
+              const subType = decoding.readVarUint(decoder);
+              if (subType === syncProtocol.messageYjsSyncStep1) {
+                const state = decoding.readVarUint8Array(decoder);
+                const encoder = encoding.createEncoder();
+                encoding.writeVarUint(encoder, MSG_SYNC);
+                syncProtocol.writeSyncStep2(encoder, room.ydoc, state);
+                socket.send(encoding.toUint8Array(encoder));
+              }
+              return;
             }
-            return;
-          }
 
-          const encoder = encoding.createEncoder();
-          encoding.writeVarUint(encoder, MSG_SYNC);
-          syncProtocol.readSyncMessage(decoder, encoder, room.ydoc, socket);
-          if (encoding.length(encoder) > 1) {
-            socket.send(encoding.toUint8Array(encoder));
+            // Edit path: apply the sync message. readSyncMessage handles
+            // step1/step2/update sub-types, applies updates to room.ydoc
+            // (which fires the "update" event → docUpdateHandler broadcasts
+            // a framed writeUpdate to every other peer), and writes any
+            // needed reply (e.g. step2 after step1) to `encoder`.
+            const encoder = encoding.createEncoder();
+            encoding.writeVarUint(encoder, MSG_SYNC);
+            syncProtocol.readSyncMessage(decoder, encoder, room.ydoc, socket);
+            if (encoding.length(encoder) > 1) {
+              socket.send(encoding.toUint8Array(encoder));
+            }
+          } else if (messageType === MSG_AWARENESS) {
+            const awarenessUpdate = decoding.readVarUint8Array(decoder);
+            awarenessProtocol.applyAwarenessUpdate(room.awareness, awarenessUpdate, socket);
           }
-
-          // Re-broadcast the original update to peers so they stay in sync
-          if (buf.length > 1) {
-            broadcast(room, buf, socket);
+        } catch (err) {
+          req.log.error({ err }, "malformed yjs message; closing socket");
+          if (socket.readyState === 1) {
+            socket.close(1002, "protocol_error");
           }
-        } else if (messageType === MSG_AWARENESS) {
-          const awarenessUpdate = decoding.readVarUint8Array(decoder);
-          awarenessProtocol.applyAwarenessUpdate(room.awareness, awarenessUpdate, socket);
         }
       });
 
       socket.on("close", () => {
         room.ydoc.off("update", docUpdateHandler);
         room.awareness.off("update", awarenessUpdateHandler);
-        awarenessProtocol.removeAwarenessStates(
-          room.awareness,
-          [room.awareness.clientID],
-          socket,
-        );
+        if (controlledClientIds.size > 0) {
+          awarenessProtocol.removeAwarenessStates(
+            room.awareness,
+            Array.from(controlledClientIds),
+            null,
+          );
+        }
         room.connections.delete(socket);
         if (room.connections.size === 0) {
           room.ydoc.destroy();

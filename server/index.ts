@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import { env } from "./env.js";
 import { healthRoutes } from "./routes/health.js";
 import { projectRoutes } from "./routes/projects.js";
+import type { ApiError } from "../shared/types.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -12,6 +13,15 @@ export async function buildServer() {
   await app.register(cors, { origin: true, credentials: true });
   await app.register(healthRoutes);
   await app.register(projectRoutes);
+
+  app.setErrorHandler((err, req, reply) => {
+    req.log.error(err);
+    const body: ApiError = {
+      error: "internal_error",
+      message: "An unexpected error occurred",
+    };
+    reply.code(500).send(body);
+  });
 
   return app;
 }

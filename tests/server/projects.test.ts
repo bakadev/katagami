@@ -29,6 +29,8 @@ describe("POST /api/projects", () => {
     expect(body.permissions.viewToken).toMatch(/^[A-Za-z0-9_-]{32}$/);
     expect(body.creatorToken).toMatch(/^[A-Za-z0-9_-]{32}$/);
     expect(body.permissions.editToken).not.toBe(body.permissions.viewToken);
+    expect(body.creatorToken).not.toBe(body.permissions.editToken);
+    expect(body.creatorToken).not.toBe(body.permissions.viewToken);
 
     const project = await db.project.findUnique({ where: { id: body.project.id } });
     expect(project).not.toBeNull();

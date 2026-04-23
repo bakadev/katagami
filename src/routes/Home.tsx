@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { createProject } from "~/lib/api";
+import { storeCreatorToken } from "~/lib/creator-token";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -10,10 +12,8 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/projects", { method: "POST" });
-      if (!res.ok) throw new Error(`Server ${res.status}`);
-      const body = await res.json();
-      // Persist creator token (done properly in Task 12)
+      const body = await createProject();
+      storeCreatorToken(body.project.id, body.creatorToken);
       setLoading(false);
       navigate(
         `/p/${body.project.id}/d/${body.document.id}?key=${body.permissions.editToken}`,

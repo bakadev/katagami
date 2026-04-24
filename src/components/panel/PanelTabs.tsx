@@ -122,12 +122,12 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
     [tabs, focusTabAt, onChange],
   );
 
-  // grid-template-columns animates smoothly in all modern browsers — flex-grow
-  // does not. Each tab is one grid column: the active tab gets `1fr`, every
-  // other gets a fixed 40px slot, and CSS transitions the column-track widths.
-  const gridTemplate = tabs
-    .map((t) => (t.id === active ? "1fr" : "40px"))
-    .join(" ");
+  // Each tab is one grid column. The active tab sizes to its content
+  // (`auto`); inactive tabs are fixed 40px wells. A trailing `1fr` track
+  // soaks up the remaining row width so the rail keeps its w-full shell
+  // and only the active tab occupies the space its content needs.
+  const gridTemplate =
+    tabs.map((t) => (t.id === active ? "auto" : "40px")).join(" ") + " 1fr";
 
   return (
     <TooltipProvider delayDuration={300}>

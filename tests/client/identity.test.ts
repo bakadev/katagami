@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from "vitest";
 import { getOrCreateIdentity } from "../../src/lib/user/identity";
-import { JAPANESE_NAMES } from "../../src/lib/user/names";
+import { JAPANESE_NAMES, CURSOR_COLORS } from "../../src/lib/user/names";
 
 describe("getOrCreateIdentity", () => {
   beforeEach(() => {
@@ -16,6 +16,11 @@ describe("getOrCreateIdentity", () => {
   it("returns a color in #rrggbb format", () => {
     const { color } = getOrCreateIdentity();
     expect(color).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it("returns a color from the palette", () => {
+    const { color } = getOrCreateIdentity();
+    expect(CURSOR_COLORS).toContain(color);
   });
 
   it("returns the same identity on subsequent calls", () => {
@@ -33,11 +38,28 @@ describe("getOrCreateIdentity", () => {
   });
 
   it("regenerates identity if localStorage is cleared", () => {
-    const first = getOrCreateIdentity();
+    const _first = getOrCreateIdentity();
     localStorage.clear();
     const second = getOrCreateIdentity();
     expect(localStorage.getItem("katagami:identity")).toBeTruthy();
     expect(JAPANESE_NAMES).toContain(second.name);
-    void first;
+  });
+
+  it("regenerates identity when stored JSON is corrupt", () => {
+    localStorage.setItem("katagami:identity", "not valid json");
+    const identity = getOrCreateIdentity();
+    expect(JAPANESE_NAMES).toContain(identity.name);
+    expect(CURSOR_COLORS).toContain(identity.color);
+  });
+
+  it("regenerates identity when stored name is not in the current pool", () => {
+    localStorage.setItem(
+      "katagami:identity",
+      JSON.stringify({ name: "DefunctName", color: CURSOR_COLORS[0] }),
+    );
+    const identity = getOrCreateIdentity();
+    expect(JAPANESE_NAMES).toContain(identity.name);
+    // Must have regenerated — not returned the defunct stored name
+    expect(identity.name).not.toBe("DefunctName");
   });
 });

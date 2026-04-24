@@ -27,7 +27,7 @@ export function getOrCreateIdentity(): Identity {
         typeof parsed.name === "string" &&
         typeof parsed.color === "string" &&
         JAPANESE_NAMES.includes(parsed.name) &&
-        /^#[0-9a-f]{6}$/i.test(parsed.color)
+        CURSOR_COLORS.includes(parsed.color)
       ) {
         return { name: parsed.name, color: parsed.color };
       }

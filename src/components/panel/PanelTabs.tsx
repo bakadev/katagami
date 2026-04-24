@@ -122,6 +122,13 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
     [tabs, focusTabAt, onChange],
   );
 
+  // grid-template-columns animates smoothly in all modern browsers — flex-grow
+  // does not. Each tab is one grid column: the active tab gets `1fr`, every
+  // other gets a fixed 40px slot, and CSS transitions the column-track widths.
+  const gridTemplate = tabs
+    .map((t) => (t.id === active ? "1fr" : "40px"))
+    .join(" ");
+
   return (
     <TooltipProvider delayDuration={300}>
       <div
@@ -130,9 +137,11 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
         aria-label="Panel sections"
         id={listId}
         className={cn(
-          "flex w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
+          "grid w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
+          "transition-[grid-template-columns] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
         )}
+        style={{ gridTemplateColumns: gridTemplate }}
       >
         {tabs.map((tab, index) => {
           const Icon = ICON_MAP[tab.icon];
@@ -140,11 +149,8 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
           const showBadge = isActive && tab.badge != null && tab.badge > 0;
           const ariaLabel = buildAriaLabel(tab);
 
-          // Layout: active tab grows, inactive tabs lock to a 40px slot.
-          // flex-basis animates alongside flex-grow so the exit is smooth too.
-          const layoutClasses = isActive
-            ? "grow basis-0"
-            : "grow-0 basis-10 shrink-0";
+          // The grid column owns the width — the button just fills it.
+          const layoutClasses = "min-w-0";
 
           const buttonNode = (
             <button
@@ -168,10 +174,10 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                 // without fighting the parent rail.
                 "relative inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-[5px] px-2",
                 "cursor-pointer select-none outline-none",
-                // The width animation is the signature motion here. We also
-                // transition colors + shadow so the handoff between states
-                // reads as a single gesture, not two separate things.
-                "transition-[flex-grow,flex-basis,background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                // The grid track owns the width animation. We still transition
+                // color/shadow on the button itself so the handoff between
+                // states reads as a single coordinated gesture.
+                "transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
                 layoutClasses,
                 isActive
                   ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"

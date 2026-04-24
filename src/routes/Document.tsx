@@ -1,8 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router";
-import * as Y from "yjs";
+import type { Editor } from "@tiptap/core";
 import { connect } from "~/lib/yjs-client";
 import { getDocument } from "~/lib/api";
+import { createEditor } from "~/lib/editor/editor";
+import { getOrCreateIdentity } from "~/lib/user/identity";
+import { ThemeToggle } from "~/lib/theme/ThemeToggle";
+import { useHighlightTheme } from "~/lib/preview/theme";
 import type { PermissionLevel } from "@shared/types";
 
 export default function DocumentRoute() {
@@ -10,19 +14,19 @@ export default function DocumentRoute() {
   const [searchParams] = useSearchParams();
   const key = searchParams.get("key");
   const navigate = useNavigate();
+  useHighlightTheme();
 
   const [permissionLevel, setPermissionLevel] = useState<PermissionLevel | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [status, setStatus] = useState<"connecting" | "connected" | "disconnected">(
     "connecting",
   );
-  const [text, setText] = useState("");
+  const [mode, setMode] = useState<"edit" | "preview">("edit");
 
+  const editorHostRef = useRef<HTMLDivElement | null>(null);
+  const editorRef = useRef<Editor | null>(null);
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
-  const yTextRef = useRef<Y.Text | null>(null);
-  const applyingRemote = useRef(false);
 
-  // Validate permission via REST before opening WebSocket
   useEffect(() => {
     if (!docId || !key) {
       setLoadError("Missing doc id or key");
@@ -41,29 +45,29 @@ export default function DocumentRoute() {
     };
   }, [docId, key]);
 
-  // After a load error, redirect home (without flashing unhelpful UI)
   useEffect(() => {
     if (!loadError) return;
     const t = setTimeout(() => navigate("/", { replace: true }), 1500);
     return () => clearTimeout(t);
   }, [loadError, navigate]);
 
-  // Open Yjs connection once we know permission is valid
   useEffect(() => {
     if (!permissionLevel || !docId || !key) return;
+    const host = editorHostRef.current;
+    if (!host) return;
+
     const conn = connect(docId, key);
     connectionRef.current = conn;
 
-    const yText = conn.ydoc.getText("content");
-    yTextRef.current = yText;
-
-    const updateText = () => {
-      applyingRemote.current = true;
-      setText(yText.toString());
-      applyingRemote.current = false;
-    };
-    updateText();
-    yText.observe(updateText);
+    const identity = getOrCreateIdentity();
+    const editor = createEditor({
+      element: host,
+      ydoc: conn.ydoc,
+      provider: conn.provider,
+      identity,
+      editable: permissionLevel === "edit",
+    });
+    editorRef.current = editor;
 
     const handleStatus = ({ status }: { status: "connecting" | "connected" | "disconnected" }) => {
       setStatus(status);
@@ -71,40 +75,27 @@ export default function DocumentRoute() {
     conn.provider.on("status", handleStatus);
 
     return () => {
-      yText.unobserve(updateText);
       conn.provider.off("status", handleStatus);
+      editor.destroy();
       conn.destroy();
+      editorRef.current = null;
       connectionRef.current = null;
-      yTextRef.current = null;
     };
   }, [permissionLevel, docId, key]);
 
-  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    if (applyingRemote.current) return;
-    const yText = yTextRef.current;
-    if (!yText) return;
-    const next = e.target.value;
-    const current = yText.toString();
-    // Full-replace diff. Fine for MVP textarea — TipTap in Phase 2 will send proper deltas.
-    yText.doc!.transact(() => {
-      yText.delete(0, current.length);
-      yText.insert(0, next);
-    });
-  }
-
   if (loadError) {
     return (
-      <main style={{ padding: 16 }}>
-        <h1>Can't open this document</h1>
+      <main className="p-4">
+        <h1 className="text-lg font-semibold">Can't open this document</h1>
         <p>{loadError}</p>
-        <p style={{ fontSize: 12, color: "#666" }}>Redirecting to home…</p>
+        <p className="text-xs text-muted-foreground">Redirecting to home…</p>
       </main>
     );
   }
 
   if (!permissionLevel) {
     return (
-      <main style={{ padding: 16 }}>
+      <main className="p-4">
         <p>Loading document…</p>
       </main>
     );
@@ -113,26 +104,49 @@ export default function DocumentRoute() {
   const readOnly = permissionLevel === "view";
 
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 18 }}>Document</h1>
-        <span aria-live="polite" style={{ fontSize: 12, color: "#666" }}>
-          {status} · {readOnly ? "view only" : "editing"}
-        </span>
+    <main className="mx-auto max-w-4xl px-4 py-8">
+      <header className="mb-4 flex items-center justify-between">
+        <h1 className="m-0 text-lg font-semibold">Document</h1>
+        <div className="flex items-center gap-3">
+          <span aria-live="polite" className="text-xs text-muted-foreground">
+            {status} · {readOnly ? "view only" : "editing"}
+          </span>
+          <div role="tablist" aria-label="View mode" className="flex rounded border border-border">
+            <button
+              role="tab"
+              aria-selected={mode === "edit"}
+              className={`px-3 py-1 text-sm ${mode === "edit" ? "bg-muted" : ""}`}
+              onClick={() => setMode("edit")}
+            >
+              Edit
+            </button>
+            <button
+              role="tab"
+              aria-selected={mode === "preview"}
+              className={`px-3 py-1 text-sm ${mode === "preview" ? "bg-muted" : ""}`}
+              onClick={() => setMode("preview")}
+            >
+              Preview
+            </button>
+          </div>
+          <ThemeToggle />
+        </div>
       </header>
-      <textarea
-        value={text}
-        onChange={handleChange}
-        readOnly={readOnly}
-        placeholder={readOnly ? "(empty document)" : "Start typing…"}
+
+      <div
+        ref={editorHostRef}
+        className={`prose max-w-none rounded border border-border p-4 ${
+          mode === "edit" ? "" : "hidden"
+        }`}
       />
+
+      {mode === "preview" && (
+        <div className="rounded border border-border p-4">
+          <p className="text-sm text-muted-foreground">
+            Preview renderer lands in Task 16.
+          </p>
+        </div>
+      )}
     </main>
   );
 }

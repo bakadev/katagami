@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { Pencil } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Popover,
@@ -91,43 +90,30 @@ export function TitleEditor({ title, onSave, readOnly }: TitleEditorProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <TooltipProvider delayDuration={300}>
-        <div className="flex min-w-0 items-center gap-1.5">
-          {/* Title text — also a click target that opens the popover. */}
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label="Rename document"
-              className={cn(
-                labelClassName,
-                "rounded-sm bg-transparent px-0 py-0 text-left outline-none",
-                "transition-colors hover:text-foreground",
-                "focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              )}
-            >
-              {labelText}
-            </button>
-          </PopoverTrigger>
-
-          {/* Explicit edit affordance — same popover trigger, second handle. */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Rename document"
-                  className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-                >
-                  <Pencil aria-hidden className="size-3.5" strokeWidth={1.75} />
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={6}>
-              Rename
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label="Rename document"
+                className={cn(
+                  labelClassName,
+                  "rounded-sm bg-transparent px-0 py-0 text-left outline-none",
+                  // Dashed underline = "clickable text" affordance. Sits in
+                  // the muted-foreground tone at rest, deepens on hover.
+                  "underline decoration-muted-foreground/40 decoration-dashed underline-offset-[6px]",
+                  "transition-colors hover:decoration-muted-foreground hover:text-foreground",
+                  "focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                )}
+              >
+                {labelText}
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" sideOffset={6}>
+            Click to rename
+          </TooltipContent>
+        </Tooltip>
       </TooltipProvider>
 
       <PopoverContent

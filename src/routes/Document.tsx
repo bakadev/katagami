@@ -432,7 +432,7 @@ export default function DocumentRoute() {
             ribbon spanning the whole window. */}
         <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-border bg-background">
           {mode === "edit" && !readOnly && (
-            <div className="border-b border-border px-2 py-1">
+            <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
             </div>
           )}

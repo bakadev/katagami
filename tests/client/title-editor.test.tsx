@@ -71,13 +71,4 @@ describe("TitleEditor", () => {
     fireEvent.click(screen.getByText("Hello"));
     expect(screen.queryByRole("textbox")).toBeNull();
   });
-
-  it("renders an explicit Pencil edit button next to the title", () => {
-    render(<TitleEditor title="Hello" onSave={() => {}} readOnly={false} />);
-    // Two buttons share the "Rename document" aria-label (the title button
-    // and the explicit pencil affordance) — querying by role + name with
-    // getAllByRole avoids the ambiguity warning while asserting both exist.
-    const triggers = screen.getAllByRole("button", { name: /Rename document/i });
-    expect(triggers.length).toBeGreaterThanOrEqual(2);
-  });
 });

@@ -107,7 +107,9 @@ function EditPreviewTabs({
                     if (!isActive) onChange(opt.value);
                   }}
                   className={cn(
-                    "relative z-10 inline-flex h-6 items-center justify-center gap-1 rounded-[5px] px-2.5",
+                    // flex-1 makes Edit + Preview share equal width so the
+                    // sliding thumb's `(100% - 4px) / 2` math is correct.
+                    "relative z-10 inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-[5px] px-2.5",
                     "cursor-pointer outline-none",
                     "text-xs font-medium",
                     "transition-colors duration-150 ease-out",
@@ -168,17 +170,19 @@ export function DocHeader({
         )}
       >
         {/* ---- LEFT: document identity (single row) ---- */}
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <FileText
             aria-hidden
-            className="size-5 shrink-0 text-muted-foreground"
+            className="size-6 shrink-0 text-muted-foreground"
             strokeWidth={1.75}
           />
-          <TitleEditor
-            title={title}
-            onSave={onSaveTitle}
-            readOnly={readOnly}
-          />
+          <div className="min-w-0 max-w-[60ch] flex-shrink">
+            <TitleEditor
+              title={title}
+              onSave={onSaveTitle}
+              readOnly={readOnly}
+            />
+          </div>
           {/* MetaLine sits inline to the right of the title with a quiet
               vertical separator so it reads as a status pair rather than
               part of the title itself. */}

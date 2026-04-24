@@ -72,8 +72,12 @@ export default function DocumentRoute() {
     editorRef.current = editor;
 
     const syncMarkdown = () => {
-      // tiptap-markdown's storage exposes getMarkdown() on any editor update.
-      const md = (editor.storage as unknown as Record<string, { getMarkdown?: () => string }>).markdown?.getMarkdown?.() ?? "";
+      // Use raw text content — the doc is paragraphs of Markdown source, so
+      // we want the exact source characters (including #, **, etc.) to feed
+      // markdown-it. tiptap-markdown's getMarkdown() escapes those characters
+      // when they appear in plain text nodes (since we disabled Heading/Bold
+      // extensions), which prevents markdown-it from parsing them.
+      const md = editor.getText({ blockSeparator: "\n\n" });
       setMarkdown(md);
     };
     syncMarkdown();

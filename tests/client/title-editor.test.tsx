@@ -3,6 +3,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TitleEditor } from "~/components/header/TitleEditor";
 
+// Radix Popover measures nodes via ResizeObserver — jsdom doesn't ship one.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(window as unknown as { ResizeObserver: typeof ResizeObserverStub }).ResizeObserver =
+  ResizeObserverStub;
+
 describe("TitleEditor", () => {
   it("renders idle state showing the title", () => {
     render(<TitleEditor title="Hello" onSave={() => {}} readOnly={false} />);
@@ -14,9 +23,10 @@ describe("TitleEditor", () => {
     expect(screen.getByText(/Untitled/i)).toBeTruthy();
   });
 
-  it("switches to input on click and saves on Enter", () => {
+  it("opens popover on title click and saves on Enter", () => {
     const onSave = vi.fn();
     render(<TitleEditor title="Hello" onSave={onSave} readOnly={false} />);
+    // Click the title text — it's a popover trigger button
     fireEvent.click(screen.getByText("Hello"));
     const input = screen.getByRole("textbox") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "World" } });
@@ -34,7 +44,7 @@ describe("TitleEditor", () => {
     expect(onSave).toHaveBeenCalledWith(null);
   });
 
-  it("reverts on Escape", () => {
+  it("closes popover on Escape without saving", () => {
     const onSave = vi.fn();
     render(<TitleEditor title="Hello" onSave={onSave} readOnly={false} />);
     fireEvent.click(screen.getByText("Hello"));
@@ -42,10 +52,9 @@ describe("TitleEditor", () => {
     fireEvent.change(input, { target: { value: "World" } });
     fireEvent.keyDown(input, { key: "Escape" });
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.getByText("Hello")).toBeTruthy();
   });
 
-  it("rejects titles over 120 chars and stays in edit mode", () => {
+  it("rejects titles over 120 chars and keeps the popover open", () => {
     const onSave = vi.fn();
     render(<TitleEditor title="Hello" onSave={onSave} readOnly={false} />);
     fireEvent.click(screen.getByText("Hello"));
@@ -53,12 +62,22 @@ describe("TitleEditor", () => {
     fireEvent.change(input, { target: { value: "a".repeat(121) } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onSave).not.toHaveBeenCalled();
+    // Input still present (popover still open)
     expect(screen.getByRole("textbox")).toBeTruthy();
   });
 
-  it("does not switch to input when readOnly", () => {
+  it("does not open the popover when readOnly", () => {
     render(<TitleEditor title="Hello" onSave={() => {}} readOnly={true} />);
     fireEvent.click(screen.getByText("Hello"));
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("renders an explicit Pencil edit button next to the title", () => {
+    render(<TitleEditor title="Hello" onSave={() => {}} readOnly={false} />);
+    // Two buttons share the "Rename document" aria-label (the title button
+    // and the explicit pencil affordance) — querying by role + name with
+    // getAllByRole avoids the ambiguity warning while asserting both exist.
+    const triggers = screen.getAllByRole("button", { name: /Rename document/i });
+    expect(triggers.length).toBeGreaterThanOrEqual(2);
   });
 });

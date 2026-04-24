@@ -17,7 +17,6 @@ import { CommentComposer } from "~/components/editor/CommentComposer";
 import { DocHeader } from "~/components/header/DocHeader";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
-import { RenameModal } from "~/components/avatar-menu/RenameModal";
 import { RightPanel } from "~/components/panel/RightPanel";
 import { DocsTab } from "~/components/panel/tabs/DocsTab";
 import { CommentsTab } from "~/components/panel/tabs/CommentsTab";
@@ -68,7 +67,6 @@ export default function DocumentRoute() {
   const [title, setTitle] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [identity, setIdentity] = useState(() => getOrCreateIdentity());
-  const [renameOpen, setRenameOpen] = useState(false);
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
@@ -379,7 +377,6 @@ export default function DocumentRoute() {
     const next = { name: nextName, color: identity.color };
     storeIdentity(next);
     setIdentity(next);
-    setRenameOpen(false);
   }, [identity.color]);
 
   // --- Render branches ---
@@ -406,16 +403,14 @@ export default function DocumentRoute() {
       identity={identity}
       theme={theme}
       onThemeChange={setTheme}
-      onRenameClick={() => setRenameOpen(true)}
+      onRenameSave={handleRenameSave}
       onDownloadClick={handleDownload}
-      trigger={
-        <AvatarButton name={identity.name} color={identity.color} active={false} />
-      }
+      trigger={<AvatarButton name={identity.name} active={false} />}
     />
   );
 
   return (
-    <main className="flex h-screen flex-col">
+    <main className="flex h-screen flex-col bg-muted/30">
       <DocHeader
         title={title}
         onSaveTitle={handleSaveTitle}
@@ -431,26 +426,30 @@ export default function DocumentRoute() {
         avatarSlot={avatarSlot}
       />
 
-      {mode === "edit" && !readOnly && (
-        <div className="border-b border-border px-4 py-1">
-          <Toolbar editor={editor} disabled={readOnly} />
-        </div>
-      )}
-
-      <div className="flex flex-1 gap-0 overflow-hidden">
-        <div className="flex flex-1 flex-col overflow-auto">
-          <div
-            ref={editorHostRef}
-            className={`prose max-w-none border border-border bg-muted/30 p-4 font-mono text-sm ${
-              mode === "edit" ? "" : "hidden"
-            }`}
-          />
-          {mode === "preview" && (
-            <div
-              className="prose max-w-none border border-border bg-background p-6 dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
-            />
+      <div className="flex flex-1 gap-3 overflow-hidden p-3">
+        {/* Editor card — toolbar + editor live together inside one rounded
+            surface so the bar reads as part of the editor, not a global
+            ribbon spanning the whole window. */}
+        <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-border bg-background">
+          {mode === "edit" && !readOnly && (
+            <div className="border-b border-border px-2 py-1">
+              <Toolbar editor={editor} disabled={readOnly} />
+            </div>
           )}
+          <div className="flex-1 overflow-auto">
+            <div
+              ref={editorHostRef}
+              className={`prose min-h-full max-w-none p-4 font-mono text-sm ${
+                mode === "edit" ? "" : "hidden"
+              }`}
+            />
+            {mode === "preview" && (
+              <div
+                className="prose min-h-full max-w-none p-6 dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
+              />
+            )}
+          </div>
         </div>
 
         <RightPanel
@@ -527,12 +526,6 @@ export default function DocumentRoute() {
         </div>
       )}
 
-      <RenameModal
-        open={renameOpen}
-        initialName={identity.name}
-        onSave={handleRenameSave}
-        onCancel={() => setRenameOpen(false)}
-      />
     </main>
   );
 }

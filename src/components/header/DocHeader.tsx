@@ -58,7 +58,11 @@ function EditPreviewTabs({
 }) {
   const groupId = useId();
   const index = MODE_OPTIONS.findIndex((o) => o.value === value);
-  const thumbOffset = `calc(${index} * (100% / 2))`;
+  // translateX percentages resolve against the element's own width, so
+  // `index * 100%` slides the thumb by exactly one thumb-width per slot.
+  // Using `(100% / 2)` of the container would overshoot because the thumb
+  // is narrower than half the container by the 4px of inset padding.
+  const thumbOffset = `${index * 100}%`;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -82,6 +86,7 @@ function EditPreviewTabs({
           style={{
             width: "calc((100% - 4px) / 2)",
             transform: `translateX(${thumbOffset})`,
+            // The thumb slides exactly one thumb-width per slot.
           }}
         />
 
@@ -151,11 +156,9 @@ export function DocHeader({
     <header
       role="banner"
       className={cn(
-        // Hairline bottom edge + translucent backdrop so the editor's content
-        // shows through subtly when scrolled under.
-        "w-full border-b border-border/80",
-        "bg-background/80 dark:bg-background/60",
-        "supports-[backdrop-filter]:backdrop-blur-sm",
+        // Header sits on the muted main backdrop; no border or fill of its
+        // own so it reads as part of the page chrome rather than a card.
+        "w-full",
       )}
     >
       <div
@@ -164,31 +167,30 @@ export function DocHeader({
           "px-4 py-2.5 md:px-6",
         )}
       >
-        {/* ---- LEFT: document identity ---- */}
-        <div className="flex min-w-0 flex-1 items-start gap-2.5">
-          {/* FileText icon sits at baseline with the title — use mt-0.5 to
-              optically balance the 20px icon against the 18px text */}
+        {/* ---- LEFT: document identity (single row) ---- */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <FileText
             aria-hidden
-            className="mt-0.5 size-5 shrink-0 text-muted-foreground"
+            className="size-5 shrink-0 text-muted-foreground"
             strokeWidth={1.75}
           />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {/* Row 1: title */}
-            <div className="flex min-w-0 items-center">
-              <TitleEditor
-                title={title}
-                onSave={onSaveTitle}
-                readOnly={readOnly}
-              />
-            </div>
-            {/* Row 2: meta strip */}
-            <MetaLine
-              updatedAt={updatedAt}
-              connection={connection}
-              permission={permission}
-            />
-          </div>
+          <TitleEditor
+            title={title}
+            onSave={onSaveTitle}
+            readOnly={readOnly}
+          />
+          {/* MetaLine sits inline to the right of the title with a quiet
+              vertical separator so it reads as a status pair rather than
+              part of the title itself. */}
+          <span
+            aria-hidden
+            className="hidden h-4 w-px shrink-0 bg-border md:inline-block"
+          />
+          <MetaLine
+            updatedAt={updatedAt}
+            connection={connection}
+            permission={permission}
+          />
         </div>
 
         {/* ---- RIGHT: controls cluster ---- */}

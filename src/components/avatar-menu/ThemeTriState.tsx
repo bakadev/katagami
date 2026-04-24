@@ -41,8 +41,9 @@ const OPTIONS: readonly Option[] = [
 export function ThemeTriState({ value, onChange }: ThemeTriStateProps) {
   const groupId = useId();
   const index = OPTIONS.findIndex((o) => o.value === value);
-  // Width of one slot = 100% / 3; thumb slides in multiples of that.
-  const thumbOffset = `calc(${index} * (100% / 3))`;
+  // translateX percentages resolve against the element's own width, so
+  // `index * 100%` slides the thumb by exactly one thumb-width per slot.
+  const thumbOffset = `${index * 100}%`;
 
   return (
     <TooltipProvider delayDuration={300}>

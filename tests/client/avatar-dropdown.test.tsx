@@ -4,31 +4,32 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { AvatarButton } from "../../src/components/header/AvatarButton";
 import { AvatarDropdown } from "../../src/components/avatar-menu/AvatarDropdown";
 import { ThemeTriState } from "../../src/components/avatar-menu/ThemeTriState";
-import { RenameModal } from "../../src/components/avatar-menu/RenameModal";
 
 describe("AvatarButton", () => {
-  it("renders the first letter of the name (uppercased)", () => {
-    render(<AvatarButton name="sakura" color="#ff66aa" active={false} />);
-    expect(screen.getByText("S")).toBeTruthy();
+  it("renders a button with a descriptive aria-label", () => {
+    render(<AvatarButton name="Sakura" active={false} />);
+    expect(screen.getByRole("button", { name: /Sakura/i })).toBeTruthy();
   });
 
-  it("applies the identity color as background", () => {
-    const { container } = render(<AvatarButton name="Sakura" color="#ff66aa" active={false} />);
+  it("renders an icon (no text label)", () => {
+    const { container } = render(<AvatarButton name="Sakura" active={false} />);
     const btn = container.querySelector("button");
     expect(btn).not.toBeNull();
-    expect(btn!.style.backgroundColor).toBeTruthy();
+    expect(btn!.querySelector("svg")).not.toBeNull();
   });
 });
 
 describe("AvatarDropdown", () => {
-  function renderDropdown(props: Partial<React.ComponentProps<typeof AvatarDropdown>> = {}) {
-    const trigger = <AvatarButton name="Sakura" color="#ff66aa" active={false} />;
+  function renderDropdown(
+    props: Partial<React.ComponentProps<typeof AvatarDropdown>> = {},
+  ) {
+    const trigger = <AvatarButton name="Sakura" active={false} />;
     return render(
       <AvatarDropdown
         identity={{ name: "Sakura", color: "#ff66aa" }}
         theme="system"
         onThemeChange={() => {}}
-        onRenameClick={() => {}}
+        onRenameSave={() => {}}
         onDownloadClick={() => {}}
         trigger={trigger}
         __testDefaultOpen
@@ -42,14 +43,6 @@ describe("AvatarDropdown", () => {
     expect(screen.getByText("Sakura")).toBeTruthy();
   });
 
-  it("calls onRenameClick when Rename is activated", async () => {
-    const onRenameClick = vi.fn();
-    renderDropdown({ onRenameClick });
-    const renameItem = screen.getByRole("menuitem", { name: /Rename/i });
-    fireEvent.click(renameItem);
-    await waitFor(() => expect(onRenameClick).toHaveBeenCalled());
-  });
-
   it("calls onDownloadClick when Download as Markdown is activated", async () => {
     const onDownloadClick = vi.fn();
     renderDropdown({ onDownloadClick });
@@ -57,38 +50,48 @@ describe("AvatarDropdown", () => {
     fireEvent.click(dl);
     await waitFor(() => expect(onDownloadClick).toHaveBeenCalled());
   });
-});
 
-describe("RenameModal", () => {
-  it("calls onSave with the trimmed name when the form is submitted", () => {
-    const onSave = vi.fn();
-    render(<RenameModal open={true} initialName="Sakura" onSave={onSave} onCancel={() => {}} />);
+  it("swaps the dropdown content to a rename form when Rename is selected", () => {
+    renderDropdown();
+    const renameItem = screen.getByRole("menuitem", { name: /Rename/i });
+    fireEvent.click(renameItem);
+    // After click, the menu items are gone and a textbox appears
+    expect(screen.getByRole("textbox")).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: /Download as Markdown/i })).toBeNull();
+  });
+
+  it("calls onRenameSave with the trimmed value when the form is submitted", () => {
+    const onRenameSave = vi.fn();
+    renderDropdown({ onRenameSave });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
     const input = screen.getByRole("textbox") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "  Hanami  " } });
     fireEvent.submit(input.closest("form")!);
-    expect(onSave).toHaveBeenCalledWith("Hanami");
+    expect(onRenameSave).toHaveBeenCalledWith("Hanami");
   });
 
-  it("rejects names shorter than 1 or longer than 40 chars", () => {
-    const onSave = vi.fn();
-    render(<RenameModal open={true} initialName="Sakura" onSave={onSave} onCancel={() => {}} />);
+  it("rejects empty + over-40-char names without calling onRenameSave", () => {
+    const onRenameSave = vi.fn();
+    renderDropdown({ onRenameSave });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
     const input = screen.getByRole("textbox") as HTMLInputElement;
     const form = input.closest("form")!;
-    // empty
     fireEvent.change(input, { target: { value: "" } });
     fireEvent.submit(form);
-    expect(onSave).not.toHaveBeenCalled();
-    // too long
+    expect(onRenameSave).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: "a".repeat(41) } });
     fireEvent.submit(form);
-    expect(onSave).not.toHaveBeenCalled();
+    expect(onRenameSave).not.toHaveBeenCalled();
   });
 
-  it("calls onCancel when Cancel button is clicked", () => {
-    const onCancel = vi.fn();
-    render(<RenameModal open={true} initialName="Sakura" onSave={() => {}} onCancel={onCancel} />);
+  it("Cancel returns to the menu view without saving", () => {
+    const onRenameSave = vi.fn();
+    renderDropdown({ onRenameSave });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
     fireEvent.click(screen.getByRole("button", { name: /Cancel/i }));
-    expect(onCancel).toHaveBeenCalled();
+    // Menu items are back
+    expect(screen.getByRole("menuitem", { name: /Download as Markdown/i })).toBeTruthy();
+    expect(onRenameSave).not.toHaveBeenCalled();
   });
 });
 

@@ -7,6 +7,7 @@ import { encoding, decoding } from "lib0";
 import { validatePermissionToken } from "../auth/permission-token.js";
 import type { PermissionLevel } from "../../shared/types.js";
 import { loadDocState, schedulePersist, flushPersist } from "./persistence.js";
+import { resetIdleTimer, clearIdleTimer } from "./snapshot-timer.js";
 
 const MSG_SYNC = 0;
 const MSG_AWARENESS = 1;
@@ -70,6 +71,11 @@ function createRoom(docId: string): Promise<Room> {
     const awareness = new awarenessProtocol.Awareness(ydoc);
     const persistListener = () => schedulePersist(docId, ydoc);
     ydoc.on("update", persistListener);
+
+    // Idle-snapshot timer: added AFTER the applyUpdate above so the initial
+    // state load does not trigger a spurious timer reset.
+    const idleListener = () => resetIdleTimer(docId);
+    ydoc.on("update", idleListener);
 
     return { ydoc, awareness, connections: new Set(), persistListener };
   })();
@@ -256,6 +262,7 @@ export function registerYjsHandler(app: FastifyInstance) {
             room.awareness.destroy();
             rooms.delete(docId);
             liveDocs.delete(docId);
+            clearIdleTimer(docId);
           }
         }
       });

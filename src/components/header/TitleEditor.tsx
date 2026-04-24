@@ -132,8 +132,8 @@ export function TitleEditor({ title, onSave, readOnly }: TitleEditorProps) {
             // Narrow caret, no weird browser selection color.
             "selection:bg-primary/20 selection:text-foreground",
           )}
-          // Reserve a few extra chars for growth without shoving the right column.
-          size={Math.max((draft.length || 1) + 2, 10)}
+          // Accept up to 2× the valid cap so a user can paste, see the error,
+          // and correct in place without the input silently truncating.
           maxLength={MAX_LENGTH * 2}
         />
         {error ? (
@@ -156,6 +156,9 @@ export function TitleEditor({ title, onSave, readOnly }: TitleEditorProps) {
       className={cn(
         typography,
         "inline-block max-w-full truncate align-baseline",
+        // Reserve 1px for the dashed underline used in edit mode so clicking
+        // the title doesn't nudge the MetaLine by a pixel.
+        "border-b border-transparent",
         isEmpty ? "italic text-muted-foreground/80" : "text-foreground",
         !readOnly &&
           // The hover underline grows in from the left via a pseudo-element so

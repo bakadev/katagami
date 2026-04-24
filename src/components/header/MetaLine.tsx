@@ -123,9 +123,9 @@ export function MetaLine({
             "size-[6px] shrink-0 rounded-full",
             dotColor,
             connection === "connected" &&
-              "shadow-[0_0_0_3px_rgb(16_185_129_/_0.18)]",
+              "shadow-[0_0_0_3px] shadow-emerald-500/20",
             connection === "disconnected" &&
-              "shadow-[0_0_0_3px_var(--destructive)/18]",
+              "shadow-[0_0_0_3px] shadow-destructive/20",
             connection === "connecting" && "animate-pulse",
           )}
         />

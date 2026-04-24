@@ -8,3 +8,7 @@ build/
 /prisma/generated/
 .vite/
 coverage/
+
+# Claude Code: local-only settings (permission allowlist, etc.)
+# Shared settings would go in .claude/settings.json (committed)
+.claude/settings.local.json

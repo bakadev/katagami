@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useId, useRef, type KeyboardEvent } from "react";
 import {
   FileText,
   History as HistoryIcon,
@@ -129,32 +122,12 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
     [tabs, focusTabAt, onChange],
   );
 
-  // CSS can't smoothly animate between `40px` and `auto` / `max-content`, so
-  // we measure each tab's natural content width up-front and store it. The
-  // explicit pixel value lets `transition-[width]` interpolate cleanly. The
-  // signature is keyed on the visible content (label + badge + notification
-  // state) so the effect re-runs when those change.
-  const measureKey = tabs
-    .map((t) => `${t.id}:${t.label}:${t.badge ?? ""}:${t.hasNotification ? 1 : 0}`)
-    .join("|");
-  const [tabWidths, setTabWidths] = useState<Record<string, number>>({});
-  useLayoutEffect(() => {
-    const next: Record<string, number> = {};
-    tabs.forEach((tab, i) => {
-      const btn = buttonRefs.current[i];
-      if (btn) {
-        // scrollWidth reports the unclipped content width even when the
-        // button is currently constrained to 40px via overflow-hidden.
-        // +1 for sub-pixel rounding.
-        next[tab.id] = btn.scrollWidth + 1;
-      }
-    });
-    setTabWidths(next);
-    // The `measureKey` digest stands in for `tabs` because `tabs` is a new
-    // array reference on every parent render and would re-fire the effect
-    // unnecessarily. Whenever the digest changes, the underlying content
-    // changed and we genuinely need to remeasure.
-  }, [measureKey]);
+  // Each tab is one grid column. The active tab sizes to its content
+  // (`auto`); inactive tabs are fixed 40px wells. A trailing `1fr` track
+  // soaks up the remaining row width so the rail keeps its w-full shell
+  // and only the active tab occupies the space its content needs.
+  const gridTemplate =
+    tabs.map((t) => (t.id === active ? "auto" : "40px")).join(" ") + " 1fr";
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -164,22 +137,20 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
         aria-label="Panel sections"
         id={listId}
         className={cn(
-          "flex w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
+          "grid w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
+          "transition-[grid-template-columns] duration-200 ease-in-out",
         )}
+        style={{ gridTemplateColumns: gridTemplate }}
       >
         {tabs.map((tab, index) => {
           const Icon = ICON_MAP[tab.icon];
           const isActive = tab.id === active;
-          // We always render the badge slot if the tab has a positive badge
-          // count — both for measurement honesty (scrollWidth includes it)
-          // and because users want to see "3" on the active Comments tab.
-          const hasBadge = tab.badge != null && tab.badge > 0;
+          const showBadge = isActive && tab.badge != null && tab.badge > 0;
           const ariaLabel = buildAriaLabel(tab);
 
-          // Active = measured natural width; inactive = 40px fixed slot.
-          // Falls back to 40px on the first render before measurement runs.
-          const targetWidth = isActive ? (tabWidths[tab.id] ?? 40) : 40;
+          // The grid column owns the width — the button just fills it.
+          const layoutClasses = "min-w-0";
 
           const buttonNode = (
             <button
@@ -191,23 +162,26 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
               id={`${listId}-tab-${tab.id}`}
               aria-selected={isActive}
               aria-label={ariaLabel}
+              // Roving tabindex: only the active tab is reachable via Tab.
               tabIndex={isActive ? 0 : -1}
               data-state={isActive ? "active" : "inactive"}
               onClick={() => {
                 if (!isActive) onChange(tab.id);
               }}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              style={{ width: `${targetWidth}px` }}
               className={cn(
                 // Base layout — h-8 gives enough room for label + 14px icon
-                // without fighting the parent rail. overflow-hidden clips
-                // the inner content while the width animation runs.
-                "relative inline-flex h-8 shrink-0 items-center gap-1.5 overflow-hidden rounded-[5px] px-2",
+                // without fighting the parent rail.
+                "relative inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-[5px] px-2",
                 "cursor-pointer select-none outline-none",
-                "transition-[width,background-color,color,box-shadow] duration-200 ease-in-out",
+                // The grid track owns the width animation. We still transition
+                // color/shadow on the button itself so the handoff between
+                // states reads as a single coordinated gesture.
+                "transition-[background-color,color,box-shadow] duration-200 ease-in-out",
+                layoutClasses,
                 isActive
-                  ? "justify-start bg-background text-foreground shadow-sm ring-1 ring-border/60"
-                  : "justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 // Focus ring sits inside the rail so it never clips.
                 "focus-visible:ring-2 focus-visible:ring-ring/60",
               )}
@@ -223,25 +197,33 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                     aria-hidden
                     className={cn(
                       "absolute -top-0.5 -right-1 size-1.5 rounded-full bg-red-500",
+                      // Ring against the panel surface so the pip reads cleanly in both themes.
                       "ring-2 ring-background",
                     )}
                   />
                 ) : null}
               </span>
 
-              {/* Label + badge are always in the DOM (so scrollWidth gives a
-                  stable measurement). The button's overflow-hidden clips them
-                  when collapsed; the width transition reveals them as it grows.
-                  aria-hidden because the visible button label duplicates info
-                  already in the button's aria-label. */}
+              {/* Label + badge reveal. We always render the label so width
+                  measurements stay honest for flex layout, but we gate its
+                  visibility on `isActive` with a short opacity/translate so
+                  the text doesn't pop in before the tab has finished growing.
+                  `aria-hidden` on the inactive copy keeps the screen reader
+                  from announcing the label twice (the button has aria-label). */}
               <span
                 aria-hidden
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap"
+                className={cn(
+                  "flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap",
+                  "transition-[max-width,opacity,transform] duration-200 ease-in-out",
+                  isActive
+                    ? "max-w-[200px] translate-x-0 opacity-100"
+                    : "max-w-0 -translate-x-1 opacity-0",
+                )}
               >
-                <span className="text-sm font-medium leading-none">
+                <span className="truncate text-sm font-medium leading-none">
                   {tab.label}
                 </span>
-                {hasBadge ? (
+                {showBadge ? (
                   <span
                     className={cn(
                       "inline-flex shrink-0 items-center justify-center rounded-full bg-muted px-1.5 py-0.5",

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router";
 import type { Editor } from "@tiptap/core";
 import { connect } from "~/lib/yjs-client";
@@ -8,7 +8,31 @@ import { renderMarkdown } from "~/lib/preview/render";
 import { getOrCreateIdentity } from "~/lib/user/identity";
 import { ThemeToggle } from "~/lib/theme/ThemeToggle";
 import { useHighlightTheme } from "~/lib/preview/theme";
+import { Toolbar } from "~/components/editor/Toolbar";
+import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
+import { CommentComposer } from "~/components/editor/CommentComposer";
+import { CommentChip } from "~/components/comments/CommentChip";
+import { CommentSidebar } from "~/components/comments/CommentSidebar";
+import {
+  registerSelectionAction,
+  unregisterSelectionAction,
+} from "~/lib/editor/selection-actions";
+import {
+  createThread,
+  addReply,
+  setResolved,
+  deleteThreadRoot,
+  deleteReply,
+} from "~/lib/comments/threads";
+import { useThreads } from "~/hooks/useThreads";
+import type { Thread } from "~/lib/comments/types";
 import type { PermissionLevel } from "@shared/types";
+
+interface ComposerState {
+  from: number;
+  to: number;
+  selectedText: string;
+}
 
 export default function DocumentRoute() {
   const { docId } = useParams();
@@ -24,11 +48,19 @@ export default function DocumentRoute() {
   );
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [markdown, setMarkdown] = useState("");
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [composer, setComposer] = useState<ComposerState | null>(null);
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<Editor | null>(null);
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
+  const identityRef = useRef(getOrCreateIdentity());
 
+  const threads = useThreads(editor, connectionRef.current?.ydoc ?? null);
+  const unresolvedCount = threads.filter((t) => !t.resolved).length;
+  const readOnly = permissionLevel === "view";
+
+  // Load permission
   useEffect(() => {
     if (!docId || !key) {
       setLoadError("Missing doc id or key");
@@ -53,6 +85,7 @@ export default function DocumentRoute() {
     return () => clearTimeout(t);
   }, [loadError, navigate]);
 
+  // Open editor once permission is known
   useEffect(() => {
     if (!permissionLevel || !docId || !key) return;
     const host = editorHostRef.current;
@@ -61,28 +94,23 @@ export default function DocumentRoute() {
     const conn = connect(docId, key);
     connectionRef.current = conn;
 
-    const identity = getOrCreateIdentity();
-    const editor = createEditor({
+    const identity = identityRef.current;
+    const tipTapEditor = createEditor({
       element: host,
       ydoc: conn.ydoc,
       provider: conn.provider,
       identity,
       editable: permissionLevel === "edit",
     });
-    editorRef.current = editor;
+    setEditor(tipTapEditor);
 
     const syncMarkdown = () => {
-      // Use raw text content — the doc is paragraphs of Markdown source, so
-      // we want the exact source characters (including #, **, etc.) to feed
-      // markdown-it. tiptap-markdown's getMarkdown() escapes those characters
-      // when they appear in plain text nodes (since we disabled Heading/Bold
-      // extensions), which prevents markdown-it from parsing them.
-      const md = editor.getText({ blockSeparator: "\n\n" });
+      const md = tipTapEditor.getText({ blockSeparator: "\n\n" });
       setMarkdown(md);
     };
     syncMarkdown();
-    editor.on("update", syncMarkdown);
-    editor.on("transaction", syncMarkdown);
+    tipTapEditor.on("update", syncMarkdown);
+    tipTapEditor.on("transaction", syncMarkdown);
 
     const handleStatus = ({ status }: { status: "connecting" | "connected" | "disconnected" }) => {
       setStatus(status);
@@ -91,14 +119,97 @@ export default function DocumentRoute() {
 
     return () => {
       conn.provider.off("status", handleStatus);
-      editor.off("update", syncMarkdown);
-      editor.off("transaction", syncMarkdown);
-      editor.destroy();
+      tipTapEditor.off("update", syncMarkdown);
+      tipTapEditor.off("transaction", syncMarkdown);
+      tipTapEditor.destroy();
       conn.destroy();
-      editorRef.current = null;
+      setEditor(null);
       connectionRef.current = null;
     };
   }, [permissionLevel, docId, key]);
+
+  // Register the Comment selection action
+  useEffect(() => {
+    if (!editor || readOnly) return;
+    registerSelectionAction({
+      id: "comment",
+      label: "Comment",
+      onInvoke: ({ from, to, selectedText }) => {
+        setComposer({ from, to, selectedText });
+      },
+    });
+    return () => unregisterSelectionAction("comment");
+  }, [editor, readOnly]);
+
+  // Post a new comment
+  const handlePostComment = useCallback(
+    (body: string) => {
+      if (!editor || !connectionRef.current || !composer) return;
+      const ydoc = connectionRef.current.ydoc;
+      const threadId = createThread(ydoc, {
+        authorName: identityRef.current.name,
+        authorColor: identityRef.current.color,
+        body,
+        createdAt: Date.now(),
+      });
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from: composer.from, to: composer.to })
+        .setCommentAnchor(threadId)
+        .run();
+      setComposer(null);
+      setSidebarOpen(true);
+    },
+    [editor, composer],
+  );
+
+  const handleScrollToAnchor = useCallback(
+    (threadId: string) => {
+      if (!editor) return;
+      let foundFrom: number | null = null;
+      editor.state.doc.descendants((node, pos) => {
+        node.marks.forEach((mark) => {
+          if (mark.type.name === "commentAnchor" && mark.attrs.threadId === threadId) {
+            if (foundFrom === null) foundFrom = pos;
+          }
+        });
+      });
+      if (foundFrom === null) return;
+      editor.commands.setTextSelection({ from: foundFrom, to: foundFrom });
+      const el = editor.view.domAtPos(foundFrom).node as HTMLElement | null;
+      if (el && "scrollIntoView" in el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const spans = editor.view.dom.querySelectorAll<HTMLElement>(
+        `[data-comment-thread-id="${threadId}"]`,
+      );
+      spans.forEach((s) => {
+        s.classList.add("comment-anchor-flash");
+        setTimeout(() => s.classList.remove("comment-anchor-flash"), 900);
+      });
+    },
+    [editor],
+  );
+
+  const resolveAnchor = useCallback(
+    (thread: Thread): string => {
+      if (!editor) return "";
+      let found = "";
+      editor.state.doc.descendants((node) => {
+        node.marks.forEach((mark) => {
+          if (mark.type.name === "commentAnchor" && mark.attrs.threadId === thread.id) {
+            if (!found) {
+              const text = node.text ?? "";
+              found = text.slice(0, 80);
+            }
+          }
+        });
+      });
+      return found;
+    },
+    [editor],
+  );
 
   if (loadError) {
     return (
@@ -118,11 +229,9 @@ export default function DocumentRoute() {
     );
   }
 
-  const readOnly = permissionLevel === "view";
-
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-4 flex items-center justify-between">
+    <main className="mx-auto flex h-screen max-w-[1400px] flex-col px-4 py-4">
+      <header className="mb-3 flex items-center justify-between">
         <h1 className="m-0 text-lg font-semibold">Document</h1>
         <div className="flex items-center gap-3">
           <span aria-live="polite" className="text-xs text-muted-foreground">
@@ -132,7 +241,11 @@ export default function DocumentRoute() {
             <button
               role="tab"
               aria-selected={mode === "edit"}
-              className={`px-3 py-1 text-sm transition-colors ${mode === "edit" ? "bg-foreground text-background font-medium" : "hover:bg-muted"}`}
+              className={`px-3 py-1 text-sm transition-colors ${
+                mode === "edit"
+                  ? "bg-foreground text-background font-medium"
+                  : "hover:bg-muted"
+              }`}
               onClick={() => setMode("edit")}
             >
               Edit
@@ -140,28 +253,96 @@ export default function DocumentRoute() {
             <button
               role="tab"
               aria-selected={mode === "preview"}
-              className={`px-3 py-1 text-sm transition-colors ${mode === "preview" ? "bg-foreground text-background font-medium" : "hover:bg-muted"}`}
+              className={`px-3 py-1 text-sm transition-colors ${
+                mode === "preview"
+                  ? "bg-foreground text-background font-medium"
+                  : "hover:bg-muted"
+              }`}
               onClick={() => setMode("preview")}
             >
               Preview
             </button>
           </div>
+          <CommentChip
+            count={unresolvedCount}
+            active={sidebarOpen}
+            onClick={() => setSidebarOpen((v) => !v)}
+          />
           <ThemeToggle />
         </div>
       </header>
 
-      <div
-        ref={editorHostRef}
-        className={`prose max-w-none rounded border-2 border-border bg-muted/30 p-4 font-mono text-sm ${
-          mode === "edit" ? "" : "hidden"
-        }`}
-      />
+      {mode === "edit" && <Toolbar editor={editor} disabled={readOnly} />}
 
-      {mode === "preview" && (
+      <div className="flex flex-1 gap-0 overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-auto">
+          <div
+            ref={editorHostRef}
+            className={`prose max-w-none border-2 ${mode === "edit" ? "rounded-b" : "rounded"} border-border bg-muted/30 p-4 font-mono text-sm ${
+              mode === "edit" ? "" : "hidden"
+            }`}
+          />
+          {mode === "preview" && (
+            <div
+              className="prose max-w-none rounded border border-border bg-background p-6 dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
+            />
+          )}
+        </div>
+
+        {sidebarOpen && (
+          <CommentSidebar
+            threads={threads}
+            currentAuthorName={identityRef.current.name}
+            readOnly={readOnly}
+            onClose={() => setSidebarOpen(false)}
+            resolveAnchor={resolveAnchor}
+            onReply={(threadId, body) => {
+              const ydoc = connectionRef.current?.ydoc;
+              if (!ydoc) return;
+              addReply(ydoc, threadId, {
+                authorName: identityRef.current.name,
+                authorColor: identityRef.current.color,
+                body,
+                createdAt: Date.now(),
+              });
+            }}
+            onResolveToggle={(threadId, next) => {
+              const ydoc = connectionRef.current?.ydoc;
+              if (!ydoc) return;
+              setResolved(ydoc, threadId, next);
+            }}
+            onDeleteThreadRoot={(threadId) => {
+              const ydoc = connectionRef.current?.ydoc;
+              if (!ydoc) return;
+              deleteThreadRoot(ydoc, threadId);
+            }}
+            onDeleteReply={(threadId, replyId) => {
+              const ydoc = connectionRef.current?.ydoc;
+              if (!ydoc) return;
+              deleteReply(ydoc, threadId, replyId);
+            }}
+            onClickAnchor={handleScrollToAnchor}
+          />
+        )}
+      </div>
+
+      <FloatingCommentButton editor={editor} disabled={readOnly} />
+
+      {composer && (
         <div
-          className="prose max-w-none rounded border border-border bg-background p-6 dark:prose-invert"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
-        />
+          className="fixed z-50 w-80 rounded border border-border bg-background p-3 shadow-lg"
+          style={{ top: 120, right: 40 }}
+          data-testid="inline-comment-composer"
+        >
+          <p className="mb-2 text-xs text-muted-foreground">
+            Commenting on: <span className="italic">"{composer.selectedText.slice(0, 60)}"</span>
+          </p>
+          <CommentComposer
+            onSubmit={handlePostComment}
+            onCancel={() => setComposer(null)}
+          />
+        </div>
       )}
     </main>
   );

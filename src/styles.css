@@ -184,3 +184,18 @@ html.dark {
   user-select: none;
   white-space: nowrap;
 }
+
+.comment-anchor {
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.comment-anchor-flash {
+  animation: comment-anchor-flash 900ms ease-out;
+}
+
+@keyframes comment-anchor-flash {
+  0%   { background: color-mix(in oklch, var(--primary) 45%, transparent); }
+  100% { background: color-mix(in oklch, var(--primary) 18%, transparent); }
+}

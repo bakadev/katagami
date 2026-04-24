@@ -4,6 +4,7 @@ import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { CommentAnchor } from "./comment-mark";
 import { mdDecorationsPlugin } from "./md-decorations";
 import type * as Y from "yjs";
 import type { WebsocketProvider } from "y-websocket";
@@ -74,6 +75,7 @@ export function createEditor({
       Placeholder.configure({
         placeholder: editable ? "Start typing Markdown…" : "(empty document)",
       }),
+      CommentAnchor,
       MdSyntaxDecorations,
     ],
   });

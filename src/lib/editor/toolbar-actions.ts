@@ -16,7 +16,10 @@ export function wrapSelection(editor: Editor, left: string, right: string): void
   const after = state.doc.textBetween(to, Math.min(state.doc.content.size, to + right.length), "\n");
 
   if (before === left && after === right) {
-    // Unwrap: delete delimiters on both sides.
+    // Unwrap: delete the right delimiter first, then the left.
+    // Right is deleted first so its positions are still valid; the left-side
+    // range (from-left.length..from) is entirely before `to`, so deleting
+    // the right delimiter doesn't shift it.
     editor
       .chain()
       .focus()
@@ -41,7 +44,8 @@ function linesInSelection(editor: Editor): Array<{ from: number; to: number; tex
   const { from: selFrom, to: selTo } = state.selection;
   const lines: Array<{ from: number; to: number; text: string }> = [];
   state.doc.descendants((node, pos) => {
-    if (!node.isBlock || node.type.name !== "paragraph") return;
+    // Any inline-content block (paragraph today; heading/blockquote if re-enabled).
+    if (!node.isTextblock) return;
     const nodeStart = pos + 1; // inside paragraph
     const nodeEnd = pos + node.nodeSize - 1;
     // Does this paragraph intersect the selection?

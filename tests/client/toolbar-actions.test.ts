@@ -63,6 +63,13 @@ function makeEditor(content: string): Editor {
       })),
     },
   });
+  // Clean up the DOM host when the editor is destroyed so it doesn't
+  // accumulate across tests in the shared jsdom environment.
+  const origDestroy = editor.destroy.bind(editor);
+  editor.destroy = () => {
+    origDestroy();
+    host.remove();
+  };
   return editor;
 }
 

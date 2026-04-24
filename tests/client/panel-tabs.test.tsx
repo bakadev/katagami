@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { PanelTabs } from "~/components/panel/PanelTabs";
 
 // Radix's Tooltip (used on inactive tabs) measures nodes with ResizeObserver,
@@ -22,18 +22,27 @@ const baseTabs = [
 
 describe("PanelTabs", () => {
   it("renders the active tab's label visibly", () => {
+    // The component also renders an aria-hidden ghost row used to measure
+    // each tab's natural width, so any text-based query must be scoped to
+    // the visible tablist.
     render(<PanelTabs tabs={baseTabs} active="comments" onChange={() => {}} />);
-    expect(screen.getByText("Comments")).toBeTruthy();
+    const list = screen.getByRole("tablist");
+    expect(within(list).getByText("Comments")).toBeTruthy();
   });
 
   it("shows a count badge on the active tab when provided", () => {
     render(<PanelTabs tabs={baseTabs} active="comments" onChange={() => {}} />);
-    expect(screen.getByText("3")).toBeTruthy();
+    const list = screen.getByRole("tablist");
+    expect(within(list).getByText("3")).toBeTruthy();
   });
 
-  it("does NOT render a badge when the active tab's badge is null", () => {
+  it("does NOT render a badge in the visible tablist when active.badge is null", () => {
     render(<PanelTabs tabs={baseTabs} active="documents" onChange={() => {}} />);
-    expect(screen.queryByText("3")).toBeNull();
+    const list = screen.getByRole("tablist");
+    // Documents is active and has badge=null. The visible tablist only shows
+    // a badge inside the *active* tab, so no "3" should be visible there
+    // (Comments' "3" lives only in the off-screen measurement ghost).
+    expect(within(list).queryByText("3")).toBeNull();
   });
 
   it("fires onChange with the clicked tab id", () => {

@@ -1,4 +1,11 @@
-import { useCallback, useId, useRef, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   FileText,
   History as HistoryIcon,
@@ -122,15 +129,69 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
     [tabs, focusTabAt, onChange],
   );
 
-  // Each tab is one grid column. The active tab sizes to its content
-  // (`auto`); inactive tabs are fixed 40px wells. A trailing `1fr` track
-  // soaks up the remaining row width so the rail keeps its w-full shell
-  // and only the active tab occupies the space its content needs.
+  // ---- Measure each tab's natural "active" width ----
+  // CSS can't smoothly interpolate between `40px` and `auto`. Solution: render
+  // each tab once in its expanded form via a hidden ghost row, capture the
+  // resolved pixel width with useLayoutEffect, and feed those pixel values
+  // straight into `grid-template-columns`. The grid transition then runs
+  // between two pixel lengths in every direction, which animates cleanly.
+  const ghostRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const measureKey = tabs
+    .map((t) => `${t.id}:${t.label}:${t.badge ?? ""}:${t.hasNotification ? 1 : 0}`)
+    .join("|");
+  const [measuredWidths, setMeasuredWidths] = useState<Record<string, number>>({});
+  useLayoutEffect(() => {
+    const next: Record<string, number> = {};
+    tabs.forEach((tab, i) => {
+      const node = ghostRefs.current[i];
+      if (node) {
+        // Add 1px for sub-pixel rounding so the active button never clips its
+        // own content during the transition.
+        next[tab.id] = Math.ceil(node.getBoundingClientRect().width) + 1;
+      }
+    });
+    setMeasuredWidths(next);
+  }, [measureKey]);
+
   const gridTemplate =
-    tabs.map((t) => (t.id === active ? "auto" : "40px")).join(" ") + " 1fr";
+    tabs
+      .map((t) =>
+        t.id === active ? `${measuredWidths[t.id] ?? 40}px` : "40px",
+      )
+      .join(" ") + " 1fr";
 
   return (
     <TooltipProvider delayDuration={300}>
+      {/* Hidden measurement row — same DOM shape as the visible tabs but with
+          natural sizing. Position absolutely so it doesn't push layout, and
+          aria-hidden + tabIndex=-1 so it's invisible to assistive tech. */}
+      <div
+        aria-hidden
+        className="pointer-events-none invisible absolute -left-[9999px] top-0 flex items-center gap-1.5"
+      >
+        {tabs.map((tab, i) => {
+          const Icon = ICON_MAP[tab.icon];
+          const hasBadge = tab.badge != null && tab.badge > 0;
+          return (
+            <span
+              key={tab.id}
+              ref={(node) => {
+                ghostRefs.current[i] = node;
+              }}
+              className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap px-2"
+            >
+              <Icon className="size-[14px]" strokeWidth={2} />
+              <span className="text-sm font-medium leading-none">{tab.label}</span>
+              {hasBadge ? (
+                <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground tabular-nums">
+                  {tab.badge}
+                </span>
+              ) : null}
+            </span>
+          );
+        })}
+      </div>
+
       <div
         role="tablist"
         aria-orientation="horizontal"
@@ -148,9 +209,6 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
           const isActive = tab.id === active;
           const showBadge = isActive && tab.badge != null && tab.badge > 0;
           const ariaLabel = buildAriaLabel(tab);
-
-          // The grid column owns the width — the button just fills it.
-          const layoutClasses = "min-w-0";
 
           const buttonNode = (
             <button
@@ -170,19 +228,17 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
               }}
               onKeyDown={(e) => handleKeyDown(e, index)}
               className={cn(
-                // Base layout — h-8 gives enough room for label + 14px icon
-                // without fighting the parent rail.
-                "relative inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-[5px] px-2",
+                // The grid track sets the available width; the button fills
+                // it and clips its own overflowing content while the
+                // grid-template-columns transition runs.
+                "relative flex h-8 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-[5px] px-2",
                 "cursor-pointer select-none outline-none",
-                // The grid track owns the width animation. We still transition
-                // color/shadow on the button itself so the handoff between
-                // states reads as a single coordinated gesture.
+                // Color/shadow transitions ride along with the grid-track
+                // width transition so the handoff reads as one gesture.
                 "transition-[background-color,color,box-shadow] duration-200 ease-in-out",
-                layoutClasses,
                 isActive
-                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                // Focus ring sits inside the rail so it never clips.
+                  ? "justify-start bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                  : "justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 "focus-visible:ring-2 focus-visible:ring-ring/60",
               )}
             >

@@ -247,7 +247,6 @@ describe("PATCH /api/docs/:id/snapshots/:snapId", () => {
   let app: FastifyInstance;
   let documentId: string;
   let editToken: string;
-  let _viewToken: string;
 
   beforeAll(async () => {
     app = await makeTestApp();
@@ -263,7 +262,6 @@ describe("PATCH /api/docs/:id/snapshots/:snapId", () => {
     const body = res.json();
     documentId = body.document.id;
     editToken = body.permissions.editToken;
-    _viewToken = body.permissions.viewToken;
   });
 
   it("promotes an auto-snapshot to named", async () => {

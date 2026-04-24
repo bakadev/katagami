@@ -183,7 +183,11 @@ export async function snapshotRoutes(app: FastifyInstance) {
         return reply.code(404).send(err);
       }
 
-      // Capture current state for pre-restore auto-snapshot
+      // Capture current state for the pre-restore auto-snapshot. We hold it
+      // in memory and only persist after the apply succeeds, so a failed
+      // apply doesn't leave an orphan auto-snapshot row behind. The narrow
+      // window where another client edits between capture and apply is
+      // acceptable — restores are rare, intentional operations.
       const liveDoc = getLiveYDoc(id);
       let currentState: Uint8Array;
       if (liveDoc) {
@@ -194,17 +198,7 @@ export async function snapshotRoutes(app: FastifyInstance) {
         currentState = new Uint8Array(0);
       }
 
-      // Create pre-restore auto-snapshot (name: null)
-      const preRestoreSnap = await db.snapshot.create({
-        data: {
-          documentId: id,
-          name: null,
-          yjsState: Buffer.from(currentState),
-          takenByName: null,
-        },
-      });
-
-      // Apply the target snapshot's state
+      // Apply the target snapshot's state first.
       const targetState = new Uint8Array(snap.yjsState);
       if (liveDoc) {
         applySnapshotToLiveDoc(liveDoc, targetState);
@@ -214,6 +208,17 @@ export async function snapshotRoutes(app: FastifyInstance) {
           data: { yjsState: snap.yjsState },
         });
       }
+
+      // Only after apply succeeds, persist the pre-restore snapshot so Undo
+      // can rewind to it.
+      const preRestoreSnap = await db.snapshot.create({
+        data: {
+          documentId: id,
+          name: null,
+          yjsState: Buffer.from(currentState),
+          takenByName: null,
+        },
+      });
 
       return reply.send({
         restoredSnapshotId: snapId,

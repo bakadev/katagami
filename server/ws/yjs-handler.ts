@@ -46,6 +46,13 @@ export function applySnapshotToLiveDoc(ydoc: Y.Doc, snapshotState: Uint8Array): 
         const child = srcFrag.get(i);
         if (child instanceof Y.XmlElement || child instanceof Y.XmlText) {
           frag.insert(frag.length, [child.clone() as Y.XmlElement | Y.XmlText]);
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "[applySnapshotToLiveDoc] skipping unsupported child type at index",
+            i,
+            (child as { constructor?: { name?: string } } | undefined)?.constructor?.name,
+          );
         }
       }
     });

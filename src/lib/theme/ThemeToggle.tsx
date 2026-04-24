@@ -3,8 +3,8 @@ import { Button } from "~/components/ui/button";
 import { useTheme } from "./useTheme";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const next = theme === "light" ? "dark" : "light";
+  const { resolvedTheme, setTheme } = useTheme();
+  const next = resolvedTheme === "light" ? "dark" : "light";
   const label = `Switch to ${next} theme`;
 
   return (
@@ -15,7 +15,7 @@ export function ThemeToggle() {
       title={label}
       onClick={() => setTheme(next)}
     >
-      {theme === "light" ? (
+      {resolvedTheme === "light" ? (
         <Moon className="h-4 w-4" />
       ) : (
         <Sun className="h-4 w-4" />

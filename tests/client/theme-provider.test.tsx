@@ -5,11 +5,12 @@ import { ThemeProvider } from "../../src/lib/theme/ThemeProvider";
 import { useTheme } from "../../src/lib/theme/useTheme";
 
 function Harness() {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   return (
     <>
       <span data-testid="theme">{theme}</span>
-      <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+      <span data-testid="resolved">{resolvedTheme}</span>
+      <button onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}>
         toggle
       </button>
     </>
@@ -42,7 +43,7 @@ describe("ThemeProvider", () => {
     vi.restoreAllMocks();
   });
 
-  it("defaults to 'light' when no preference exists and system is light", () => {
+  it("system mode resolves to light when system prefers light", () => {
     vi.spyOn(window, "matchMedia").mockImplementation(
       () =>
         ({
@@ -57,11 +58,12 @@ describe("ThemeProvider", () => {
         <Harness />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("theme").textContent).toBe("light");
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
     expect(document.documentElement.classList.contains("dark")).toBe(false);
   });
 
-  it("defaults to 'dark' when system prefers dark", () => {
+  it("system mode resolves to dark when system prefers dark", () => {
     vi.spyOn(window, "matchMedia").mockImplementation(
       () =>
         ({
@@ -76,7 +78,8 @@ describe("ThemeProvider", () => {
         <Harness />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId("theme").textContent).toBe("dark");
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved").textContent).toBe("dark");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
@@ -99,6 +102,7 @@ describe("ThemeProvider", () => {
       screen.getByRole("button").click();
     });
     expect(screen.getByTestId("theme").textContent).toBe("dark");
+    expect(screen.getByTestId("resolved").textContent).toBe("dark");
     expect(localStorage.getItem("katagami:theme")).toBe("dark");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
@@ -129,5 +133,91 @@ describe("ThemeProvider", () => {
       "useTheme must be used inside a ThemeProvider",
     );
     errorSpy.mockRestore();
+  });
+
+  it("exposes 'system' as the default theme on first visit", () => {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      () =>
+        ({
+          matches: false,
+          media: "(prefers-color-scheme: dark)",
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        }) as unknown as MediaQueryList,
+    );
+    function Reader() {
+      const { theme, resolvedTheme } = useTheme();
+      return (
+        <>
+          <span data-testid="theme">{theme}</span>
+          <span data-testid="resolved">{resolvedTheme}</span>
+        </>
+      );
+    }
+    render(<ThemeProvider><Reader /></ThemeProvider>);
+    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
+  });
+
+  it("live-updates resolvedTheme when system preference changes while in 'system' mode", () => {
+    const listeners = new Set<(ev: MediaQueryListEvent) => void>();
+    let currentMatches = false;
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      () =>
+        ({
+          get matches() { return currentMatches; },
+          media: "(prefers-color-scheme: dark)",
+          addEventListener: (_: string, cb: (ev: MediaQueryListEvent) => void) => listeners.add(cb),
+          removeEventListener: (_: string, cb: (ev: MediaQueryListEvent) => void) => listeners.delete(cb),
+        }) as unknown as MediaQueryList,
+    );
+    function Reader() {
+      const { resolvedTheme } = useTheme();
+      return <span data-testid="resolved">{resolvedTheme}</span>;
+    }
+    render(<ThemeProvider><Reader /></ThemeProvider>);
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
+
+    act(() => {
+      currentMatches = true;
+      for (const cb of listeners) cb({ matches: true } as MediaQueryListEvent);
+    });
+    expect(screen.getByTestId("resolved").textContent).toBe("dark");
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+
+  it("pinned theme does NOT track system preference changes", () => {
+    localStorage.setItem("katagami:theme", "light");
+    const listeners = new Set<(ev: MediaQueryListEvent) => void>();
+    let currentMatches = false;
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      () =>
+        ({
+          get matches() { return currentMatches; },
+          media: "(prefers-color-scheme: dark)",
+          addEventListener: (_: string, cb: (ev: MediaQueryListEvent) => void) => listeners.add(cb),
+          removeEventListener: (_: string, cb: (ev: MediaQueryListEvent) => void) => listeners.delete(cb),
+        }) as unknown as MediaQueryList,
+    );
+    function Reader() {
+      const { theme, resolvedTheme } = useTheme();
+      return (
+        <>
+          <span data-testid="theme">{theme}</span>
+          <span data-testid="resolved">{resolvedTheme}</span>
+        </>
+      );
+    }
+    render(<ThemeProvider><Reader /></ThemeProvider>);
+    expect(screen.getByTestId("theme").textContent).toBe("light");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
+
+    act(() => {
+      currentMatches = true;
+      for (const cb of listeners) cb({ matches: true } as MediaQueryListEvent);
+    });
+    // Theme stays pinned to light; no re-render for system changes
+    expect(screen.getByTestId("theme").textContent).toBe("light");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
   });
 });

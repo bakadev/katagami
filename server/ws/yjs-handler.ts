@@ -30,6 +30,30 @@ export function getLiveYDoc(docId: string): Y.Doc | null {
   return liveDocs.get(docId) ?? null;
 }
 
+export function applySnapshotToLiveDoc(ydoc: Y.Doc, snapshotState: Uint8Array): void {
+  // Replace the tiptap fragment's children with the snapshot's content.
+  // We can't "rewind" CRDT history cleanly, so we clone the snapshot's XML
+  // elements into the live fragment inside a single transaction. Connected
+  // clients observe this as a regular update event.
+  const frag = ydoc.getXmlFragment("tiptap");
+  const temp = new Y.Doc();
+  try {
+    Y.applyUpdate(temp, snapshotState);
+    const srcFrag = temp.getXmlFragment("tiptap");
+    ydoc.transact(() => {
+      frag.delete(0, frag.length);
+      for (let i = 0; i < srcFrag.length; i++) {
+        const child = srcFrag.get(i);
+        if (child instanceof Y.XmlElement || child instanceof Y.XmlText) {
+          frag.insert(frag.length, [child.clone() as Y.XmlElement | Y.XmlText]);
+        }
+      }
+    });
+  } finally {
+    temp.destroy();
+  }
+}
+
 function createRoom(docId: string): Promise<Room> {
   return (async () => {
     const ydoc = new Y.Doc();

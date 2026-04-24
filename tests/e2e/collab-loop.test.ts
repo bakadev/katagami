@@ -79,10 +79,27 @@ describe("full collab loop", () => {
     );
     expect(viewer.ydoc.getText("content").toString()).toBe("editor-only update");
 
+    // Viewer attempts to write; server should drop the update.
     viewer.ydoc.getText("content").insert(0, "viewer tried ");
-    // Give the server a moment to respond (or not). The editor should never see the write.
-    await new Promise((r) => setTimeout(r, 300));
-    expect(editor.ydoc.getText("content").toString()).toBe("editor-only update");
+
+    // Editor makes a follow-up edit. Once the viewer sees the follow-up,
+    // any updates from the viewer that the server was going to accept would
+    // already be on the editor. Because the server drops view-only writes,
+    // the editor should only have the two editor-originated texts.
+    const followUp = " (editor follow-up)";
+    editor.ydoc.getText("content").insert(
+      editor.ydoc.getText("content").length,
+      followUp,
+    );
+    const expectedFinal = "editor-only update" + followUp;
+    await waitFor(
+      () => viewer.ydoc.getText("content").toString().includes(followUp),
+    );
+
+    // Viewer's own local doc will show its uncommitted "viewer tried " prefix
+    // plus whatever the server has sent it — we only care that the editor
+    // never saw the viewer's write.
+    expect(editor.ydoc.getText("content").toString()).toBe(expectedFinal);
 
     editor.ws.close();
     viewer.ws.close();

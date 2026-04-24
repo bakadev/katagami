@@ -59,6 +59,48 @@ describe("admin routes", () => {
       });
       expect(res.statusCode).toBe(403);
     });
+
+    it("does not nullify name when the body is empty", async () => {
+      // First set a name.
+      await app.inject({
+        method: "PATCH",
+        url: `/api/projects/${projectId}`,
+        headers: { "x-creator-token": creatorToken },
+        payload: { name: "Original" },
+      });
+
+      // Then PATCH with an empty body.
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/projects/${projectId}`,
+        headers: { "x-creator-token": creatorToken },
+        payload: {},
+      });
+      expect(res.statusCode).toBe(200);
+
+      const project = await db.project.findUnique({ where: { id: projectId } });
+      expect(project!.name).toBe("Original");
+    });
+
+    it("explicitly clears name when body has name: null", async () => {
+      await app.inject({
+        method: "PATCH",
+        url: `/api/projects/${projectId}`,
+        headers: { "x-creator-token": creatorToken },
+        payload: { name: "temp" },
+      });
+
+      const res = await app.inject({
+        method: "PATCH",
+        url: `/api/projects/${projectId}`,
+        headers: { "x-creator-token": creatorToken },
+        payload: { name: null },
+      });
+      expect(res.statusCode).toBe(200);
+
+      const project = await db.project.findUnique({ where: { id: projectId } });
+      expect(project!.name).toBeNull();
+    });
   });
 
   describe("DELETE /api/docs/:id", () => {

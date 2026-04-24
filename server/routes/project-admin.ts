@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { Prisma } from "@prisma/client";
 import { db } from "../db.js";
 import {
   validateCreatorTokenForProject,
@@ -7,7 +8,7 @@ import {
 import type { ApiError } from "../../shared/types.js";
 
 export async function projectAdminRoutes(app: FastifyInstance) {
-  app.patch<{ Params: { id: string }; Body: { name?: string } }>(
+  app.patch<{ Params: { id: string }; Body: { name?: string | null } }>(
     "/api/projects/:id",
     async (req, reply) => {
       const { id } = req.params;
@@ -20,11 +21,13 @@ export async function projectAdminRoutes(app: FastifyInstance) {
         return reply.code(403).send(err);
       }
 
-      const { name } = req.body ?? {};
-      const project = await db.project.update({
-        where: { id },
-        data: { name: name ?? null },
-      });
+      const body = req.body ?? {};
+      const update: Prisma.ProjectUpdateInput = {};
+      if ("name" in body) {
+        // Explicitly provided — accept string or null (to clear).
+        update.name = body.name ?? null;
+      }
+      const project = await db.project.update({ where: { id }, data: update });
       return reply.send({ project: { id: project.id, name: project.name } });
     },
   );

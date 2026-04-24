@@ -10,6 +10,7 @@ import type {
   DocumentMetadataResponse,
   ApiError,
   PermissionTokens,
+  UpdateDocumentRequest,
 } from "../../shared/types.js";
 
 export async function documentRoutes(app: FastifyInstance) {
@@ -47,6 +48,54 @@ export async function documentRoutes(app: FastifyInstance) {
       return reply.send(body);
     },
   );
+
+  app.patch<{
+    Params: { id: string };
+    Querystring: { key?: string };
+    Body: UpdateDocumentRequest;
+  }>("/api/docs/:id", async (req, reply) => {
+    const { id } = req.params;
+    const { key } = req.query;
+
+    const doc = await db.document.findUnique({ where: { id } });
+    if (!doc) {
+      const err: ApiError = { error: "not_found", message: "Document not found" };
+      return reply.code(404).send(err);
+    }
+
+    const level = await validatePermissionToken(id, key);
+    if (!level) {
+      const err: ApiError = { error: "forbidden", message: "Invalid or missing permission token" };
+      return reply.code(403).send(err);
+    }
+    if (level !== "edit") {
+      const err: ApiError = { error: "forbidden", message: "View-only token cannot edit" };
+      return reply.code(403).send(err);
+    }
+
+    const body = req.body ?? {};
+    if (body.title !== null && body.title !== undefined) {
+      if (typeof body.title !== "string") {
+        const err: ApiError = { error: "bad_request", message: "title must be a string or null" };
+        return reply.code(400).send(err);
+      }
+      if (body.title.length > 120) {
+        const err: ApiError = { error: "bad_request", message: "title too long" };
+        return reply.code(400).send(err);
+      }
+    }
+
+    const updated = await db.document.update({
+      where: { id },
+      data: { title: body.title === undefined ? doc.title : body.title },
+    });
+
+    return reply.send({
+      id: updated.id,
+      title: updated.title,
+      updatedAt: updated.updatedAt.toISOString(),
+    });
+  });
 
   app.delete<{ Params: { id: string } }>("/api/docs/:id", async (req, reply) => {
     const { id } = req.params;

@@ -191,7 +191,8 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                     aria-hidden
                     className={cn(
                       "absolute -top-0.5 -right-1 size-1.5 rounded-full bg-red-500",
-                      "ring-2 ring-muted/40",
+                      // Ring against the panel surface so the pip reads cleanly in both themes.
+                      "ring-2 ring-background",
                     )}
                   />
                 ) : null}

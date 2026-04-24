@@ -1,4 +1,6 @@
-import type { SnapshotRecord } from "../../../shared/types";
+import type { ListSnapshotsResponse, SnapshotRecord } from "../../../shared/types";
+
+const ERROR_BODY_MAX = 200;
 
 async function jsonFetch<T>(url: string, init: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -9,14 +11,14 @@ async function jsonFetch<T>(url: string, init: RequestInit): Promise<T> {
     },
   });
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
+    const body = (await res.text().catch(() => "")).slice(0, ERROR_BODY_MAX);
     throw new Error(`${init.method ?? "GET"} ${url} → ${res.status}: ${body}`);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
-export function listSnapshots(docId: string, key: string): Promise<{ snapshots: SnapshotRecord[] }> {
+export function listSnapshots(docId: string, key: string): Promise<ListSnapshotsResponse> {
   return jsonFetch(
     `/api/docs/${encodeURIComponent(docId)}/snapshots?key=${encodeURIComponent(key)}`,
     { method: "GET" },

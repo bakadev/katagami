@@ -18,7 +18,7 @@ export async function updateDocumentTitle(
     },
   );
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
+    const body = (await res.text().catch(() => "")).slice(0, 200);
     throw new Error(`updateDocumentTitle failed: ${res.status}: ${body}`);
   }
   return (await res.json()) as UpdateTitleResponse;

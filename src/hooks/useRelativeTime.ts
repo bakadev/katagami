@@ -17,9 +17,10 @@ export function formatRelative(iso: string, now: number = Date.now()): string {
 export function useRelativeTime(iso: string | null | undefined): string {
   const [, tick] = useState(0);
   useEffect(() => {
+    if (!iso) return;
     const id = setInterval(() => tick((n) => n + 1), 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [iso]);
   if (!iso) return "";
   return formatRelative(iso);
 }

@@ -1,4 +1,4 @@
-import { Editor } from "@tiptap/core";
+import { Editor, Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
@@ -13,11 +13,19 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { Markdown } from "tiptap-markdown";
 import { createLowlight, common } from "lowlight";
+import { mdDecorationsPlugin } from "./md-decorations";
 import type * as Y from "yjs";
 import type { WebsocketProvider } from "y-websocket";
 import type { Identity } from "~/lib/user/identity";
 
 const lowlight = createLowlight(common);
+
+const MdSyntaxDecorations = Extension.create({
+  name: "mdSyntaxDecorations",
+  addProseMirrorPlugins() {
+    return [mdDecorationsPlugin()];
+  },
+});
 
 export interface CreateEditorArgs {
   element: HTMLElement;
@@ -78,6 +86,7 @@ export function createEditor({
         transformPastedText: true,
         transformCopiedText: true,
       }),
+      MdSyntaxDecorations,
     ],
   });
 }

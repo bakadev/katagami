@@ -145,9 +145,6 @@ export function CommentsTab({
   }
 
   // --- List view ------------------------------------------------------
-  const countLabel =
-    total === 1 ? "1 comment" : `${total} comments`;
-
   return (
     <div
       role="region"
@@ -166,6 +163,9 @@ export function CommentsTab({
        * currently exist.
        */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-3 py-2.5 backdrop-blur">
+        {/* aria-atomic makes the whole region speak as one unit on change,
+            so the visible "3 comments" gets announced naturally — no
+            separate sr-only longform needed. */}
         <div
           aria-live="polite"
           aria-atomic="true"
@@ -177,9 +177,6 @@ export function CommentsTab({
           <span className="text-muted-foreground">
             {total === 1 ? "comment" : "comments"}
           </span>
-          {/* Screen-reader-only longform so the live region announces
-              "3 comments" rather than just "3". */}
-          <span className="sr-only">{countLabel}</span>
         </div>
 
         {resolvedCount > 0 && (

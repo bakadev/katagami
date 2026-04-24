@@ -31,7 +31,7 @@ describe("AvatarDropdown", () => {
         onRenameClick={() => {}}
         onDownloadClick={() => {}}
         trigger={trigger}
-        defaultOpen
+        __testDefaultOpen
         {...props}
       />,
     );

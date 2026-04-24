@@ -22,8 +22,11 @@ export interface AvatarDropdownProps {
   onRenameClick: () => void;
   onDownloadClick: () => void;
   trigger: ReactNode;
-  /** Force the menu open — useful for tests; not for production use. */
-  defaultOpen?: boolean;
+  /**
+   * Force the menu open at mount. Test-only seam — not part of the public API.
+   * @internal
+   */
+  __testDefaultOpen?: boolean;
 }
 
 /**
@@ -47,10 +50,10 @@ export function AvatarDropdown({
   onRenameClick,
   onDownloadClick,
   trigger,
-  defaultOpen,
+  __testDefaultOpen,
 }: AvatarDropdownProps) {
   return (
-    <DropdownMenu defaultOpen={defaultOpen}>
+    <DropdownMenu defaultOpen={__testDefaultOpen}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -119,12 +122,18 @@ export function AvatarDropdown({
               <TooltipTrigger asChild>
                 {/*
                  * Radix's DropdownMenuItem handles `disabled` by setting
-                 * data-disabled and pointer-events: none — but that also kills
-                 * tooltip hover. We wrap in a span so the tooltip can still
-                 * detect pointer events while the item itself remains visually
-                 * and semantically disabled.
+                 * data-disabled and pointer-events: none, which also kills the
+                 * tooltip's hover detection. We wrap in a span to restore
+                 * pointer events for the tooltip only. tabIndex={-1} +
+                 * role="presentation" keep the wrapper out of the menu's
+                 * roving-tabindex focus cycle so keyboard nav skips straight
+                 * over the disabled item as expected.
                  */}
-                <span tabIndex={0} className="block rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/60">
+                <span
+                  role="presentation"
+                  tabIndex={-1}
+                  className="block rounded-md outline-none"
+                >
                   <DropdownMenuItem
                     disabled
                     className="gap-2 px-2 py-1.5 text-sm"

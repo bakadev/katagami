@@ -199,3 +199,15 @@ html.dark {
   0%   { background: color-mix(in oklch, var(--primary) 45%, transparent); }
   100% { background: color-mix(in oklch, var(--primary) 18%, transparent); }
 }
+
+/* Respect the user's OS-level motion preference. WCAG 2.3.3. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

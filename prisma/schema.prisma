@@ -42,11 +42,13 @@ model Snapshot {
   yjsState     Bytes     @map("yjs_state")
   takenAt      DateTime  @default(now()) @map("taken_at")
   takenByName  String?   @map("taken_by_name")
+  name         String?
 
   document     Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@map("snapshots")
   @@index([documentId, takenAt])
+  @@index([documentId, name])
 }
 
 model Permission {

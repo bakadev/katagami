@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { ThemeProvider } from "~/lib/theme/ThemeProvider";
+import { Toaster } from "~/components/ui/sonner";
 import App from "./App";
 import "./styles.css";
 
@@ -11,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
+      <Toaster richColors closeButton position="bottom-right" />
     </ThemeProvider>
   </React.StrictMode>,
 );

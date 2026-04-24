@@ -1,4 +1,4 @@
-const PREFIX = "mdcollab:creator-token:";
+const PREFIX = "katagami:creator-token:";
 
 export function storeCreatorToken(projectId: string, token: string) {
   localStorage.setItem(PREFIX + projectId, token);

@@ -32,4 +32,10 @@ describe("creator-token storage", () => {
     clearCreatorToken("abc");
     expect(getCreatorToken("abc")).toBeNull();
   });
+
+  it("overwrites the stored token when called twice with the same project", () => {
+    storeCreatorToken("abc", "first");
+    storeCreatorToken("abc", "second");
+    expect(getCreatorToken("abc")).toBe("second");
+  });
 });

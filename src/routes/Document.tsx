@@ -6,7 +6,6 @@ import { getDocument } from "~/lib/api";
 import { createEditor } from "~/lib/editor/editor";
 import { renderMarkdown } from "~/lib/preview/render";
 import { getOrCreateIdentity } from "~/lib/user/identity";
-import { ThemeToggle } from "~/lib/theme/ThemeToggle";
 import { useHighlightTheme } from "~/lib/preview/theme";
 import { Toolbar } from "~/components/editor/Toolbar";
 import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
@@ -268,7 +267,6 @@ export default function DocumentRoute() {
             active={sidebarOpen}
             onClick={() => setSidebarOpen((v) => !v)}
           />
-          <ThemeToggle />
         </div>
       </header>
 

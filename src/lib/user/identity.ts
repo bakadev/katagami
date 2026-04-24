@@ -25,9 +25,10 @@ export function getOrCreateIdentity(): Identity {
       const parsed = JSON.parse(raw) as Partial<Identity>;
       if (
         typeof parsed.name === "string" &&
+        parsed.name.length >= 1 &&
+        parsed.name.length <= 40 &&
         typeof parsed.color === "string" &&
-        JAPANESE_NAMES.includes(parsed.name) &&
-        CURSOR_COLORS.includes(parsed.color)
+        parsed.color.length > 0
       ) {
         return { name: parsed.name, color: parsed.color };
       }
@@ -42,4 +43,12 @@ export function getOrCreateIdentity(): Identity {
     // non-fatal: session still gets an identity, just not persisted
   }
   return identity;
+}
+
+export function storeIdentity(identity: Identity): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
+  } catch {
+    // non-fatal: storage might be blocked (private mode, etc.)
+  }
 }

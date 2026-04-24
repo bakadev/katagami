@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useSearchParams, Navigate } from "react-router";
+import { useParams, useSearchParams, useNavigate } from "react-router";
 import * as Y from "yjs";
 import { connect } from "~/lib/yjs-client";
 import { getDocument } from "~/lib/api";
@@ -9,6 +9,7 @@ export default function DocumentRoute() {
   const { docId } = useParams();
   const [searchParams] = useSearchParams();
   const key = searchParams.get("key");
+  const navigate = useNavigate();
 
   const [permissionLevel, setPermissionLevel] = useState<PermissionLevel | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -39,6 +40,13 @@ export default function DocumentRoute() {
       cancelled = true;
     };
   }, [docId, key]);
+
+  // After a load error, redirect home (without flashing unhelpful UI)
+  useEffect(() => {
+    if (!loadError) return;
+    const t = setTimeout(() => navigate("/", { replace: true }), 1500);
+    return () => clearTimeout(t);
+  }, [loadError, navigate]);
 
   // Open Yjs connection once we know permission is valid
   useEffect(() => {
@@ -77,7 +85,7 @@ export default function DocumentRoute() {
     if (!yText) return;
     const next = e.target.value;
     const current = yText.toString();
-    // Minimal diff via full replace — fine for MVP textarea, TipTap will do proper deltas.
+    // Full-replace diff. Fine for MVP textarea — TipTap in Phase 2 will send proper deltas.
     yText.doc!.transact(() => {
       yText.delete(0, current.length);
       yText.insert(0, next);
@@ -89,7 +97,7 @@ export default function DocumentRoute() {
       <main style={{ padding: 16 }}>
         <h1>Can't open this document</h1>
         <p>{loadError}</p>
-        <Navigate to="/" replace />
+        <p style={{ fontSize: 12, color: "#666" }}>Redirecting to home…</p>
       </main>
     );
   }
@@ -115,7 +123,7 @@ export default function DocumentRoute() {
         }}
       >
         <h1 style={{ margin: 0, fontSize: 18 }}>Document</h1>
-        <span style={{ fontSize: 12, color: "#666" }}>
+        <span aria-live="polite" style={{ fontSize: 12, color: "#666" }}>
           {status} · {readOnly ? "view only" : "editing"}
         </span>
       </header>
@@ -123,7 +131,7 @@ export default function DocumentRoute() {
         value={text}
         onChange={handleChange}
         readOnly={readOnly}
-        placeholder={readOnly ? "" : "Start typing…"}
+        placeholder={readOnly ? "(empty document)" : "Start typing…"}
       />
     </main>
   );

@@ -4,6 +4,7 @@ import type { Editor } from "@tiptap/core";
 import { connect } from "~/lib/yjs-client";
 import { getDocument } from "~/lib/api";
 import { createEditor } from "~/lib/editor/editor";
+import { renderMarkdown } from "~/lib/preview/render";
 import { getOrCreateIdentity } from "~/lib/user/identity";
 import { ThemeToggle } from "~/lib/theme/ThemeToggle";
 import { useHighlightTheme } from "~/lib/preview/theme";
@@ -22,6 +23,7 @@ export default function DocumentRoute() {
     "connecting",
   );
   const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [markdown, setMarkdown] = useState("");
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -69,6 +71,15 @@ export default function DocumentRoute() {
     });
     editorRef.current = editor;
 
+    const syncMarkdown = () => {
+      // tiptap-markdown's storage exposes getMarkdown() on any editor update.
+      const md = (editor.storage as unknown as Record<string, { getMarkdown?: () => string }>).markdown?.getMarkdown?.() ?? "";
+      setMarkdown(md);
+    };
+    syncMarkdown();
+    editor.on("update", syncMarkdown);
+    editor.on("transaction", syncMarkdown);
+
     const handleStatus = ({ status }: { status: "connecting" | "connected" | "disconnected" }) => {
       setStatus(status);
     };
@@ -76,6 +87,8 @@ export default function DocumentRoute() {
 
     return () => {
       conn.provider.off("status", handleStatus);
+      editor.off("update", syncMarkdown);
+      editor.off("transaction", syncMarkdown);
       editor.destroy();
       conn.destroy();
       editorRef.current = null;
@@ -141,11 +154,10 @@ export default function DocumentRoute() {
       />
 
       {mode === "preview" && (
-        <div className="rounded border border-border p-4">
-          <p className="text-sm text-muted-foreground">
-            Preview renderer lands in Task 16.
-          </p>
-        </div>
+        <div
+          className="prose max-w-none rounded border border-border p-4 dark:prose-invert"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
+        />
       )}
     </main>
   );

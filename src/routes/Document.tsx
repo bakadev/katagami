@@ -439,7 +439,7 @@ export default function DocumentRoute() {
           <div className="flex-1 overflow-auto">
             <div
               ref={editorHostRef}
-              className={`prose min-h-full max-w-none p-4 font-mono text-sm ${
+              className={`prose min-h-full max-w-none p-4 font-mono text-sm dark:prose-invert ${
                 mode === "edit" ? "" : "hidden"
               }`}
             />

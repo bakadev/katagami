@@ -31,9 +31,14 @@ describe("PanelTabs", () => {
     expect(screen.getByText("3")).toBeTruthy();
   });
 
-  it("does NOT render a badge when the active tab's badge is null", () => {
+  it("a tab without a badge has an aria-label that doesn't mention 'unread'", () => {
+    // The Documents tab has badge: null. Its aria-label should be just the
+    // label, no count. Comments still has badge: 3 in the DOM (for width
+    // measurement) but is clipped by the active tab's overflow-hidden, so
+    // we check the semantic — the active tab's accessible name — instead.
     render(<PanelTabs tabs={baseTabs} active="documents" onChange={() => {}} />);
-    expect(screen.queryByText("3")).toBeNull();
+    const documentsTab = screen.getByRole("tab", { name: /Documents/i });
+    expect(documentsTab.getAttribute("aria-label")).toBe("Documents");
   });
 
   it("fires onChange with the clicked tab id", () => {

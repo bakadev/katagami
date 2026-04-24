@@ -157,6 +157,22 @@ html.dark {
   html {
     @apply font-sans;
   }
+
+  /* Default every interactive control to a pointer cursor; disabled
+     elements get not-allowed via the :disabled selector. Components can
+     override with their own cursor- utility when needed (e.g. text input
+     style buttons that should read as cursor-text). */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* CollaborationCaret styling: small floating label next to the remote caret. */
@@ -198,4 +214,16 @@ html.dark {
 @keyframes comment-anchor-flash {
   0%   { background: color-mix(in oklch, var(--primary) 45%, transparent); }
   100% { background: color-mix(in oklch, var(--primary) 18%, transparent); }
+}
+
+/* Respect the user's OS-level motion preference. WCAG 2.3.3. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

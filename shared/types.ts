@@ -32,3 +32,27 @@ export interface ApiError {
   error: string;
   message: string;
 }
+
+export interface SnapshotRecord {
+  id: string;
+  name: string | null;       // null = auto-snapshot
+  takenAt: string;           // ISO
+  takenByName: string | null;
+  preview: string;           // up to 120 chars of plaintext
+}
+
+export interface ListSnapshotsResponse {
+  snapshots: SnapshotRecord[];
+}
+
+export interface CreateSnapshotRequest {
+  name?: string;
+}
+
+export interface RenameSnapshotRequest {
+  name: string;
+}
+
+export interface UpdateDocumentRequest {
+  title?: string | null;
+}

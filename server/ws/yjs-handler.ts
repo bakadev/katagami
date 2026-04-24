@@ -7,6 +7,7 @@ import { encoding, decoding } from "lib0";
 import { validatePermissionToken } from "../auth/permission-token.js";
 import type { PermissionLevel } from "../../shared/types.js";
 import { loadDocState, schedulePersist, flushPersist } from "./persistence.js";
+import { resetIdleTimer, clearIdleTimer } from "./snapshot-timer.js";
 
 const MSG_SYNC = 0;
 const MSG_AWARENESS = 1;
@@ -22,6 +23,45 @@ interface Room {
 // all await the same construction and never create divergent rooms.
 const rooms = new Map<string, Promise<Room>>();
 
+// Tracks rooms whose Promise has resolved — allows synchronous Y.Doc lookup
+// without awaiting. Populated after createRoom resolves; deleted on last-disconnect.
+const liveDocs = new Map<string, Y.Doc>();
+
+export function getLiveYDoc(docId: string): Y.Doc | null {
+  return liveDocs.get(docId) ?? null;
+}
+
+export function applySnapshotToLiveDoc(ydoc: Y.Doc, snapshotState: Uint8Array): void {
+  // Replace the tiptap fragment's children with the snapshot's content.
+  // We can't "rewind" CRDT history cleanly, so we clone the snapshot's XML
+  // elements into the live fragment inside a single transaction. Connected
+  // clients observe this as a regular update event.
+  const frag = ydoc.getXmlFragment("tiptap");
+  const temp = new Y.Doc();
+  try {
+    Y.applyUpdate(temp, snapshotState);
+    const srcFrag = temp.getXmlFragment("tiptap");
+    ydoc.transact(() => {
+      frag.delete(0, frag.length);
+      for (let i = 0; i < srcFrag.length; i++) {
+        const child = srcFrag.get(i);
+        if (child instanceof Y.XmlElement || child instanceof Y.XmlText) {
+          frag.insert(frag.length, [child.clone() as Y.XmlElement | Y.XmlText]);
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "[applySnapshotToLiveDoc] skipping unsupported child type at index",
+            i,
+            (child as { constructor?: { name?: string } } | undefined)?.constructor?.name,
+          );
+        }
+      }
+    });
+  } finally {
+    temp.destroy();
+  }
+}
+
 function createRoom(docId: string): Promise<Room> {
   return (async () => {
     const ydoc = new Y.Doc();
@@ -32,6 +72,11 @@ function createRoom(docId: string): Promise<Room> {
     const persistListener = () => schedulePersist(docId, ydoc);
     ydoc.on("update", persistListener);
 
+    // Idle-snapshot timer: added AFTER the applyUpdate above so the initial
+    // state load does not trigger a spurious timer reset.
+    const idleListener = () => resetIdleTimer(docId);
+    ydoc.on("update", idleListener);
+
     return { ydoc, awareness, connections: new Set(), persistListener };
   })();
 }
@@ -39,7 +84,10 @@ function createRoom(docId: string): Promise<Room> {
 function getOrCreateRoom(docId: string): Promise<Room> {
   let roomPromise = rooms.get(docId);
   if (!roomPromise) {
-    roomPromise = createRoom(docId);
+    roomPromise = createRoom(docId).then((room) => {
+      liveDocs.set(docId, room.ydoc);
+      return room;
+    });
     rooms.set(docId, roomPromise);
   }
   return roomPromise;
@@ -213,6 +261,8 @@ export function registerYjsHandler(app: FastifyInstance) {
             room.ydoc.destroy();
             room.awareness.destroy();
             rooms.delete(docId);
+            liveDocs.delete(docId);
+            clearIdleTimer(docId);
           }
         }
       });

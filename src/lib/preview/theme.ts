@@ -15,9 +15,9 @@ function themeHref(theme: "light" | "dark"): string {
  * or updates a <link rel="stylesheet"> for the active highlight.js theme.
  */
 export function useHighlightTheme() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   useEffect(() => {
-    const href = themeHref(theme);
+    const href = themeHref(resolvedTheme);
     let link = document.getElementById(LINK_ID) as HTMLLinkElement | null;
     if (!link) {
       link = document.createElement("link");
@@ -26,5 +26,5 @@ export function useHighlightTheme() {
       document.head.appendChild(link);
     }
     link.href = href;
-  }, [theme]);
+  }, [resolvedTheme]);
 }

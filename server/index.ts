@@ -5,6 +5,7 @@ import { env } from "./env.js";
 import { healthRoutes } from "./routes/health.js";
 import { projectRoutes } from "./routes/projects.js";
 import { documentRoutes } from "./routes/documents.js";
+import { snapshotRoutes } from "./routes/snapshots.js";
 import { projectAdminRoutes } from "./routes/project-admin.js";
 import { registerYjsHandler } from "./ws/yjs-handler.js";
 import type { ApiError } from "../shared/types.js";
@@ -19,6 +20,7 @@ export async function buildServer() {
   await app.register(healthRoutes);
   await app.register(projectRoutes);
   await app.register(documentRoutes);
+  await app.register(snapshotRoutes);
   await app.register(projectAdminRoutes);
 
   registerYjsHandler(app);

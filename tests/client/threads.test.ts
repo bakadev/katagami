@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import * as Y from "yjs";
 import {
+  getThreadsMap,
   createThread,
   addReply,
   setResolved,
@@ -135,5 +136,26 @@ describe("threads Y.Map helpers", () => {
     const b = createThread(ydoc, { authorName: "B", authorColor: "#111", body: "2", createdAt: 2 });
     const ids = listThreads(ydoc).map((t) => t.id);
     expect(ids).toEqual([a, b]);
+  });
+
+  it("getThreadsMap returns the Y.Map named 'threads' on the doc", () => {
+    const a = getThreadsMap(ydoc);
+    const b = ydoc.getMap("threads");
+    expect(a).toBe(b);
+  });
+
+  it("addReply on unknown thread id is a silent no-op", () => {
+    addReply(ydoc, "does-not-exist", {
+      authorName: "X",
+      authorColor: "#000",
+      body: "ghost",
+      createdAt: 1,
+    });
+    expect(listThreads(ydoc)).toHaveLength(0);
+  });
+
+  it("setResolved on unknown thread id is a silent no-op", () => {
+    setResolved(ydoc, "does-not-exist", true);
+    expect(listThreads(ydoc)).toHaveLength(0);
   });
 });

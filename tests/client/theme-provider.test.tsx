@@ -121,4 +121,13 @@ describe("ThemeProvider", () => {
     );
     expect(screen.getByTestId("theme").textContent).toBe("dark");
   });
+
+  it("throws a helpful error when useTheme is used outside a provider", () => {
+    // Suppress React's error boundary console output for this expected throw
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(() => render(<Harness />)).toThrow(
+      "useTheme must be used inside a ThemeProvider",
+    );
+    errorSpy.mockRestore();
+  });
 });

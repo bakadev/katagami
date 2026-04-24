@@ -128,7 +128,7 @@ export default function DocumentRoute() {
             <button
               role="tab"
               aria-selected={mode === "edit"}
-              className={`px-3 py-1 text-sm ${mode === "edit" ? "bg-muted" : ""}`}
+              className={`px-3 py-1 text-sm transition-colors ${mode === "edit" ? "bg-foreground text-background font-medium" : "hover:bg-muted"}`}
               onClick={() => setMode("edit")}
             >
               Edit
@@ -136,7 +136,7 @@ export default function DocumentRoute() {
             <button
               role="tab"
               aria-selected={mode === "preview"}
-              className={`px-3 py-1 text-sm ${mode === "preview" ? "bg-muted" : ""}`}
+              className={`px-3 py-1 text-sm transition-colors ${mode === "preview" ? "bg-foreground text-background font-medium" : "hover:bg-muted"}`}
               onClick={() => setMode("preview")}
             >
               Preview
@@ -148,14 +148,14 @@ export default function DocumentRoute() {
 
       <div
         ref={editorHostRef}
-        className={`prose max-w-none rounded border border-border p-4 ${
+        className={`prose max-w-none rounded border-2 border-border bg-muted/30 p-4 font-mono text-sm ${
           mode === "edit" ? "" : "hidden"
         }`}
       />
 
       {mode === "preview" && (
         <div
-          className="prose max-w-none rounded border border-border p-4 dark:prose-invert"
+          className="prose max-w-none rounded border border-border bg-background p-6 dark:prose-invert"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
         />
       )}

@@ -4,21 +4,11 @@ import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { TableHeader } from "@tiptap/extension-table-header";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { Markdown } from "tiptap-markdown";
-import { createLowlight, common } from "lowlight";
 import { mdDecorationsPlugin } from "./md-decorations";
 import type * as Y from "yjs";
 import type { WebsocketProvider } from "y-websocket";
 import type { Identity } from "~/lib/user/identity";
-
-const lowlight = createLowlight(common);
 
 const MdSyntaxDecorations = Extension.create({
   name: "mdSyntaxDecorations",
@@ -54,8 +44,21 @@ export function createEditor({
       StarterKit.configure({
         // Yjs owns undo/redo; disabling TipTap's history avoids double-undo.
         undoRedo: false,
-        // CodeBlockLowlight replaces StarterKit's plain codeBlock.
+        // Block-transforming extensions disabled so Markdown syntax characters
+        // stay as literal text (faded by md-decorations plugin) instead of
+        // being swallowed by input rules like "# " → H1 node.
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+        blockquote: false,
+        horizontalRule: false,
         codeBlock: false,
+        // Marks that also have input rules
+        bold: false,
+        italic: false,
+        strike: false,
+        // Keep: paragraph, text, hardBreak, dropcursor, gapcursor
       }),
       Collaboration.configure({
         document: ydoc,
@@ -72,13 +75,6 @@ export function createEditor({
       Placeholder.configure({
         placeholder: editable ? "Start typing Markdown…" : "(empty document)",
       }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Table.configure({ resizable: false }),
-      TableRow,
-      TableCell,
-      TableHeader,
-      CodeBlockLowlight.configure({ lowlight }),
       Markdown.configure({
         html: false,
         breaks: false,

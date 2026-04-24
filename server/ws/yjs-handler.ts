@@ -22,6 +22,14 @@ interface Room {
 // all await the same construction and never create divergent rooms.
 const rooms = new Map<string, Promise<Room>>();
 
+// Tracks rooms whose Promise has resolved — allows synchronous Y.Doc lookup
+// without awaiting. Populated after createRoom resolves; deleted on last-disconnect.
+const liveDocs = new Map<string, Y.Doc>();
+
+export function getLiveYDoc(docId: string): Y.Doc | null {
+  return liveDocs.get(docId) ?? null;
+}
+
 function createRoom(docId: string): Promise<Room> {
   return (async () => {
     const ydoc = new Y.Doc();
@@ -39,7 +47,10 @@ function createRoom(docId: string): Promise<Room> {
 function getOrCreateRoom(docId: string): Promise<Room> {
   let roomPromise = rooms.get(docId);
   if (!roomPromise) {
-    roomPromise = createRoom(docId);
+    roomPromise = createRoom(docId).then((room) => {
+      liveDocs.set(docId, room.ydoc);
+      return room;
+    });
     rooms.set(docId, roomPromise);
   }
   return roomPromise;
@@ -213,6 +224,7 @@ export function registerYjsHandler(app: FastifyInstance) {
             room.ydoc.destroy();
             room.awareness.destroy();
             rooms.delete(docId);
+            liveDocs.delete(docId);
           }
         }
       });

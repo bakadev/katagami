@@ -171,21 +171,20 @@ export function HistoryTab({
        * controls today; the header's "Save" button handles named-save.
        */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-3 py-2.5 backdrop-blur">
-        <div
-          aria-live="polite"
-          aria-atomic="true"
-          className="flex items-baseline gap-1.5 text-sm"
-        >
+        <div className="flex items-baseline gap-1.5 text-sm">
           <span className="font-medium text-foreground">History</span>
+          {/* Only the count sits inside the live region so updates announce
+              as "4 snapshots" rather than "History · 4 snapshots". */}
           {snapshots.length > 0 && (
             <>
-              <span
-                aria-hidden
-                className="text-muted-foreground/60"
-              >
+              <span aria-hidden className="text-muted-foreground/60">
                 &middot;
               </span>
-              <span className="tabular-nums text-muted-foreground">
+              <span
+                aria-live="polite"
+                aria-atomic="true"
+                className="tabular-nums text-muted-foreground"
+              >
                 {snapshots.length}{" "}
                 {snapshots.length === 1 ? "snapshot" : "snapshots"}
               </span>

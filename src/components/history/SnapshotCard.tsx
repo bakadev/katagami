@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactElement } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactElement } from "react";
 import {
   ChevronRight,
   History as HistoryIcon,
@@ -27,16 +27,13 @@ interface SnapshotCardProps {
 }
 
 /**
- * SnapshotCard — per-snapshot collapsible row with a timeline spine.
+ * SnapshotCard — per-snapshot collapsible row.
  *
- * The design flourish that makes this different from a generic list row:
- * every card carries a 1px vertical rule on its left edge with a small
- * round "node" centered on the icon. Named snapshots get an amber-tinted
- * filled node (matching the Star); autos get a hollow ring. The spine is
- * drawn per-card so the gap between consecutive cards breaks the line —
- * reinforcing "moments in a sequence" rather than "one continuous stream."
- * This is subtle but loadbearing: it's the one thing that makes the history
- * panel feel like a history and not a settings list.
+ * The named/auto distinction is carried by iconography: named snapshots use a
+ * soft-filled amber Star (`text-amber-500 fill-amber-500/20`) and autos use a
+ * muted History clock. Cards are separated by a `divide-y` on the parent list
+ * rather than borders on each card so the rhythm is set by whitespace, not
+ * chrome.
  *
  * Two states, single DOM tree:
  *
@@ -86,8 +83,7 @@ export function SnapshotCard({
        * lives here (not on the card wrapper) so the action row below can
        * align its right edge with the chevron.
        *
-       * Left column width: 2.25rem (w-9). Holds the icon; the timeline
-       * spine sits at half that width so nodes center on the icon.
+       * Left column width: 2.25rem (w-9). Holds the icon.
        */}
       <button
         type="button"
@@ -249,6 +245,7 @@ function RenamePopover({
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(currentName);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputId = useId();
 
   // Reset value when popover opens so stale edits from a previous cancel
   // don't leak into the next open.
@@ -296,11 +293,11 @@ function RenamePopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={6} className="w-64">
-        <label className="text-xs font-medium text-foreground" htmlFor="rename-input">
+        <label className="text-xs font-medium text-foreground" htmlFor={inputId}>
           Snapshot name
         </label>
         <input
-          id="rename-input"
+          id={inputId}
           ref={inputRef}
           type="text"
           value={value}
@@ -348,6 +345,7 @@ function SaveAsNamedPopover({
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -389,11 +387,11 @@ function SaveAsNamedPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={6} className="w-64">
-        <label className="text-xs font-medium text-foreground" htmlFor="save-as-named-input">
+        <label className="text-xs font-medium text-foreground" htmlFor={inputId}>
           Name this snapshot
         </label>
         <input
-          id="save-as-named-input"
+          id={inputId}
           ref={inputRef}
           type="text"
           value={value}

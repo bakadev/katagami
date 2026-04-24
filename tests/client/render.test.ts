@@ -45,9 +45,26 @@ describe("renderMarkdown", () => {
   it("strips javascript: URL schemes via DOMPurify", () => {
     const html = renderMarkdown("[click](javascript:alert(1))");
     expect(html).not.toMatch(/href="javascript:/i);
+    // Link text must still be rendered (just without the dangerous href)
+    expect(html).toContain("click");
   });
 
   it("handles empty input", () => {
     expect(renderMarkdown("")).toBe("");
+  });
+
+  it("strips event handlers like onerror", () => {
+    const html = renderMarkdown('<img src="x" onerror="alert(1)">');
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).not.toContain("alert(");
+  });
+
+  it("strips form elements (phishing vector)", () => {
+    const html = renderMarkdown(
+      '<form action="https://evil.example"><input name="p"><button>Submit</button></form>',
+    );
+    expect(html).not.toContain("<form");
+    expect(html).not.toContain("<input");
+    expect(html).not.toContain("<button");
   });
 });

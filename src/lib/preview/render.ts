@@ -23,6 +23,18 @@ hljs.registerLanguage("sh", bash);
 hljs.registerLanguage("markdown", markdown);
 hljs.registerLanguage("md", markdown);
 
+// Strip non-checkbox <input> elements (phishing vector) while preserving
+// task-list checkboxes that markdown-it emits as <input type="checkbox">.
+DOMPurify.addHook("afterSanitizeElements", (node: Node) => {
+  if (node.nodeName?.toLowerCase() === "input") {
+    const el = node as Element;
+    const type = (el.getAttribute("type") ?? "").toLowerCase();
+    if (type !== "checkbox") {
+      node.parentNode?.removeChild(node);
+    }
+  }
+});
+
 const md = new MarkdownIt({
   html: true,
   linkify: true,
@@ -49,5 +61,10 @@ const md = new MarkdownIt({
 export function renderMarkdown(source: string): string {
   if (!source) return "";
   const rawHtml = md.render(source);
-  return DOMPurify.sanitize(rawHtml);
+  // USE_PROFILES: { html: true } strips form/input/button elements in addition
+  // to scripts and javascript: URLs — blocks phishing-form injection.
+  return DOMPurify.sanitize(rawHtml, {
+    USE_PROFILES: { html: true },
+    FORBID_TAGS: ["form", "button"],
+  });
 }

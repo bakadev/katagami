@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { createProject } from "~/lib/api";
 import { storeCreatorToken } from "~/lib/creator-token";
+import { Button } from "~/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { ThemeToggle } from "~/lib/theme/ThemeToggle";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -25,13 +28,23 @@ export default function Home() {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "80px auto", padding: "0 16px" }}>
-      <h1>Katagami</h1>
-      <p>Collaborative Markdown editor for spec teams.</p>
-      <button onClick={handleCreate} disabled={loading}>
+    <main className="mx-auto max-w-xl px-4 py-20">
+      <header className="mb-8 flex items-center justify-between">
+        <h1 className="m-0 text-2xl font-semibold">Katagami</h1>
+        <ThemeToggle />
+      </header>
+      <p className="mb-6 text-muted-foreground">
+        Collaborative Markdown editor for spec teams.
+      </p>
+      <Button onClick={handleCreate} disabled={loading}>
         {loading ? "Creating…" : "Create new doc"}
-      </button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      </Button>
+      {error && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>Something went wrong</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </main>
   );
 }

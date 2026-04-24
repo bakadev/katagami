@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
+@plugin "@tailwindcss/typography";
+
 /* Tailwind 4: define the `dark:` variant against a `.dark` class on the
    html element, matching shadcn's canonical dark-mode strategy. */
 @custom-variant dark (&:where(.dark, .dark *));

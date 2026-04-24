@@ -71,7 +71,7 @@ function EditPreviewTabs({
         aria-label="View mode"
         aria-orientation="horizontal"
         className={cn(
-          "relative inline-flex items-center rounded-md border border-border bg-muted/40 p-0.5",
+          "relative items-center rounded-md border border-border bg-muted/40 p-0.5 grid grid-cols-2",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
         )}
       >
@@ -81,7 +81,7 @@ function EditPreviewTabs({
           className={cn(
             "pointer-events-none absolute inset-y-0.5 left-0.5 rounded-[5px] bg-secondary",
             "shadow-sm ring-1 ring-border/60",
-            "transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            "transition-transform duration-200 ease-in-out",
           )}
           style={{
             width: "calc((100% - 4px) / 2)",
@@ -176,7 +176,7 @@ export function DocHeader({
             className="size-6 shrink-0 text-muted-foreground"
             strokeWidth={1.75}
           />
-          <div className="min-w-0 max-w-[60ch] flex-shrink">
+          <div className="min-w-0 max-w-[60ch] shrink">
             <TitleEditor
               title={title}
               onSave={onSaveTitle}

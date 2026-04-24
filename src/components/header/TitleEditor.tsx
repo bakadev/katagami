@@ -98,7 +98,7 @@ export function TitleEditor({ title, onSave, readOnly }: TitleEditorProps) {
                 aria-label="Rename document"
                 className={cn(
                   labelClassName,
-                  "rounded-sm bg-transparent px-0 py-0 text-left outline-none",
+                  "rounded-sm bg-transparent px-1 py-0 text-left outline-none",
                   // Dashed underline = "clickable text" affordance. Sits in
                   // the muted-foreground tone at rest, deepens on hover.
                   "underline decoration-muted-foreground/40 decoration-dashed underline-offset-[6px]",

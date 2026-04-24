@@ -139,7 +139,7 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
         className={cn(
           "grid w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
-          "transition-[grid-template-columns] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "transition-[grid-template-columns] duration-200 ease-in-out",
         )}
         style={{ gridTemplateColumns: gridTemplate }}
       >
@@ -177,7 +177,7 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                 // The grid track owns the width animation. We still transition
                 // color/shadow on the button itself so the handoff between
                 // states reads as a single coordinated gesture.
-                "transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                "transition-[background-color,color,box-shadow] duration-200 ease-in-out",
                 layoutClasses,
                 isActive
                   ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
@@ -214,7 +214,7 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                 aria-hidden
                 className={cn(
                   "flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap",
-                  "transition-[max-width,opacity,transform] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                  "transition-[max-width,opacity,transform] duration-200 ease-in-out",
                   isActive
                     ? "max-w-[200px] translate-x-0 opacity-100"
                     : "max-w-0 -translate-x-1 opacity-0",

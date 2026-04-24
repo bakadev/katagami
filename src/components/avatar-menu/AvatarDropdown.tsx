@@ -127,12 +127,12 @@ function MenuView({
           className="relative size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-black/5"
           style={{ backgroundColor: identity.color }}
         />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 inline-flex justify-between gap-2">
           <div className="truncate text-sm font-semibold leading-tight text-foreground">
             {identity.name}
           </div>
-          <div className="mt-0.5 text-xs leading-tight text-muted-foreground">
-            You
+          <div className="mt-0.5 text-xs tracking-wider leading-tight text-muted-foreground">
+            (You)
           </div>
         </div>
       </div>

@@ -10,21 +10,14 @@ import { useHighlightTheme } from "~/lib/preview/theme";
 import { Toolbar } from "~/components/editor/Toolbar";
 import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
 import { CommentComposer } from "~/components/editor/CommentComposer";
-import { CommentChip } from "~/components/comments/CommentChip";
-import { CommentSidebar } from "~/components/comments/CommentSidebar";
 import {
   registerSelectionAction,
   unregisterSelectionAction,
 } from "~/lib/editor/selection-actions";
-import {
-  createThread,
-  addReply,
-  setResolved,
-  deleteThreadRoot,
-  deleteReply,
-} from "~/lib/comments/threads";
+// Task 17 will re-introduce addReply, setResolved, deleteThreadRoot, deleteReply
+// as they get wired into the new CommentsTab through the RightPanel.
+import { createThread } from "~/lib/comments/threads";
 import { useThreads } from "~/hooks/useThreads";
-import type { Thread } from "~/lib/comments/types";
 import type { PermissionLevel } from "@shared/types";
 
 interface ComposerState {
@@ -48,7 +41,6 @@ export default function DocumentRoute() {
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [markdown, setMarkdown] = useState("");
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [composer, setComposer] = useState<ComposerState | null>(null);
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
@@ -158,57 +150,13 @@ export default function DocumentRoute() {
         .setCommentAnchor(threadId)
         .run();
       setComposer(null);
-      setSidebarOpen(true);
+      // Task 17: open the RightPanel + focus the Comments tab here.
     },
     [editor, composer],
   );
 
-  const handleScrollToAnchor = useCallback(
-    (threadId: string) => {
-      if (!editor) return;
-      let foundFrom: number | null = null;
-      editor.state.doc.descendants((node, pos) => {
-        node.marks.forEach((mark) => {
-          if (mark.type.name === "commentAnchor" && mark.attrs.threadId === threadId) {
-            if (foundFrom === null) foundFrom = pos;
-          }
-        });
-      });
-      if (foundFrom === null) return;
-      editor.commands.setTextSelection({ from: foundFrom, to: foundFrom });
-      const el = editor.view.domAtPos(foundFrom).node as HTMLElement | null;
-      if (el && "scrollIntoView" in el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      const spans = editor.view.dom.querySelectorAll<HTMLElement>(
-        `[data-comment-thread-id="${threadId}"]`,
-      );
-      spans.forEach((s) => {
-        s.classList.add("comment-anchor-flash");
-        setTimeout(() => s.classList.remove("comment-anchor-flash"), 900);
-      });
-    },
-    [editor],
-  );
-
-  const resolveAnchor = useCallback(
-    (thread: Thread): string => {
-      if (!editor) return "";
-      let found = "";
-      editor.state.doc.descendants((node) => {
-        node.marks.forEach((mark) => {
-          if (mark.type.name === "commentAnchor" && mark.attrs.threadId === thread.id) {
-            if (!found) {
-              const text = node.text ?? "";
-              found = text.slice(0, 80);
-            }
-          }
-        });
-      });
-      return found;
-    },
-    [editor],
-  );
+  // Task 17: handleScrollToAnchor and resolveAnchor re-enter here once
+  // the new CommentsTab wiring lands.
 
   if (loadError) {
     return (
@@ -262,11 +210,8 @@ export default function DocumentRoute() {
               Preview
             </button>
           </div>
-          <CommentChip
-            count={unresolvedCount}
-            active={sidebarOpen}
-            onClick={() => setSidebarOpen((v) => !v)}
-          />
+          {/* Task 17: avatar dropdown + panel toggle wire into this slot */}
+          <span className="text-xs text-muted-foreground">{unresolvedCount} unresolved</span>
         </div>
       </header>
 
@@ -288,41 +233,7 @@ export default function DocumentRoute() {
           )}
         </div>
 
-        {sidebarOpen && (
-          <CommentSidebar
-            threads={threads}
-            currentAuthorName={identityRef.current.name}
-            readOnly={readOnly}
-            onClose={() => setSidebarOpen(false)}
-            resolveAnchor={resolveAnchor}
-            onReply={(threadId, body) => {
-              const ydoc = connectionRef.current?.ydoc;
-              if (!ydoc) return;
-              addReply(ydoc, threadId, {
-                authorName: identityRef.current.name,
-                authorColor: identityRef.current.color,
-                body,
-                createdAt: Date.now(),
-              });
-            }}
-            onResolveToggle={(threadId, next) => {
-              const ydoc = connectionRef.current?.ydoc;
-              if (!ydoc) return;
-              setResolved(ydoc, threadId, next);
-            }}
-            onDeleteThreadRoot={(threadId) => {
-              const ydoc = connectionRef.current?.ydoc;
-              if (!ydoc) return;
-              deleteThreadRoot(ydoc, threadId);
-            }}
-            onDeleteReply={(threadId, replyId) => {
-              const ydoc = connectionRef.current?.ydoc;
-              if (!ydoc) return;
-              deleteReply(ydoc, threadId, replyId);
-            }}
-            onClickAnchor={handleScrollToAnchor}
-          />
-        )}
+        {/* Task 17: RightPanel with CommentsTab (et al.) mounts here. */}
       </div>
 
       <FloatingCommentButton editor={editor} disabled={readOnly} />

@@ -16,14 +16,17 @@ function previewFromState(state: Uint8Array): string {
   if (state.length === 0) return "";
   const ydoc = new Y.Doc();
   try {
-    Y.applyUpdate(ydoc, state);
-  } catch {
-    return "";
+    try {
+      Y.applyUpdate(ydoc, state);
+    } catch {
+      return "";
+    }
+    const frag = ydoc.getXmlFragment("tiptap");
+    // Trim before slicing so leading whitespace doesn't eat the visible preview.
+    return frag.toString().replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, PREVIEW_MAX);
+  } finally {
+    ydoc.destroy();
   }
-  const frag = ydoc.getXmlFragment("tiptap");
-  const text = frag.toString().replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-  ydoc.destroy();
-  return text.slice(0, PREVIEW_MAX);
 }
 
 function toRecord(row: {
@@ -111,6 +114,10 @@ export async function snapshotRoutes(app: FastifyInstance) {
       const body = req.body ?? {};
       let name: string | null = null;
       if (body.name !== undefined && body.name !== null) {
+        if (typeof body.name !== "string") {
+          const err: ApiError = { error: "bad_request", message: "name must be a string" };
+          return reply.code(400).send(err);
+        }
         const trimmed = body.name.trim();
         if (trimmed.length > 80) {
           const err: ApiError = { error: "bad_request", message: "name too long (max 80 chars)" };

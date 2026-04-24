@@ -40,7 +40,7 @@ describe("GET /api/docs/:id/snapshots", () => {
       method: "GET",
       url: `/api/docs/${documentId}/snapshots?key=wrong-token`,
     });
-    expect([401, 403, 404]).toContain(res.statusCode);
+    expect(res.statusCode).toBe(403);
   });
 
   it("returns snapshots newest-first", async () => {

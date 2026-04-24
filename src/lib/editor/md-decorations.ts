@@ -4,21 +4,19 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 // Exported so tests can read the plugin state via PluginKey.getState().
 export const MD_DECORATIONS_KEY = new PluginKey<DecorationSet>("md-decorations");
 
-// Matches opening+closing pairs of the same delimiter around non-empty content.
-// Captures: 1) leading delimiter run, 2) inner content, 3) trailing delimiter run.
-// Patterns intentionally simple — we're only fading *syntax*, not parsing MD.
-const PATTERNS: Array<{ delim: string; regex: RegExp }> = [
-  { delim: "**", regex: /(\*\*)([^*]+?)(\*\*)/g },
-  { delim: "__", regex: /(__)([^_]+?)(__)/g },
-  { delim: "*", regex: /(?<!\*)(\*)(?!\*)([^*]+?)(?<!\*)(\*)(?!\*)/g },
-  { delim: "_", regex: /(?<!_)(_)(?!_)([^_]+?)(?<!_)(_)(?!_)/g },
-  { delim: "`", regex: /(`)([^`]+?)(`)/g },
+// Pairs: delimiter regex and the CSS class to apply to the INNER content
+// between the delimiters (in addition to `md-syntax` on the delimiters).
+const PATTERNS: Array<{ regex: RegExp; innerClass: string }> = [
+  { regex: /(\*\*)([^*]+?)(\*\*)/g, innerClass: "md-bold" },
+  { regex: /(__)([^_]+?)(__)/g, innerClass: "md-bold" },
+  { regex: /(~~)([^~]+?)(~~)/g, innerClass: "md-strike" },
+  // Single * and _ must avoid adjacent delimiters so **x** doesn't match *x*.
+  { regex: /(?<!\*)(\*)(?!\*)([^*]+?)(?<!\*)(\*)(?!\*)/g, innerClass: "md-italic" },
+  { regex: /(?<!_)(_)(?!_)([^_]+?)(?<!_)(_)(?!_)/g, innerClass: "md-italic" },
+  { regex: /(`)([^`]+?)(`)/g, innerClass: "md-code" },
 ];
 
-// Heading marker at line start: ^#{1,6} followed by a space.
 const HEADING_REGEX = /^(#{1,6})(\s)/gm;
-
-// Blockquote marker at line start.
 const BLOCKQUOTE_REGEX = /^(>)(\s)/gm;
 
 function buildDecorations(state: EditorState): DecorationSet {
@@ -29,16 +27,20 @@ function buildDecorations(state: EditorState): DecorationSet {
     const text = node.text;
     const base = pos;
 
-    for (const { regex } of PATTERNS) {
+    for (const { regex, innerClass } of PATTERNS) {
       regex.lastIndex = 0;
       let m: RegExpExecArray | null;
       while ((m = regex.exec(text)) !== null) {
         const openStart = base + m.index;
         const openEnd = openStart + m[1].length;
-        const closeStart = base + m.index + m[1].length + m[2].length;
+        const innerStart = openEnd;
+        const innerEnd = innerStart + m[2].length;
+        const closeStart = innerEnd;
         const closeEnd = closeStart + m[3].length;
+
         decorations.push(
           Decoration.inline(openStart, openEnd, { class: "md-syntax" }),
+          Decoration.inline(innerStart, innerEnd, { class: innerClass }),
           Decoration.inline(closeStart, closeEnd, { class: "md-syntax" }),
         );
       }

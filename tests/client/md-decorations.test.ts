@@ -20,34 +20,62 @@ function buildState(text: string) {
   });
 }
 
-function decorationCount(state: EditorState): number {
+function decorationsWithClass(state: EditorState, className: string): number {
   const set = MD_DECORATIONS_KEY.getState(state);
-  return set ? set.find().length : 0;
+  if (!set) return 0;
+  return set
+    .find()
+    .filter((d) => {
+      const attrs = (d as unknown as { type: { attrs?: { class?: string } } }).type.attrs;
+      return attrs && typeof attrs.class === "string" && attrs.class === className;
+    }).length;
 }
 
-describe("mdDecorationsPlugin", () => {
-  it("decorates bold asterisks", () => {
+describe("mdDecorationsPlugin — syntax fading", () => {
+  it("fades bold asterisks", () => {
     const state = buildState("**hello**");
-    expect(decorationCount(state)).toBe(2); // opening + closing **
+    expect(decorationsWithClass(state, "md-syntax")).toBe(2);
   });
 
-  it("decorates italic underscores", () => {
+  it("fades italic underscores", () => {
     const state = buildState("_hi_");
-    expect(decorationCount(state)).toBe(2);
+    expect(decorationsWithClass(state, "md-syntax")).toBe(2);
   });
 
-  it("decorates inline code backticks", () => {
+  it("fades inline code backticks", () => {
     const state = buildState("`code`");
-    expect(decorationCount(state)).toBe(2);
+    expect(decorationsWithClass(state, "md-syntax")).toBe(2);
   });
 
-  it("decorates heading markers at line start", () => {
+  it("fades heading markers at line start", () => {
     const state = buildState("## Heading");
-    expect(decorationCount(state)).toBe(1); // the "##"
+    expect(decorationsWithClass(state, "md-syntax")).toBe(1);
   });
 
-  it("produces zero decorations for plain text", () => {
+  it("produces zero syntax decorations for plain text", () => {
     const state = buildState("no syntax here");
-    expect(decorationCount(state)).toBe(0);
+    expect(decorationsWithClass(state, "md-syntax")).toBe(0);
+  });
+});
+
+describe("mdDecorationsPlugin — inner-content styling", () => {
+  it("applies .md-bold to the inner content of **...**", () => {
+    const state = buildState("say **hello** friend");
+    expect(decorationsWithClass(state, "md-bold")).toBe(1);
+  });
+
+  it("applies .md-italic to the inner content of *...*", () => {
+    const state = buildState("this is *italic* text");
+    expect(decorationsWithClass(state, "md-italic")).toBe(1);
+  });
+
+  it("applies .md-strike to ~~...~~", () => {
+    const state = buildState("remove ~~this~~ please");
+    expect(decorationsWithClass(state, "md-strike")).toBe(1);
+  });
+
+  it("applies .md-code to `...`", () => {
+    const state = buildState("use `npm` to install");
+    expect(decorationsWithClass(state, "md-code")).toBe(1);
   });
 });

@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { createProject } from "~/lib/api";
 import { storeCreatorToken } from "~/lib/creator-token";
+import { useTheme } from "~/lib/theme/useTheme";
 
 /**
  * Design exploration index (`/design`). Public, so external reviewers can
@@ -62,10 +64,15 @@ export default function DesignIndex() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-3xl px-6 py-16">
-        <p className="text-sm text-muted-foreground">Katagami</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-          Design explorations
-        </h1>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Katagami</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+              Design explorations
+            </h1>
+          </div>
+          <ThemeToggleButton />
+        </div>
         <p className="mt-3 max-w-prose text-muted-foreground">
           Three alternatives per surface, each built for a different persona so
           the options diverge instead of drifting toward one idea. Nothing here
@@ -127,7 +134,7 @@ export function ExplorationBar({
       <Link to="/design" className="text-muted-foreground hover:text-foreground">
         ← Explorations / {r.surface}
       </Link>
-      <nav className="flex gap-1">
+      <nav className="flex items-center gap-1">
         {r.options.map((o) => (
           <Link
             key={o.slug}
@@ -143,8 +150,30 @@ export function ExplorationBar({
             {o.persona}
           </Link>
         ))}
+        <ThemeToggleButton />
       </nav>
     </div>
+  );
+}
+
+/** Light/dark switch so reviewers can check both modes without the avatar menu. */
+export function ThemeToggleButton() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const next = resolvedTheme === "dark" ? "light" : "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(next)}
+      aria-label={`Switch to ${next} mode`}
+      title={`Switch to ${next} mode`}
+      className="ml-2 inline-flex size-7 items-center justify-center rounded border border-border text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {resolvedTheme === "dark" ? (
+        <Sun className="size-3.5" aria-hidden />
+      ) : (
+        <Moon className="size-3.5" aria-hidden />
+      )}
+    </button>
   );
 }
 

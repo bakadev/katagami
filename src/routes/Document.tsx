@@ -450,7 +450,7 @@ export default function DocumentRoute() {
         avatarSlot={avatarSlot}
       />
 
-      <div className="flex flex-1 gap-4 overflow-hidden p-4">
+      <div className="relative flex flex-1 gap-4 overflow-hidden p-4">
         {/* Editor card — toolbar + editor live together inside one rounded
             surface so the bar reads as part of the editor, not a global
             ribbon spanning the whole window. */}

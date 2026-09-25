@@ -71,7 +71,7 @@ export default function SignInB() {
 
             <div className="my-auto max-w-[30ch] py-10 md:py-16">
               <h2 style={{ fontFamily: SERIF }} className="text-3xl leading-tight sm:text-4xl">
-                An account is the door to Team. Free documents stay outside it.
+                Sign in to use Team. Free documents never need an account.
               </h2>
               <ul className="mt-10 space-y-6">
                 {UNLOCKS.map((u) => (

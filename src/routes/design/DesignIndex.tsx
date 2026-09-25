@@ -35,6 +35,8 @@ const ROUNDS: Round[] = [
     id: "auth",
     surface: "Authentication",
     date: "2026-09-25",
+    outcome:
+      "Locked in on 2026-09-25: Sign in B is /signin, Welcome A is /welcome, Claim B is /claim. All seven variants are kept here.",
     options: [
       {
         slug: "signin-a",
@@ -49,6 +51,7 @@ const ROUNDS: Round[] = [
         title: "Split: indigo statement, plain card",
         blurb:
           "Left half indigo with seigaiha and three lines on what an account unlocks (projects, seats, named history); right half the sign-in card.",
+        liveAt: "/signin",
       },
       {
         slug: "signin-c",
@@ -63,6 +66,7 @@ const ROUNDS: Round[] = [
         title: "Full-page stepper",
         blurb:
           "1 Sign in (done) · 2 Name your workspace (active) · 3 Invite people (later). Greeting with the provider avatar, name prefilled from the email domain.",
+        liveAt: "/welcome",
       },
       {
         slug: "welcome-b",
@@ -84,6 +88,7 @@ const ROUNDS: Round[] = [
         title: "A page with a table",
         blurb:
           "Left column explains claiming with the mark; right column a notched table of the documents with checkboxes, all checked, and a button that counts the selection.",
+        liveAt: "/claim",
       },
     ],
   },

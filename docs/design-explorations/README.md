@@ -92,7 +92,9 @@ Should the editor's header take the utility bar's indigo? There is no mock: each
 | `/design/editor-header/b` | **B. Indigo plain.** | Same header, solid indigo, no pattern. |
 | `/design/editor-header/c` | **C. Rail.** | The site's 32px utility bar carried into the app above the current dark header: home link, live connection state, log-in slot, the mark. The document header itself stays quiet. |
 
-## Round 6 — Authentication (2026-09-25)
+## Round 6 — Authentication (closed)
+
+**Outcome (2026-09-25):** Sign in B shipped as `/signin`, Welcome A as `/welcome`, Claim B as `/claim` (`src/routes/SignIn.tsx`, `Welcome.tsx`, `Claim.tsx`). All seven variants stay under `/design/auth/*`. The B statement copy was changed to "Sign in to use Team. Free documents never need an account." (2026-09-25)
 
 The account pages that arrive with OAuth (`two-tier-proposal.md` section 5: OAuth first, GitHub and Google, Free needs no account, Team requires one). There is no email and password, so there is no password reset and no "create account" form: the first sign-in with a provider is the sign-up. Three surfaces, seven variants, all under `/design/auth/*` and rendered by `src/routes/design/auth/AuthExploration.tsx`. Style is locked to Product v2; the options differ in layout and how much they say.
 

@@ -431,12 +431,14 @@ export default function DocumentRoute() {
         {/* Editor card — toolbar + editor live together inside one rounded
             surface so the bar reads as part of the editor, not a global
             ribbon spanning the whole window. */}
-        <div className="relative flex flex-1 flex-col">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <RegMarks />
         {/* Outlined notch: a border-coloured outer face with the card face
-            inside, so the 1px edge follows the cut corners. */}
-        <div className="notch flex flex-1 flex-col bg-border p-px">
-        <div className="notch-in flex flex-1 flex-col overflow-hidden bg-background">
+            inside, so the 1px edge follows the cut corners. Every layer in
+            this flex chain needs min-h-0 so the scroll container below can
+            shrink instead of growing the page. */}
+        <div className="notch flex min-h-0 flex-1 flex-col overflow-hidden bg-border p-px">
+        <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
           {mode === "edit" && !readOnly && (
             <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
@@ -455,7 +457,7 @@ export default function DocumentRoute() {
                   editor.commands.focus("end");
                 }
               }}
-              className={`prose min-h-full max-w-none p-4 font-mono text-sm dark:prose-invert ${
+              className={`prose min-h-full max-w-none p-4 font-mono text-sm leading-6 dark:prose-invert [&_p]:my-0 ${
                 mode === "edit" ? "flex flex-col" : "hidden"
               }`}
             />

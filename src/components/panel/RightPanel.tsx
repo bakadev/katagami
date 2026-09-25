@@ -53,12 +53,12 @@ export function RightPanel({
       role="complementary"
       aria-label="Document panel"
       aria-hidden={!open}
-      className={`notch flex flex-col overflow-hidden bg-border p-px transition-[width] duration-200 ease-out ${
+      className={`notch flex min-h-0 flex-col overflow-hidden bg-border p-px transition-[width] duration-200 ease-out ${
         open ? "w-[360px]" : "w-0 p-0"
       }`}
     >
       {open ? (
-        <div className="notch-in flex h-full flex-col overflow-hidden bg-background">
+        <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
           <div className="border-b border-border p-2">
             <PanelTabs
               tabs={tabs}
@@ -66,7 +66,7 @@ export function RightPanel({
               onChange={(id) => onTabChange(id as PanelTab)}
             />
           </div>
-          <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
         </div>
       ) : null}
     </aside>

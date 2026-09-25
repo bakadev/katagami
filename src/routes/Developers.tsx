@@ -77,7 +77,7 @@ export default function Developers() {
       style={{ ["--indigo" as string]: INDIGO }}
     >
       {/* Top bar */}
-      <header className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
+      <header className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-5">
         <span className="flex items-center gap-2">
           <StencilMark />
           <span style={{ fontFamily: MONO }} className="text-sm font-semibold">
@@ -86,7 +86,7 @@ export default function Developers() {
         </span>
         <nav
           style={{ fontFamily: MONO }}
-          className="flex items-center gap-5 text-xs text-muted-foreground"
+          className="flex items-center gap-3 text-xs text-muted-foreground sm:gap-5"
         >
           <a href="#how" className="hover:text-foreground">
             basics

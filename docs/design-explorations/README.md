@@ -49,7 +49,9 @@ Mobbin references consulted:
 - Seat calculator: [Coda](https://mobbin.com/sites/sections/2377e733-dfbb-4506-8422-47afd49c203f) (team size vs doc makers, "never pay for collaborators"), [GitBook](https://mobbin.com/sites/sections/8545954a-6e11-46c1-bbb1-d3f5f5487618) (plan plus users, total per month as a receipt), [Teak](https://mobbin.com/sites/sections/58c2e515-2f0f-4696-8cc2-d9d0ad4993c7) (single slider, big total beside it).
 - FAQ: [Harvest](https://mobbin.com/sites/sections/0c073171-fb09-4b13-b140-937acb761f2c) (heading left, questions right), [Zaro](https://mobbin.com/sites/sections/faffeda3-f5a4-4bf9-8fb3-b404473b5c63) (seat question answered first).
 
-## Round 3 — Contact (2026-09-25) — open
+## Round 3 — Contact (2026-09-25) — closed
+
+**Outcome (2026-09-25):** option B is now `/contact` (`src/routes/Contact.tsx`). Unlike earlier rounds, A, B and C are kept under `/design/contact/*` for reference.
 
 The page the two "Contact us" buttons on `/pricing` point at. Style is locked (Product v2); the exploration is about how much to ask and in what order. Forms don't post anywhere yet; submit shows a "sent" state.
 

@@ -35,6 +35,8 @@ const ROUNDS: Round[] = [
     id: "contact",
     surface: "Contact",
     date: "2026-09-25",
+    outcome:
+      "Locked in on 2026-09-25: option B became /contact. A and C are kept here for reference.",
     options: [
       {
         slug: "a",
@@ -49,6 +51,7 @@ const ROUNDS: Round[] = [
         title: "Three doors, then a short form",
         blurb:
           "Enterprise demo, help with a doc, or press and partnerships. Each door narrows the form to what that person needs.",
+        liveAt: "/contact",
       },
       {
         slug: "c",

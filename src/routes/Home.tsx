@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { usePageMeta } from "~/hooks/usePageMeta";
+import { SiteFooter } from "~/components/site/SiteFooter";
 
 /**
  * Homepage (root). Aimed at product, design, content and business people
@@ -60,6 +62,12 @@ const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
 
 export default function Home() {
+  usePageMeta({
+    title: "Katagami",
+    description:
+      "Write the spec together. Argue in the margins. Ship one version. Collaborative Markdown for product, design and engineering teams.",
+    bare: true,
+  });
   const { create, loading, error } = useCreateDoc();
 
   return (
@@ -90,6 +98,9 @@ export default function Home() {
           </a>
           <Link to="/pricing" className="hover:text-foreground">
             Pricing
+          </Link>
+          <Link to="/contact" className="hover:text-foreground">
+            Contact
           </Link>
           <Link
             to="/developers"
@@ -355,13 +366,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-xs text-muted-foreground md:px-10">
-        <span className="flex items-center gap-2">
-          <StencilMark small />
-          <span style={{ fontFamily: SERIF }}>Katagami</span>
-        </span>
-        <span>型紙 — a stencil the whole team fills in</span>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

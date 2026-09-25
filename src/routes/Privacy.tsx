@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { usePageMeta } from "~/hooks/usePageMeta";
+import { SiteFooter } from "~/components/site/SiteFooter";
 
 /**
  * Privacy policy.
@@ -359,6 +361,11 @@ const ALL_IDS = ALL.map((s) => s.id);
 /* ---- page --------------------------------------------------------------- */
 
 export default function Privacy() {
+  usePageMeta({
+    title: "Privacy",
+    description:
+      "What Katagami collects, what it does not, where documents are stored, and who can see them.",
+  });
   const { create, loading, error } = useCreateDoc();
   const active = useActiveSection(ALL_IDS);
 
@@ -506,13 +513,7 @@ export default function Privacy() {
         </div>
       </main>
 
-      <footer className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-xs text-muted-foreground md:px-10">
-        <span className="flex items-center gap-2">
-          <StencilMark small />
-          <span style={{ fontFamily: SERIF }}>Katagami</span>
-        </span>
-        <span>型紙 — a stencil the whole team fills in</span>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

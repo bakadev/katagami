@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { usePageMeta } from "~/hooks/usePageMeta";
+import { SiteFooter } from "~/components/site/SiteFooter";
 
 /**
  * 404: a stencil with nothing cut.
@@ -40,6 +42,11 @@ const NOTCH_IN =
   "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px)";
 
 export default function NotFound() {
+  usePageMeta({
+    title: "Page not found",
+    description:
+      "Nothing is cut here yet. The link may be wrong, or the document may have been deleted.",
+  });
   const { create, loading, error } = useCreateDoc();
 
   return (
@@ -170,13 +177,7 @@ export default function NotFound() {
         </div>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8 text-xs text-muted-foreground md:px-10">
-        <span className="flex items-center gap-2">
-          <StencilMark small />
-          <span style={{ fontFamily: SERIF }}>Katagami</span>
-        </span>
-        <span>型紙 — a stencil the whole team fills in</span>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

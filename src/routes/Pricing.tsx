@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 /** Pricing option D: composite of A (hero, FAQ layout), B (short answers), C (calculator, what Team adds, Enterprise band). */
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { usePageMeta } from "~/hooks/usePageMeta";
+import { SiteFooter } from "~/components/site/SiteFooter";
 
 
 /**
@@ -122,6 +124,12 @@ const FAQ: { q: string; a: string }[] = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
+  usePageMeta({
+    title: "Pricing",
+    description:
+      "Free to start. One price for the team. Free for one or two people and up to ten docs; Team is $39 a month with five seats.",
+  });
   const { create, loading, error } = useCreateDoc();
   const [seats, setSeats] = useState(8);
 
@@ -254,7 +262,11 @@ export default function Pricing() {
               priceSmall
               meta="Custom seat agreements"
               blurb="For organisations that need sign-on, retention and an SLA."
-              cta={<SheetButton secondary>Contact us</SheetButton>}
+              cta={
+                <SheetButton secondary onClick={() => navigate("/contact")}>
+                  Contact us
+                </SheetButton>
+              }
               lead="Everything in Team, plus"
               items={[
                 "Single sign-on",
@@ -493,13 +505,13 @@ export default function Pricing() {
               </p>
             </div>
             <div className="flex flex-col items-start gap-3 md:items-end">
-              <button
-                type="button"
+              <Link
+                to="/contact"
                 style={{ clipPath: NOTCH }}
-                className="h-11 bg-white px-6 text-sm font-medium text-[var(--indigo)] hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex h-11 items-center bg-white px-6 text-sm font-medium text-[var(--indigo)] hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Contact us
-              </button>
+              </Link>
               <span className="text-xs text-white/70">
                 Priced per agreement.
               </span>
@@ -508,13 +520,7 @@ export default function Pricing() {
         </section>
       </main>
 
-      <footer className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8 text-xs text-muted-foreground md:px-10">
-        <span className="flex items-center gap-2">
-          <StencilMark small />
-          <span style={{ fontFamily: SERIF }}>Katagami</span>
-        </span>
-        <span>型紙 — a stencil the whole team fills in</span>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { usePageMeta } from "~/hooks/usePageMeta";
 
 /**
  * /developers — the developer door. Linked from the README, install
@@ -63,6 +64,11 @@ const NOTCH =
   "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)";
 
 export default function Developers() {
+  usePageMeta({
+    title: "For developers",
+    description:
+      "Markdown, multiplayer. Still just a file. Real-time co-editing for READMEs, RFCs and runbooks, with no account and plain HTTP export.",
+  });
   const { create, loading, error } = useCreateDoc();
   const typed = useTypewriter(SOURCE);
 

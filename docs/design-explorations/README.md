@@ -62,3 +62,17 @@ The page the two "Contact us" buttons on `/pricing` point at. Style is locked (P
 | `/design/contact/c` | **C. A conversation.** | Four questions one at a time on a single sheet, cut-edge progress along the top, seat stepper and slider for team size, and a live sentence on the left restating the answers, including what the team size means on Team pricing. |
 
 Mobbin references consulted: ToDesktop and Reducto (split form with a "here to help" column), Grammarly and Charma (choose a reason before the form), Dovetail (route-by-reason select with response time up front), Sana AI "Book an intro" flow (stepped request with team size).
+
+## Round 4 — Audience top bar (2026-09-25) — open
+
+A strip above the site header that switches between the teams pages and `/developers`, so the "For developers" / "for teams" cross-links can leave the main nav. Each option is shown on the real homepage and developer page with the nav cross-link hidden (`audienceLink={false}`).
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/topbar/a` | **A. Utility bar.** | Solid indigo, white text. Notched two-way audience switch on the left; on the right a live status dot, a one-line pilot note, and a "Log in · soon" slot that becomes real when accounts ship. |
+| `/design/topbar/b` | **B. Announcement bar.** | Indigo with a faint seigaiha ground. Plain audience links with the current one underlined, one dismissible message ("every plan is free while billing is built") linking to pricing. |
+| `/design/topbar/c` | **C. Hairline bar.** | No fill: a bordered 32px strip on the page background with 11px text. "Katagami for Teams · Developers", operational status, log in, a theme toggle and the 型紙 mark. |
+
+Append `/developers` to any option's URL to see the same bar on the developer page.
+
+Mobbin references consulted: Klarna (tiny "For shoppers / For business" links above the header), Grammarly and Equals (solid announcement bars), Stripe (quiet secondary bar under the nav), mymind (single-row pill nav with status dots).

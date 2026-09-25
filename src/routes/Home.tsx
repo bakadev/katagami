@@ -61,7 +61,12 @@ const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
 
-export default function Home() {
+export default function Home({
+  audienceLink = true,
+}: {
+  /** Show the "For developers" cross-link in the nav. Off when a top bar carries it. */
+  audienceLink?: boolean;
+} = {}) {
   usePageMeta({
     title: "Katagami",
     description:
@@ -102,12 +107,14 @@ export default function Home() {
           <Link to="/contact" className="hover:text-foreground">
             Contact
           </Link>
-          <Link
-            to="/developers"
-            className="text-[var(--indigo)] hover:underline dark:text-blue-300"
-          >
-            For developers
-          </Link>
+          {audienceLink && (
+            <Link
+              to="/developers"
+              className="text-[var(--indigo)] hover:underline dark:text-blue-300"
+            >
+              For developers
+            </Link>
+          )}
           <button
             type="button"
             onClick={create}

@@ -32,6 +32,34 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "topbar",
+    surface: "Audience top bar",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "a",
+        persona: "A · Utility bar",
+        title: "Indigo, a notched switch, status and log in",
+        blurb:
+          "Solid indigo strip above the header. Audience switch on the left, live status, pilot note and a log-in slot on the right.",
+      },
+      {
+        slug: "b",
+        persona: "B · Announcement bar",
+        title: "Audience links plus one dismissible message",
+        blurb:
+          "Indigo with a faint wave ground. Plain audience links, one message about the pilot with a link, and a dismiss.",
+      },
+      {
+        slug: "c",
+        persona: "C · Hairline bar",
+        title: "No fill, tiny text, the quiet version",
+        blurb:
+          "A bordered strip on the page background: Katagami for Teams · Developers, status, log in, theme toggle, the mark.",
+      },
+    ],
+  },
+  {
     id: "contact",
     surface: "Contact",
     date: "2026-09-25",

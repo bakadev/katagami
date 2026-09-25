@@ -63,7 +63,12 @@ const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height
 const NOTCH =
   "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)";
 
-export default function Developers() {
+export default function Developers({
+  audienceLink = true,
+}: {
+  /** Show the "for teams" cross-link in the nav. Off when a top bar carries it. */
+  audienceLink?: boolean;
+} = {}) {
   usePageMeta({
     title: "For developers",
     description:
@@ -104,12 +109,14 @@ export default function Developers() {
           >
             source
           </a>
-          <Link
-            to="/"
-            className="text-[var(--indigo)] hover:underline dark:text-blue-300"
-          >
-            for teams →
-          </Link>
+          {audienceLink && (
+            <Link
+              to="/"
+              className="text-[var(--indigo)] hover:underline dark:text-blue-300"
+            >
+              for teams →
+            </Link>
+          )}
         </nav>
       </header>
 

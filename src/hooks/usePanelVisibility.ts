@@ -25,8 +25,17 @@ function readTab(fallback: PanelTab): PanelTab {
   return fallback;
 }
 
+/** Phones start with the panel closed; it opens as an overlay there. */
+function defaultOpen(): boolean {
+  try {
+    return window.matchMedia("(min-width: 768px)").matches;
+  } catch {
+    return true;
+  }
+}
+
 export function usePanelVisibility() {
-  const [open, setOpenState] = useState<boolean>(() => readBool(OPEN_KEY, true));
+  const [open, setOpenState] = useState<boolean>(() => readBool(OPEN_KEY, defaultOpen()));
   const [activeTab, setActiveTabState] = useState<PanelTab>(() => readTab("comments"));
 
   const setOpen = useCallback((next: boolean) => {

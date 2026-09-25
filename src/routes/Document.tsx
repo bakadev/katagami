@@ -497,6 +497,7 @@ export default function DocumentRoute() {
 
         <RightPanel
           open={panelOpen}
+          onClose={togglePanel}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           commentCount={unresolvedCount + suggestions.length}

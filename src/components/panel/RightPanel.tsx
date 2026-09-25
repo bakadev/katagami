@@ -4,6 +4,8 @@ import type { PanelTab } from "~/hooks/usePanelVisibility";
 
 interface RightPanelProps {
   open: boolean;
+  /** Phones: tapping the backdrop closes the overlay. */
+  onClose?: () => void;
   activeTab: PanelTab;
   onTabChange: (tab: PanelTab) => void;
   commentCount: number;
@@ -31,6 +33,7 @@ const TABS: readonly PanelTabDescriptor[] = [
  */
 export function RightPanel({
   open,
+  onClose,
   activeTab,
   onTabChange,
   commentCount,
@@ -49,12 +52,24 @@ export function RightPanel({
   });
 
   return (
+    <>
+      {/* Phones: the panel floats over the editor; a backdrop closes it. */}
+      {open && (
+        <button
+          type="button"
+          aria-label="Close panel"
+          onClick={onClose}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
     <aside
       role="complementary"
       aria-label="Document panel"
       aria-hidden={!open}
-      className={`notch flex min-h-0 flex-col overflow-hidden bg-border p-px transition-[width] duration-200 ease-out ${
-        open ? "w-[360px]" : "w-0 p-0"
+      className={`notch min-h-0 flex-col overflow-hidden bg-border p-px transition-[width] duration-200 ease-out ${
+        open
+          ? "fixed inset-y-3 right-3 z-40 flex w-[min(360px,calc(100vw-1.5rem))] shadow-2xl md:static md:inset-auto md:z-auto md:w-[360px] md:shadow-none"
+          : "hidden md:flex md:w-0 md:p-0"
       }`}
     >
       {open ? (
@@ -70,5 +85,6 @@ export function RightPanel({
         </div>
       ) : null}
     </aside>
+    </>
   );
 }

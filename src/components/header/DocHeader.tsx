@@ -115,7 +115,7 @@ function EditPreviewTabs({
                   className={cn(
                     // flex-1 makes the three modes share equal width so the
                     // sliding thumb's `(100% - 4px) / 3` math is correct.
-                    "relative z-10 inline-flex h-7 w-9 flex-1 items-center justify-center rounded-sm",
+                    "relative z-10 inline-flex h-7 w-9 flex-1 items-center justify-center rounded-sm md:h-6 md:w-auto md:gap-1 md:px-2.5",
                     "cursor-pointer outline-none",
                     "text-xs font-medium",
                     "transition-colors duration-150 ease-out",
@@ -125,8 +125,8 @@ function EditPreviewTabs({
                     "focus-visible:ring-2 focus-visible:ring-ring/60",
                   )}
                 >
-                  <Icon className="size-[15px]" strokeWidth={2} aria-hidden />
-                  <span className="sr-only">{opt.shortLabel}</span>
+                  <Icon className="size-[15px] md:size-[13px]" strokeWidth={2} aria-hidden />
+                  <span className="sr-only md:not-sr-only md:inline">{opt.shortLabel}</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent sideOffset={6}>{opt.label}</TooltipContent>
@@ -178,8 +178,8 @@ export function DocHeader({
         className={cn(
           // Phones: identity on the first line, controls on a second line.
           // From md up, one row.
-          "relative flex w-full flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap md:gap-4",
-          "px-4 py-2.5 md:px-6",
+          "relative flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 md:flex-nowrap md:gap-4",
+          "px-3 py-2 md:px-6 md:py-2.5",
         )}
       >
         {/* ---- LEFT: document identity ---- */}
@@ -214,7 +214,7 @@ export function DocHeader({
         </div>
 
         {/* ---- RIGHT: controls cluster ---- */}
-        <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-3">
+        <div className="flex w-full shrink-0 items-center gap-2 md:w-auto md:gap-3">
           <SaveSnapshotButton
             disabled={readOnly}
             onSave={onSaveSnapshot}
@@ -231,8 +231,9 @@ export function DocHeader({
 
           <PanelToggle open={panelOpen} onToggle={onTogglePanel} />
 
-          {/* Avatar slot is a pass-through — whatever the route wires in */}
-          {avatarSlot}
+          {/* Avatar slot is a pass-through — whatever the route wires in.
+              On phones it sits at the far end of the controls row. */}
+          <div className="ml-auto md:ml-0">{avatarSlot}</div>
         </div>
       </div>
     </header>

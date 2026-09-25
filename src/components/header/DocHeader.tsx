@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from "react";
-import { Eye, PenLine } from "lucide-react";
+import { Eye, MessageSquareDiff, PenLine } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,7 +14,7 @@ import { PanelToggle } from "./PanelToggle";
 import { SaveSnapshotButton } from "./SaveSnapshotButton";
 import { TitleEditor } from "./TitleEditor";
 
-export type EditorMode = "edit" | "preview";
+export type EditorMode = "edit" | "suggest" | "preview";
 
 export interface DocHeaderProps {
   title: string | null;
@@ -39,8 +39,14 @@ type ModeOption = {
 };
 
 const MODE_OPTIONS: readonly ModeOption[] = [
-  { value: "edit", label: "Edit mode", shortLabel: "Edit", icon: PenLine },
-  { value: "preview", label: "Preview mode", shortLabel: "Preview", icon: Eye },
+  { value: "edit", label: "Edit directly", shortLabel: "Edit", icon: PenLine },
+  {
+    value: "suggest",
+    label: "Suggest: edits become suggestions",
+    shortLabel: "Suggest",
+    icon: MessageSquareDiff,
+  },
+  { value: "preview", label: "Preview the rendered document", shortLabel: "Preview", icon: Eye },
 ];
 
 /**
@@ -62,8 +68,6 @@ function EditPreviewTabs({
   const index = MODE_OPTIONS.findIndex((o) => o.value === value);
   // translateX percentages resolve against the element's own width, so
   // `index * 100%` slides the thumb by exactly one thumb-width per slot.
-  // Using `(100% / 2)` of the container would overshoot because the thumb
-  // is narrower than half the container by the 4px of inset padding.
   const thumbOffset = `${index * 100}%`;
 
   return (
@@ -73,7 +77,7 @@ function EditPreviewTabs({
         aria-label="View mode"
         aria-orientation="horizontal"
         className={cn(
-          "relative items-center rounded-sm border border-border bg-muted/40 p-0.5 grid grid-cols-2",
+          "relative items-center rounded-sm border border-border bg-muted/40 p-0.5 grid grid-cols-3",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
         )}
       >
@@ -86,7 +90,7 @@ function EditPreviewTabs({
             "transition-transform duration-200 ease-in-out",
           )}
           style={{
-            width: "calc((100% - 4px) / 2)",
+            width: "calc((100% - 4px) / 3)",
             transform: `translateX(${thumbOffset})`,
             // The thumb slides exactly one thumb-width per slot.
           }}
@@ -109,8 +113,8 @@ function EditPreviewTabs({
                     if (!isActive) onChange(opt.value);
                   }}
                   className={cn(
-                    // flex-1 makes Edit + Preview share equal width so the
-                    // sliding thumb's `(100% - 4px) / 2` math is correct.
+                    // flex-1 makes the three modes share equal width so the
+                    // sliding thumb's `(100% - 4px) / 3` math is correct.
                     "relative z-10 inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-sm px-2.5",
                     "cursor-pointer outline-none",
                     "text-xs font-medium",

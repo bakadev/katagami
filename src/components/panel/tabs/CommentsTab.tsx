@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { ThreadCard } from "~/components/comments/ThreadCard";
+import { SuggestionCard } from "~/components/suggestions/SuggestionCard";
+import type { Suggestion } from "~/lib/suggestions/types";
 import type { Thread } from "~/lib/comments/types";
 
 interface CommentsTabProps {
   threads: Thread[];
+  /** Pending suggestions, in document order. */
+  suggestions?: Suggestion[];
+  onAcceptSuggestion?: (id: string) => void;
+  onRejectSuggestion?: (id: string) => void;
+  onClickSuggestion?: (id: string) => void;
   currentAuthorName: string;
   readOnly: boolean;
   resolveAnchor: (thread: Thread) => string;
@@ -59,8 +66,30 @@ export function CommentsTab({
   onDeleteThreadRoot,
   onDeleteReply,
   onClickAnchor,
+  suggestions = [],
+  onAcceptSuggestion,
+  onRejectSuggestion,
+  onClickSuggestion,
 }: CommentsTabProps) {
   const [showResolved, setShowResolved] = useState(false);
+  const suggestionList =
+    suggestions.length > 0 ? (
+      <section aria-label="Suggestions" className="space-y-2 border-b border-border p-3">
+        <h3 className="text-xs font-medium text-muted-foreground">
+          {suggestions.length} {suggestions.length === 1 ? "suggestion" : "suggestions"}
+        </h3>
+        {suggestions.map((s) => (
+          <SuggestionCard
+            key={s.id}
+            suggestion={s}
+            readOnly={readOnly}
+            onAccept={(id) => onAcceptSuggestion?.(id)}
+            onReject={(id) => onRejectSuggestion?.(id)}
+            onClick={(id) => onClickSuggestion?.(id)}
+          />
+        ))}
+      </section>
+    ) : null;
 
   const { unresolved, resolved, total, resolvedCount } = useMemo(() => {
     const u: Thread[] = [];
@@ -86,7 +115,7 @@ export function CommentsTab({
   // resolvedCount > 0 && unresolved.length === 0` case (all done!) gets
   // a subtly different treatment below inside the list view — we still
   // show the strip so the user can toggle back.
-  if (total === 0) {
+  if (total === 0 && suggestions.length === 0) {
     return (
       <div
         role="region"
@@ -204,7 +233,8 @@ export function CommentsTab({
        * treatment, because the global state is "working," not "fresh."
        */}
       <div className="flex-1 overflow-y-auto">
-        {visible.length === 0 ? (
+        {suggestionList}
+        {visible.length === 0 && suggestions.length === 0 ? (
           <div className="flex h-full min-h-[200px] flex-col items-center justify-center px-6 text-center">
             <div className="mb-3 flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <MessageSquare

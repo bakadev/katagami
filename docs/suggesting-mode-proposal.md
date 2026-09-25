@@ -1,6 +1,6 @@
 # Suggesting mode — proposal
 
-> Status: proposal, 2026-09-25. Prompted by a user comparing Katagami to Google Docs' Suggesting mode.
+> Status: proposal, 2026-09-25.
 
 ## Summary
 

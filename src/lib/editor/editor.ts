@@ -6,6 +6,11 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CommentAnchor } from "./comment-mark";
 import { mdDecorationsPlugin } from "./md-decorations";
+import {
+  SuggestChanges,
+  SuggestableDocument,
+  SuggestionMarks,
+} from "./suggest-changes";
 import type * as Y from "yjs";
 import type { WebsocketProvider } from "y-websocket";
 import type { Identity } from "~/lib/user/identity";
@@ -23,6 +28,8 @@ export interface CreateEditorArgs {
   provider: WebsocketProvider;
   identity: Identity;
   editable: boolean;
+  /** Ids of suggestions created by a rewritten transaction (suggest mode). */
+  onNewSuggestions?: (ids: string[]) => void;
 }
 
 /**
@@ -36,12 +43,15 @@ export function createEditor({
   provider,
   identity,
   editable,
+  onNewSuggestions,
 }: CreateEditorArgs): Editor {
   return new Editor({
     element,
     editable,
     extensions: [
       StarterKit.configure({
+        // Replaced by SuggestableDocument so block-level suggestions can carry marks.
+        document: false,
         // Yjs owns undo/redo; disabling TipTap's history avoids double-undo.
         undoRedo: false,
         // Block-transforming extensions disabled so Markdown syntax characters
@@ -77,6 +87,9 @@ export function createEditor({
       }),
       CommentAnchor,
       MdSyntaxDecorations,
+      SuggestableDocument,
+      ...SuggestionMarks,
+      SuggestChanges.configure({ onNewSuggestions }),
     ],
   });
 }

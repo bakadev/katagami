@@ -1,8 +1,10 @@
 import type { Editor } from "@tiptap/core";
+import { getSourceText } from "~/lib/editor/source-text";
 
 export function buildMarkdownFromEditor(editor: Editor): string {
-  // One paragraph per source line; blank lines are empty paragraphs.
-  return editor.getText({ blockSeparator: "\n" });
+  // One paragraph per source line, pending suggestions resolved as the
+  // document stands today (insertions hidden, deletions kept).
+  return getSourceText(editor);
 }
 
 export function buildFilename(title: string | null | undefined, docId: string): string {

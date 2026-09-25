@@ -313,6 +313,28 @@ html.dark {
   min-height: 100%;
 }
 
+/* Suggesting mode: proposed insertions and deletions, in the editor and in
+   the Review panel cards. */
+.suggest-ins {
+  background: color-mix(in oklch, #22a06b 18%, transparent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, #22a06b 70%, transparent);
+  text-underline-offset: 3px;
+}
+.suggest-del {
+  background: color-mix(in oklch, #d9534f 14%, transparent);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklch, #d9534f 80%, transparent);
+  color: var(--muted-foreground);
+}
+.suggest-mod {
+  box-shadow: inset 0 -2px 0 color-mix(in oklch, var(--brand) 50%, transparent);
+}
+ins[data-inline="false"],
+del[data-inline="false"] {
+  display: block;
+}
+
 /* Respect the user's OS-level motion preference. WCAG 2.3.3. */
 @media (prefers-reduced-motion: reduce) {
   *,

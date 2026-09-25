@@ -14,7 +14,13 @@ import { downloadAsMarkdown } from "~/lib/export/markdown-download";
 import { Toolbar } from "~/components/editor/Toolbar";
 import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
 import { CommentComposer } from "~/components/editor/CommentComposer";
-import { DocHeader } from "~/components/header/DocHeader";
+import { DocHeader, type EditorMode } from "~/components/header/DocHeader";
+import { getSourceText } from "~/lib/editor/source-text";
+import { useSuggestions } from "~/hooks/useSuggestions";
+import {
+  createSuggestionRecords,
+  removeSuggestionRecords,
+} from "~/lib/suggestions/suggestions";
 import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
@@ -61,7 +67,7 @@ export default function DocumentRoute() {
   const [status, setStatus] = useState<"connecting" | "connected" | "disconnected">(
     "connecting",
   );
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [mode, setMode] = useState<EditorMode>("edit");
   const [markdown, setMarkdown] = useState("");
   const [editor, setEditor] = useState<Editor | null>(null);
   const [composer, setComposer] = useState<ComposerState | null>(null);
@@ -73,6 +79,14 @@ export default function DocumentRoute() {
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
 
   const threads = useThreads(editor, connectionRef.current?.ydoc ?? null);
+  const suggestions = useSuggestions(editor, connectionRef.current?.ydoc ?? null);
+
+  // Suggest mode: rewrite edits into suggestions while active.
+  useEffect(() => {
+    if (!editor) return;
+    if (mode === "suggest") editor.commands.enableSuggesting();
+    else editor.commands.disableSuggesting();
+  }, [editor, mode]);
   const unresolvedCount = useMemo(
     () => threads.filter((t) => !t.resolved).length,
     [threads],
@@ -122,14 +136,20 @@ export default function DocumentRoute() {
       provider: conn.provider,
       identity,
       editable: permissionLevel === "edit",
+      // A rewritten transaction created these suggestions; record who and when.
+      onNewSuggestions: (ids) => {
+        createSuggestionRecords(conn.ydoc, ids, {
+          authorName: identity.name,
+          authorColor: identity.color,
+        });
+      },
     });
     setEditor(tipTapEditor);
 
     const syncMarkdown = () => {
-      // One editor paragraph is one source line, and a blank line is an empty
-      // paragraph, so paragraphs join with a single newline. Joining with a
-      // blank line broke anything that spans lines: tables, lists, quotes.
-      setMarkdown(tipTapEditor.getText({ blockSeparator: "\n" }));
+      // One editor paragraph is one source line; pending suggestions are
+      // resolved the way the document reads today.
+      setMarkdown(getSourceText(tipTapEditor));
     };
     syncMarkdown();
     tipTapEditor.on("update", syncMarkdown);
@@ -442,7 +462,7 @@ export default function DocumentRoute() {
             shrink instead of growing the page. */}
         <div className="notch flex min-h-0 flex-1 flex-col overflow-hidden bg-border p-px">
         <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
-          {mode === "edit" && !readOnly && (
+          {mode !== "preview" && !readOnly && (
             <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
             </div>
@@ -461,7 +481,7 @@ export default function DocumentRoute() {
                 }
               }}
               className={`prose min-h-full max-w-none p-4 font-mono text-sm leading-6 dark:prose-invert [&_p]:my-0 ${
-                mode === "edit" ? "flex flex-col" : "hidden"
+                mode !== "preview" ? "flex flex-col" : "hidden"
               }`}
             />
             {mode === "preview" && (
@@ -479,7 +499,7 @@ export default function DocumentRoute() {
           open={panelOpen}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          commentCount={unresolvedCount}
+          commentCount={unresolvedCount + suggestions.length}
           hasNewCommentActivity={false}
         >
           {activeTab === "documents" && <DocsTab />}
@@ -515,6 +535,25 @@ export default function DocumentRoute() {
                 deleteReply(ydoc, threadId, replyId);
               }}
               onClickAnchor={handleScrollToAnchor}
+              suggestions={suggestions}
+              onAcceptSuggestion={(id) => {
+                if (!editor) return;
+                editor.commands.acceptSuggestion(id);
+                const ydoc = connectionRef.current?.ydoc;
+                if (ydoc) removeSuggestionRecords(ydoc, [id]);
+              }}
+              onRejectSuggestion={(id) => {
+                if (!editor) return;
+                editor.commands.rejectSuggestion(id);
+                const ydoc = connectionRef.current?.ydoc;
+                if (ydoc) removeSuggestionRecords(ydoc, [id]);
+              }}
+              onClickSuggestion={(id) => {
+                const s = suggestions.find((x) => x.id === id);
+                if (!s || !editor) return;
+                editor.commands.focus(s.from);
+                editor.commands.scrollIntoView();
+              }}
             />
           )}
           {activeTab === "ai" && <AiTab />}

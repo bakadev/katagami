@@ -4,13 +4,22 @@ import {
   buildFilename,
   buildMarkdownFromEditor,
 } from "~/lib/export/markdown-download";
-import type { Editor } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
 
+/** A real editor: buildMarkdownFromEditor reads the document, not getText. */
 function stubEditor(text: string): Editor {
-  return {
-    getText: ({ blockSeparator }: { blockSeparator: string }) =>
-      text.split("\n").join(blockSeparator),
-  } as unknown as Editor;
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  const html = text
+    .split("\n")
+    .map((line) => `<p>${line}</p>`)
+    .join("");
+  return new Editor({
+    element: host,
+    extensions: [StarterKit.configure({ undoRedo: false })],
+    content: text === "" ? "<p></p>" : html,
+  });
 }
 
 describe("buildFilename", () => {

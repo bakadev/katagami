@@ -75,8 +75,9 @@ export function RightPanel({
         aria-hidden={!open}
         inert={!open}
         className={`notch flex min-h-0 flex-col overflow-hidden bg-border p-px transition-[width,translate] duration-200 ease-out ${
-          /* phone: drawer sliding in from the right edge of the content area */
-          "absolute inset-y-3 right-3 z-40 w-[min(360px,calc(100vw-1.5rem))] shadow-2xl"
+          /* phone: drawer sliding in over the editor card, matching its
+             footprint exactly (the content area has p-4) */
+          "absolute inset-4 z-40 shadow-2xl"
         } ${open ? "translate-x-0" : "pointer-events-none translate-x-[calc(100%+1rem)]"} ${
           /* md+: in-flow column that collapses to zero width */
           "md:static md:inset-auto md:z-auto md:translate-x-0 md:shadow-none md:pointer-events-auto"

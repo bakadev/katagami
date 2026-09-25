@@ -91,3 +91,45 @@ Should the editor's header take the utility bar's indigo? There is no mock: each
 | `/design/editor-header/a` | **A. Indigo with pattern.** | The whole document header on indigo with the faint seigaiha; title, meta and controls in white via scoped token overrides. |
 | `/design/editor-header/b` | **B. Indigo plain.** | Same header, solid indigo, no pattern. |
 | `/design/editor-header/c` | **C. Rail.** | The site's 32px utility bar carried into the app above the current dark header: home link, live connection state, log-in slot, the mark. The document header itself stays quiet. |
+
+## Round 6 — Authentication (2026-09-25)
+
+The account pages that arrive with OAuth (`two-tier-proposal.md` section 5: OAuth first, GitHub and Google, Free needs no account, Team requires one). There is no email and password, so there is no password reset and no "create account" form: the first sign-in with a provider is the sign-up. Three surfaces, seven variants, all under `/design/auth/*` and rendered by `src/routes/design/auth/AuthExploration.tsx`. Style is locked to Product v2; the options differ in layout and how much they say.
+
+Copy shared by every sign-in option: "Accounts are needed for Team: projects, seats and named history. Free documents never need one.", a link back to "Start a spec without an account" (`/`), and a legal line linking `/terms` and `/privacy`. Buttons do nothing except navigate to `/` where noted.
+
+**Sign in**
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/auth/signin-a` | **A. Centered stencil sheet.** | One notched card on the asanoha ground with registration marks. Wordmark on top, "Sign in", the reason line, GitHub and Google as outlined two-layer notched buttons, a note that the first sign-in creates the account, the link back to a free document. Footer beneath. The least to read; the page is a gate and says so. |
+| `/design/auth/signin-b` | **B. Split.** | Left half indigo cloth with the seigaiha dyed through: a serif statement ("An account is the door to Team. Free documents stay outside it.") and three lines with the mark: projects, seats, named history. Right half the same card on the plain ground. On a phone the indigo half becomes a band above the card. |
+| `/design/auth/signin-c` | **C. Inline in the site.** | Site header and footer stay. Large serif "Sign in" on a short asanoha hero, then a komon band with the sign-in panel on the left (like the Contact form) and a numbered "What an account is for" column on the right in the Contact page's "what happens next" style, ending with a link to `/pricing`. |
+
+**After sign-in (welcome)**
+
+First screen after the provider returns. There are no workspaces yet, so the step is "Name your workspace", prefilled from the email domain (`priya@acme.co` becomes "Acme"), with "Skip for now" back to `/`.
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/auth/welcome-a` | **A. Full-page stepper.** | Three steps across the top on the asanoha ground: 1 Sign in (filled, check), 2 Name your workspace (outlined notch, active), 3 Invite people (muted, "later"). Greeting with a notched initials avatar and "Signed in as Priya Raman via Google", then the step 2 form on an indigo-bordered sheet. A footnote says step 3 can wait and that 5 seats are included. |
+| `/design/auth/welcome-b` | **B. A quiet card.** | One card on a komon band: avatar, name and provider, "You're signed in.", the name field, one full-width button, and a single line "5 seats included on Team, add people any time." No stepper, so nothing suggests a long setup. |
+
+**Claim a project**
+
+Someone who wrote documents without an account signs in. The browser still holds the creator token (`mvp-spec.md` section 6), so the app can offer to attach those documents to the new workspace. Both options list 2 to 3 documents with title and last edited, offer "Move these into Acme" and "Not now", and say that share links keep working.
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/auth/claim-a` | **A. Sheet over the document.** | The document they were on, faked with a few lines of Markdown on a notched card, sits blurred and dimmed behind. A modal-style sheet with the mark, "Bring these documents with you?", the three documents as a plain list, primary and outlined "Not now", and the share-link line. No footer: it reads as an interruption on the way into the document. |
+| `/design/auth/claim-b` | **B. A page.** | On a komon band. Left column explains with the mark how we know the documents are theirs (the creator key) and what does not change: share links, comments and history, and that an unchecked document stays a Free document claimable later. Right column is a notched table with a select-all header, a checkbox per row (all checked), editing count and last edited, and a footer whose button counts the selection ("Move 2 into Acme"). |
+
+**Recommendation:** Sign in A (the plainest gate; B's statement repeats the pricing page, C's inline framing makes signing in look like a marketing page). Welcome B (with one step there is nothing for a stepper to sequence; A becomes right if invite-people ships as part of setup). Claim B (checkboxes let someone leave a personal draft behind, which A can't; A is better if claiming is triggered from inside a document rather than after sign-in).
+
+Mobbin references consulted:
+
+- Provider-only sign in: [Microsoft Copilot](https://mobbin.com/screens/e88a372c-08d7-49a4-b670-cbac99e11f4f) (three provider buttons, one line of reason, split with image), [Steep](https://mobbin.com/screens/9dddac5b-a5e7-43dd-90b0-7063434e6975) ("Sign in or create a new account", providers only, legal line), [Twingate](https://mobbin.com/screens/0223cd02-29d3-40de-ab9c-4a19073ec719) (stacked providers on a plain ground, terms and privacy at the foot), [Pi](https://mobbin.com/screens/c14e455c-da99-4996-975e-fdc96928c18b) (the reason to sign in as the heading, "Not now" as the way out).
+- GitHub and Google together: [Lovable](https://mobbin.com/screens/a08946ce-1d08-4d35-907b-961eeb8f2df2), [Laravel Cloud](https://mobbin.com/screens/da4e69aa-9d8b-4f2e-9578-d9ad6d6c02b0), [GitBook](https://mobbin.com/screens/7fdc8055-8c83-498b-be38-89c773272c6c) (all split, product preview on the right, providers before email).
+- Split with a statement instead of a screenshot: [Klaviyo](https://mobbin.com/screens/609920e7-3191-4ed1-8e5c-090cf98d338b) (dark half with a headline and four bullet lines), [Origin](https://mobbin.com/screens/78f8e79a-9f51-48e8-a2dd-46990e75a959) (serif "Welcome back", providers first).
+- Welcome and workspace naming: [OpenAI Platform](https://mobbin.com/screens/611e8426-d9df-4449-ab4c-1fae5a59c6cb) (organisation name prefilled, "Signed in with ..." under the button, step dots on top), [Midday](https://mobbin.com/screens/29a9dee0-9f92-47a7-b1ff-3f41001a2a0e) (serif "Welcome, Sam", the quietest version), [Uxcel](https://mobbin.com/screens/635b9bc6-b4b5-4371-bc62-7a93735b5034) (progress bar over "Let's create your team"), [Devin](https://mobbin.com/screens/bee6917d-e6a3-4e5c-9352-2d648d5ef22d) ("Skip for now" under the primary), [Wrangle](https://mobbin.com/screens/a36483f9-b739-404c-bfe4-49a88aaac5cd) (onboarding status card listing done, current and not-started steps).
+- Claiming and moving existing work: [Heidi](https://mobbin.com/screens/02e8e434-5f4e-436d-a7aa-29370bcc95a2) (review list with a checkbox per row and "Import (3 of 3)"), [Manus](https://mobbin.com/screens/4fe21022-2ea8-4c45-a9e5-507dba3214da) (select all, every row checked by default, over a blurred page), [Square](https://mobbin.com/screens/116c1970-a671-44e2-aca9-e598ce0865a7) (modal table with checkbox, title and status columns), [TheyDo](https://mobbin.com/screens/e0d88387-339f-4069-bff8-54a2da91e2da) (grouped checklist with counts and a single "Duplicate workspace" button), [fal](https://mobbin.com/screens/b6df3dd7-1d2a-49f3-8452-7dc208bf7913) (small modal over the dashboard).

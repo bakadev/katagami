@@ -32,6 +32,62 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "auth",
+    surface: "Authentication",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "signin-a",
+        persona: "Sign in · A",
+        title: "Centered stencil sheet",
+        blurb:
+          "One notched card on the asanoha ground: wordmark, GitHub and Google as outlined buttons, why an account exists, a way back to a document without one.",
+      },
+      {
+        slug: "signin-b",
+        persona: "Sign in · B",
+        title: "Split: indigo statement, plain card",
+        blurb:
+          "Left half indigo with seigaiha and three lines on what an account unlocks (projects, seats, named history); right half the sign-in card.",
+      },
+      {
+        slug: "signin-c",
+        persona: "Sign in · C",
+        title: "Inline in the site",
+        blurb:
+          "Site header and footer stay. A small sign-in panel in the page flow on a komon band, beside a numbered 'what an account is for' column.",
+      },
+      {
+        slug: "welcome-a",
+        persona: "After sign-in · A",
+        title: "Full-page stepper",
+        blurb:
+          "1 Sign in (done) · 2 Name your workspace (active) · 3 Invite people (later). Greeting with the provider avatar, name prefilled from the email domain.",
+      },
+      {
+        slug: "welcome-b",
+        persona: "After sign-in · B",
+        title: "A quiet card",
+        blurb:
+          "Avatar and name, 'You're signed in', one name field, one button, one line about seats. No stepper, nothing else to read.",
+      },
+      {
+        slug: "claim-a",
+        persona: "Claim a project · A",
+        title: "Sheet over the document",
+        blurb:
+          "A modal-style sheet over the blurred document they were on: three documents found in this browser, move them in or not now, share links keep working.",
+      },
+      {
+        slug: "claim-b",
+        persona: "Claim a project · B",
+        title: "A page with a table",
+        blurb:
+          "Left column explains claiming with the mark; right column a notched table of the documents with checkboxes, all checked, and a button that counts the selection.",
+      },
+    ],
+  },
+  {
     id: "editor-header",
     surface: "Editor header",
     date: "2026-09-25",
@@ -239,11 +295,12 @@ export function ExplorationBar({
   const r = ROUNDS.find((x) => x.id === round);
   if (!r) return null;
   return (
-    <div className="sticky top-0 z-50 flex h-9 items-center justify-between border-b border-border bg-background/95 px-4 text-xs backdrop-blur">
-      <Link to="/design" className="text-muted-foreground hover:text-foreground">
+    <div className="sticky top-0 z-50 flex h-9 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 text-xs backdrop-blur">
+      <Link to="/design" className="shrink-0 text-muted-foreground hover:text-foreground">
         ← Explorations / {r.surface}
       </Link>
-      <nav className="flex items-center gap-1">
+      {/* Many options (Round 6 has seven) scroll sideways on phones. */}
+      <nav className="flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none]">
         {r.options.map((o) => (
           <Link
             key={o.slug}

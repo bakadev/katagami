@@ -50,11 +50,11 @@ const ROUNDS: Round[] = [
           "For POs, PMs and business users writing specs that the dev team or an AI agent will build from.",
       },
       {
-        slug: "enterprise",
-        persona: "Enterprise buyer",
-        title: "Safe to standardize on",
+        slug: "katagami",
+        persona: "Product / Business · katagami",
+        title: "Get everyone to yes, cut in paper",
         blurb:
-          "For an IT or ops lead evaluating one tool for every team, with security, hosting and pricing up front.",
+          "Same page as Product, re-materialised with stencil motifs, cut-paper edges and aizome indigo.",
       },
     ],
   },

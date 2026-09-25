@@ -5,7 +5,7 @@ import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
 import HomeDeveloper from "./routes/design/home/HomeDeveloper";
 import HomeProduct from "./routes/design/home/HomeProduct";
-import HomeEnterprise from "./routes/design/home/HomeEnterprise";
+import HomeProductKatagami from "./routes/design/home/HomeProductKatagami";
 
 export default function App() {
   return (
@@ -18,7 +18,7 @@ export default function App() {
       <Route path="/design" element={<DesignIndex />} />
       <Route path="/design/home/developer" element={<HomeDeveloper />} />
       <Route path="/design/home/product" element={<HomeProduct />} />
-      <Route path="/design/home/enterprise" element={<HomeEnterprise />} />
+      <Route path="/design/home/katagami" element={<HomeProductKatagami />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

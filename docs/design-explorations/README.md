@@ -19,6 +19,10 @@ Pages use the existing theme tokens (`bg-background`, `text-muted-foreground`, e
 |---|---|---|
 | `/design/home/developer` | **Developer.** Creates, edits and maintains Markdown docs (READMEs, RFCs, ADRs, runbooks). Wants a tool, not a platform; distrusts anything that hides the file. | README-shaped single column, monospace display type, dotted rules, live raw-vs-rendered hero, keyboard table, curl snippets. Amber accent. |
 | `/design/home/product` | **PO / PM / Business user.** Has to get a mixed team (product, design, content, engineering) to agree on a spec that engineering or an AI agent will build from. Lives in Google Docs and Slack today. | Editorial serif headline, wide margins, spec excerpt with named cursors and open comment threads, numbered draft-to-agreed process, version history as sign-off, handoff section. Sage accent, yellow anchor highlight. |
-| `/design/home/enterprise` | **Enterprise buyer.** IT, ops or platform lead choosing one documentation tool for many teams. Needs proof of adoption, security, hosting options and pricing above the fold. | Centered layout, tight Geist headings, logo strip, stats row, security control grid, department use cases, deployment options, three-tier pricing, demo request form. Navy accent. |
+| `/design/home/katagami` | **Product / Business user, katagami iteration.** Same persona, sections and copy as Product. | Re-materialised with the craft the product is named after: asanoha, komon and seigaiha stencil tiles as section grounds, notched "cut paper" cards with registration marks, seigaiha cut-edge strips between sections, aizome indigo as the single accent. Replaced the Enterprise option after review (Sept 25). |
+
+Review, 2026-09-25: Developer and Product kept; Enterprise dropped and replaced by the katagami iteration of Product.
 
 Mobbin references consulted: Cursor and Height (code-editor hero), Figma, Coda and Vercel (annotated document hero with cursors and comments), Vanta, Notion and Mural (enterprise hero, logo strip, demo CTA), GitHub, Dovetail and TheyDo (three-tier pricing).
+
+Katagami-iteration references: Figma Shortcut (punched-dot card fields, essentially komon), Sketch (hairline hexagon lattice, a kikkō), Dropbox (two-tone riso block with numbered rail), Linear (fine-line geometric ornament under a serif headline).

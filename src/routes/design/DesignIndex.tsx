@@ -1,8 +1,5 @@
-import { Link, useNavigate } from "react-router";
-import { useState } from "react";
+import { Link } from "react-router";
 import { Moon, Sun } from "lucide-react";
-import { createProject } from "~/lib/api";
-import { storeCreatorToken } from "~/lib/creator-token";
 import { useTheme } from "~/lib/theme/useTheme";
 
 /**
@@ -20,12 +17,16 @@ interface Option {
   persona: string;
   title: string;
   blurb: string;
+  /** Set when the option was promoted to a real route. */
+  liveAt?: string;
 }
 
 interface Round {
   id: string;
   surface: string;
   date: string;
+  /** Present once a winner was chosen and shipped. */
+  outcome?: string;
   options: Option[];
 }
 
@@ -34,27 +35,24 @@ const ROUNDS: Round[] = [
     id: "home",
     surface: "Homepage",
     date: "2026-09-24",
+    outcome:
+      "Locked in on 2026-09-25: Product v2 became the root homepage and Developer v2 became /developers. The other options were retired.",
     options: [
-      {
-        slug: "developer",
-        persona: "Developer",
-        title: "The file is the product",
-        blurb:
-          "For engineers who create, edit and maintain Markdown docs and want a tool, not a platform.",
-      },
-      {
-        slug: "developer-v2",
-        persona: "Developer v2",
-        title: "The file is the product, same cloth",
-        blurb:
-          "The Developer page with the Product v2 DNA: indigo, stencil wordmark, notched buttons, cut edges. Still minimal.",
-      },
       {
         slug: "katagami",
         persona: "Product v2",
         title: "Get everyone to yes, cut in paper",
         blurb:
           "For POs, PMs and business users. Stencil motifs, cut-paper edges and aizome indigo.",
+        liveAt: "/",
+      },
+      {
+        slug: "developer-v2",
+        persona: "Developer v2",
+        title: "The file is the product, same cloth",
+        blurb:
+          "The developer door, sharing the homepage's DNA: indigo, stencil wordmark, notched buttons, cut edges.",
+        liveAt: "/developers",
       },
     ],
   },
@@ -85,15 +83,23 @@ export default function DesignIndex() {
               <h2 className="text-lg font-medium">{round.surface}</h2>
               <span className="text-xs text-muted-foreground">{round.date}</span>
             </div>
+            {round.outcome && (
+              <p className="mt-3 text-sm text-muted-foreground">{round.outcome}</p>
+            )}
             <ul className="mt-4 grid gap-3 sm:grid-cols-3">
               {round.options.map((opt) => (
                 <li key={opt.slug}>
                   <Link
-                    to={`/design/${round.id}/${opt.slug}`}
+                    to={opt.liveAt ?? `/design/${round.id}/${opt.slug}`}
                     className="block h-full rounded-lg border border-border p-4 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="text-xs text-muted-foreground">
                       {opt.persona}
+                      {opt.liveAt && (
+                        <span className="ml-2 text-[var(--indigo,#274b8f)] dark:text-blue-300">
+                          live at {opt.liveAt}
+                        </span>
+                      )}
                     </span>
                     <span className="mt-1 block font-medium">{opt.title}</span>
                     <span className="mt-2 block text-sm text-muted-foreground">
@@ -138,7 +144,7 @@ export function ExplorationBar({
         {r.options.map((o) => (
           <Link
             key={o.slug}
-            to={`/design/${r.id}/${o.slug}`}
+            to={o.liveAt ?? `/design/${r.id}/${o.slug}`}
             aria-current={o.slug === current ? "page" : undefined}
             className={
               "rounded px-2 py-0.5 " +
@@ -175,28 +181,4 @@ export function ThemeToggleButton() {
       )}
     </button>
   );
-}
-
-/** Shared "create a doc" behaviour so each option's primary CTA is real. */
-export function useCreateDoc() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function create() {
-    setLoading(true);
-    setError(null);
-    try {
-      const body = await createProject();
-      storeCreatorToken(body.project.id, body.creatorToken);
-      navigate(
-        `/p/${body.project.id}/d/${body.document.id}?key=${body.permissions.editToken}`,
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Unknown error");
-      setLoading(false);
-    }
-  }
-
-  return { create, loading, error };
 }

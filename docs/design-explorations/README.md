@@ -13,7 +13,9 @@ An area of the app (`/design`) for comparing redesign options before committing 
 
 Pages use the existing theme tokens (`bg-background`, `text-muted-foreground`, etc.) so light and dark both work. Each page may add its own accent colors as CSS variables on its root element.
 
-## Round 1 — Homepage (2026-09-24)
+## Round 1 — Homepage (2026-09-24) — closed
+
+**Outcome (2026-09-25):** Product v2 is now the root homepage (`src/routes/Home.tsx`) and Developer v2 is `/developers` (`src/routes/Developers.tsx`). The exploration files were promoted rather than copied, so the routes below no longer exist; the index at `/design` links to the live pages instead.
 
 | Option | Persona | Direction |
 |---|---|---|

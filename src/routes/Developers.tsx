@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { ExplorationBar, useCreateDoc } from "../DesignIndex";
+import { useCreateDoc } from "~/hooks/useCreateDoc";
 
 /**
- * Homepage option B — Developer v2.
+ * /developers — the developer door. Linked from the README, install
+ * snippets and anywhere engineers arrive from; the root homepage is aimed
+ * at product and business people. Chosen from the Round 1 design
+ * exploration ("Developer v2").
  *
- * Same persona and structure as the original Developer page: README-shaped
- * column, monospace display type, the hero that types raw Markdown on the
- * left while the right pane renders it. What changes is the shared DNA with
- * the katagami Product page so the two read as one site:
+ * README-shaped column, monospace display type, a hero that types raw
+ * Markdown on the left while the right pane renders it. Shares the
+ * homepage's DNA so the two read as one site:
  *
  * - aizome indigo is the single accent (was amber)
  * - the stencil-cell wordmark glyph
@@ -60,7 +62,7 @@ const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height
 const NOTCH =
   "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)";
 
-export default function HomeDeveloperKatagami() {
+export default function Developers() {
   const { create, loading, error } = useCreateDoc();
   const typed = useTypewriter(SOURCE);
 
@@ -69,8 +71,6 @@ export default function HomeDeveloperKatagami() {
       className="min-h-screen bg-background text-foreground"
       style={{ ["--indigo" as string]: INDIGO }}
     >
-      <ExplorationBar round="home" current="developer-v2" />
-
       {/* Top bar */}
       <header className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
         <span className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function HomeDeveloperKatagami() {
             source
           </a>
           <Link
-            to="/design/home/katagami"
+            to="/"
             className="text-[var(--indigo)] hover:underline dark:text-blue-300"
           >
             for teams →

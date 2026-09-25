@@ -5,6 +5,7 @@ import { signInUrl } from "~/lib/api/auth";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SEIGAIHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 import { StencilMark } from "~/components/site/StencilMark";
 
@@ -115,10 +116,7 @@ export default function SignIn() {
               <RegMark className="-right-3 -top-3" />
               <RegMark className="-bottom-3 -left-3" />
               <RegMark className="-bottom-3 -right-3" />
-              <div
-                style={{ clipPath: NOTCH }}
-                className="border border-border bg-card p-6 shadow-sm sm:p-8"
-              >
+              <NotchCard shadow className="p-6 sm:p-8">
                 <h1 style={{ fontFamily: SERIF }} className="text-3xl leading-tight">
                   Sign in
                 </h1>
@@ -158,7 +156,7 @@ export default function SignIn() {
                     Start a spec without an account
                   </Link>
                 </div>
-              </div>
+              </NotchCard>
             </div>
 
             <p className="mt-6 text-xs text-muted-foreground">

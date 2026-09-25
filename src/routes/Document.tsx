@@ -21,6 +21,7 @@ import {
   createSuggestionRecords,
   removeSuggestionRecords,
 } from "~/lib/suggestions/suggestions";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { useAuth } from "~/lib/auth/AuthProvider";
@@ -471,12 +472,15 @@ export default function DocumentRoute() {
             ribbon spanning the whole window. */}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <RegMarks />
-        {/* Outlined notch: a border-coloured outer face with the card face
-            inside, so the 1px edge follows the cut corners. Every layer in
-            this flex chain needs min-h-0 so the scroll container below can
-            shrink instead of growing the page. */}
-        <div className="notch flex min-h-0 flex-1 flex-col overflow-hidden bg-border p-px">
-        <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+        {/* Outlined notch (NotchCard): a border-coloured outer face with the
+            page face inside, so the 1px edge follows the cut corners. Every
+            layer in this flex chain needs min-h-0 so the scroll container
+            below can shrink instead of growing the page. */}
+        <NotchCard
+          fill="background"
+          outerClassName="min-h-0 flex-1 overflow-hidden"
+          className="flex flex-col overflow-hidden"
+        >
           {mode !== "preview" && !readOnly && (
             <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
@@ -506,8 +510,7 @@ export default function DocumentRoute() {
               />
             )}
           </div>
-        </div>
-        </div>
+        </NotchCard>
         </div>
 
         <RightPanel

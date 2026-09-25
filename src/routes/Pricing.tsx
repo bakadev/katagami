@@ -7,6 +7,7 @@ import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
 import { ASANOHA, KOMON, SEIGAIHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 
 /**
@@ -257,10 +258,7 @@ export default function Pricing() {
               <RegMark className="-right-3 -top-3" />
               <RegMark className="-bottom-3 -left-3" />
               <RegMark className="-bottom-3 -right-3" />
-              <div
-                style={{ clipPath: NOTCH }}
-                className="border border-[var(--indigo)] bg-card p-6 shadow-md sm:p-8"
-              >
+              <NotchCard tone="indigo" shadow className="p-6 sm:p-8">
                 <div className="flex items-center justify-between">
                   <label htmlFor="seats" className="text-sm font-medium">
                     People who edit
@@ -354,7 +352,7 @@ export default function Pricing() {
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   Start on Free today. Move to Team when billing opens.
                 </p>
-              </div>
+              </NotchCard>
             </div>
           </div>
         </section>
@@ -535,14 +533,11 @@ function Sheet({
           <RegMark className="-bottom-3 -right-3" />
         </>
       )}
-      <div
-        style={{ clipPath: NOTCH }}
-        className={
-          "flex h-full flex-col border bg-card " +
-          (featured
-            ? "border-[var(--indigo)] shadow-md"
-            : "border-border shadow-sm")
-        }
+      <NotchCard
+        tone={featured ? "indigo" : "gray"}
+        shadow
+        outerClassName="h-full"
+        className="flex flex-col"
       >
         {featured ? (
           <div className="flex items-center justify-between bg-[var(--indigo)] px-6 py-2 text-xs text-white">
@@ -586,7 +581,7 @@ function Sheet({
             ))}
           </ul>
         </div>
-      </div>
+      </NotchCard>
     </div>
   );
 }

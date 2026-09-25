@@ -4,6 +4,7 @@ import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
 import { ASANOHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 
 /**
@@ -53,10 +54,7 @@ export default function NotFound() {
             <RegMark className="-right-3 -top-3" />
             <RegMark className="-bottom-3 -left-3" />
             <RegMark className="-bottom-3 -right-3" />
-            <div
-              style={{ clipPath: NOTCH }}
-              className="relative overflow-hidden border border-[var(--indigo)] bg-card p-4 shadow-md sm:p-8"
-            >
+            <NotchCard tone="indigo" shadow className="relative overflow-hidden p-4 sm:p-8">
               {/* Asanoha field, the stencil ground */}
               <div
                 aria-hidden
@@ -119,7 +117,7 @@ export default function NotFound() {
                   </p>
                 )}
               </section>
-            </div>
+            </NotchCard>
           </div>
 
           <p className="mx-auto mt-8 max-w-[60ch] text-center text-sm leading-relaxed text-muted-foreground">

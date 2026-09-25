@@ -6,6 +6,7 @@ import { clearCreatorToken, listCreatorTokens } from "~/lib/creator-token";
 import type { ClaimLookupResponse } from "../../shared/types";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 import { StencilMark } from "~/components/site/StencilMark";
 
@@ -156,10 +157,7 @@ export default function Claim() {
             <RegMark className="-right-3 -top-3" />
             <RegMark className="-bottom-3 -left-3" />
             <RegMark className="-bottom-3 -right-3" />
-            <div
-              style={{ clipPath: NOTCH }}
-              className="border border-[var(--indigo)] bg-card shadow-md dark:border-blue-300/60"
-            >
+            <NotchCard tone="indigo" shadow>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -265,7 +263,7 @@ export default function Claim() {
                   </button>
                 </div>
               </div>
-            </div>
+            </NotchCard>
           </div>
         </div>
       </main>

@@ -34,7 +34,7 @@ export function SiteHeader() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="mx-auto max-w-6xl px-6 py-6 md:px-10">
+    <header className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10">
       <div className="flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <StencilMark />

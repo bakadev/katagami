@@ -3,6 +3,7 @@ import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
 import { ASANOHA, KOMON, SEIGAIHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 
 /**
@@ -112,10 +113,7 @@ export default function Home() {
                 <RegMark className="-right-3 -top-3" />
                 <RegMark className="-bottom-3 -left-3" />
                 <RegMark className="-bottom-3 -right-3" />
-                <div
-                  style={{ clipPath: NOTCH }}
-                  className="border border-border bg-card p-6 shadow-sm sm:p-8"
-                >
+                <NotchCard shadow className="p-6 sm:p-8">
                   <p className="text-xs text-muted-foreground">
                     Checkout redesign · PRD · v3
                   </p>
@@ -142,7 +140,7 @@ export default function Home() {
                     Out of scope: saved payment methods, loyalty points.
                     <CursorLabel name="Jonas · Design" color="#b5452c" />
                   </p>
-                </div>
+                </NotchCard>
               </div>
 
               <div className="space-y-3 sm:pt-10">
@@ -212,10 +210,7 @@ export default function Home() {
           className="mx-auto grid max-w-6xl gap-12 px-6 py-20 md:grid-cols-2 md:items-center md:px-10"
         >
           <div className="order-2 md:order-1">
-            <div
-              style={{ clipPath: NOTCH }}
-              className="border border-border bg-card p-5"
-            >
+            <NotchCard className="p-5">
               <p className="text-xs text-muted-foreground">Version history</p>
               <ul className="mt-3 divide-y divide-border">
                 <Snap name="v3 · approved by stakeholders" who="Priya" when="Today, 4:12 PM" named />
@@ -223,7 +218,7 @@ export default function Home() {
                 <Snap name="Auto-snapshot" who="" when="Tue, 10:55 AM" />
                 <Snap name="v1 · first full draft" who="Amara" when="Mon, 3:02 PM" named />
               </ul>
-            </div>
+            </NotchCard>
           </div>
           <div className="order-1 md:order-2">
             <h2
@@ -354,10 +349,7 @@ function Thread({
   replies: number;
 }) {
   return (
-    <div
-      style={{ clipPath: NOTCH }}
-      className="border border-border bg-card p-3 shadow-sm"
-    >
+    <NotchCard shadow className="p-3">
       <div className="flex items-center gap-2 text-xs">
         <span
           aria-hidden
@@ -373,7 +365,7 @@ function Thread({
         )}
       </div>
       <p className="mt-1.5 text-sm leading-snug">{body}</p>
-    </div>
+    </NotchCard>
   );
 }
 

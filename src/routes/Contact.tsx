@@ -3,6 +3,7 @@ import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
 import { ASANOHA, KOMON, SEIGAIHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 import { StencilMark } from "~/components/site/StencilMark";
 
@@ -24,10 +25,6 @@ const INDIGO = "#274b8f";
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
-
-/** Same notch, 1px smaller, for the inner face of an outlined shape. */
-const NOTCH_IN =
-  "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px)";
 
 const TEAM_SIZES = ["Just me", "2 to 5", "6 to 20", "21 to 100", "More than 100"];
 
@@ -93,17 +90,15 @@ export default function Contact() {
                     setPath(d.id);
                     setSent(false);
                   }}
-                  style={{ clipPath: NOTCH }}
                   className={
-                    "group relative p-px text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-                    (active ? "bg-[var(--indigo)] dark:bg-blue-300" : "bg-border")
+                    "notch group relative p-px text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+                    (active ? "bg-brand-ink" : "bg-border")
                   }
                 >
                   <span
-                    style={{ clipPath: NOTCH_IN }}
                     className={
-                      "block h-full p-6 " +
-                      (active ? "bg-[var(--indigo-tint)]" : "bg-card group-hover:bg-muted/60")
+                      "notch-in block h-full p-6 " +
+                      (active ? "bg-brand-tint" : "bg-card group-hover:bg-muted/60")
                     }
                   >
                     <span className="flex items-center justify-between">
@@ -163,10 +158,12 @@ export default function Contact() {
                   <RegMark className="-right-3 -top-3" />
                   <RegMark className="-bottom-3 -left-3" />
                   <RegMark className="-bottom-3 -right-3" />
-                  <form
+                  <NotchCard
+                    as="form"
                     key={path}
-                    style={{ clipPath: NOTCH }}
-                    className="grid gap-5 border border-[var(--indigo)] bg-card p-6 shadow-md sm:p-8"
+                    tone="indigo"
+                    shadow
+                    className="grid gap-5 p-6 sm:p-8"
                     onSubmit={(e) => {
                       e.preventDefault();
                       setSent(true);
@@ -232,7 +229,7 @@ export default function Contact() {
                       <p className="text-xs text-muted-foreground">Reply within one business day.</p>
                       <Primary type="submit">{door.cta}</Primary>
                     </div>
-                  </form>
+                  </NotchCard>
                 </>
               )}
             </div>
@@ -306,11 +303,7 @@ function Sent({ email, onReset }: { email: string; onReset: () => void }) {
       <RegMark className="-right-3 -top-3" />
       <RegMark className="-bottom-3 -left-3" />
       <RegMark className="-bottom-3 -right-3" />
-      <div
-        style={{ clipPath: NOTCH }}
-        className="border border-[var(--indigo)] bg-card p-8 text-center"
-        role="status"
-      >
+      <NotchCard tone="indigo" className="p-8 text-center" role="status">
         <StencilMark className="dark:text-brand" />
         <p style={{ fontFamily: SERIF }} className="mt-4 text-2xl">
           Sent.
@@ -327,7 +320,7 @@ function Sent({ email, onReset }: { email: string; onReset: () => void }) {
         >
           Send another
         </button>
-      </div>
+      </NotchCard>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { listCreatorTokens } from "~/lib/creator-token";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { ASANOHA } from "~/components/site/patterns";
+import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 
 /**
@@ -24,9 +25,6 @@ const INDIGO = "#274b8f";
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
-
-const NOTCH_IN =
-  "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px)";
 
 /** "priya@acme.co" → "Acme"; personal mailboxes fall back to the first name. */
 export function guessWorkspaceName(email: string, name: string): string {
@@ -116,30 +114,29 @@ export default function Welcome() {
           <ol className="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Setup steps">
             {STEPS.map((s) => (
               <li key={s.n} className="flex items-center gap-3">
-                <span
-                  style={{ fontFamily: SERIF, clipPath: NOTCH }}
-                  className={
-                    "flex size-8 shrink-0 items-center justify-center text-sm " +
-                    (s.state === "done"
-                      ? "bg-[var(--indigo)] text-white"
-                      : s.state === "active"
-                        ? "bg-[var(--indigo)] p-px text-[var(--indigo)] dark:bg-blue-300 dark:text-blue-300"
+                {s.state === "active" ? (
+                  <NotchCard
+                    as="span"
+                    tone="indigo"
+                    outerClassName="size-8 shrink-0"
+                    style={{ fontFamily: SERIF }}
+                    className="flex items-center justify-center text-sm text-[var(--indigo)] dark:text-blue-300"
+                  >
+                    {s.n}
+                  </NotchCard>
+                ) : (
+                  <span
+                    style={{ fontFamily: SERIF, clipPath: NOTCH }}
+                    className={
+                      "flex size-8 shrink-0 items-center justify-center text-sm " +
+                      (s.state === "done"
+                        ? "bg-[var(--indigo)] text-white"
                         : "bg-muted text-muted-foreground")
-                  }
-                >
-                  {s.state === "done" ? (
-                    <Check />
-                  ) : s.state === "active" ? (
-                    <span
-                      style={{ clipPath: NOTCH_IN }}
-                      className="flex size-full items-center justify-center bg-card"
-                    >
-                      {s.n}
-                    </span>
-                  ) : (
-                    s.n
-                  )}
-                </span>
+                    }
+                  >
+                    {s.state === "done" ? <Check /> : s.n}
+                  </span>
+                )}
                 <span
                   className={
                     "text-xs sm:text-sm " +
@@ -195,9 +192,11 @@ export default function Welcome() {
             <RegMark className="-right-3 -top-3" />
             <RegMark className="-bottom-3 -left-3" />
             <RegMark className="-bottom-3 -right-3" />
-            <form
-              style={{ clipPath: NOTCH }}
-              className="border border-[var(--indigo)] bg-card p-6 shadow-md sm:p-8 dark:border-blue-300/60"
+            <NotchCard
+              as="form"
+              tone="indigo"
+              shadow
+              className="p-6 sm:p-8"
               onSubmit={submit}
             >
               <p className="text-xs text-muted-foreground">Step 2 of 3</p>
@@ -239,7 +238,7 @@ export default function Welcome() {
                   Skip for now
                 </Link>
               </div>
-            </form>
+            </NotchCard>
           </div>
 
           {error && (

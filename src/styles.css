@@ -44,6 +44,7 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-ink: var(--brand-ink);
+  --color-brand-tint: var(--brand-tint);
   --color-anchor: var(--anchor);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -89,6 +90,7 @@
   --brand: #274b8f;
   --brand-foreground: #ffffff;
   --brand-ink: #274b8f;
+  --brand-tint: color-mix(in srgb, #274b8f 14%, var(--card));
   --anchor: color-mix(in oklch, #f2c94c 40%, transparent);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -129,6 +131,7 @@ html.dark {
   --brand: #274b8f;
   --brand-foreground: #ffffff;
   --brand-ink: oklch(0.81 0.1 252);
+  --brand-tint: color-mix(in srgb, oklch(0.81 0.1 252) 14%, var(--card));
   --anchor: color-mix(in oklch, #f2c94c 32%, transparent);
   /* Dark mode is aizome: black with a memory of indigo. Every surface sits
      on hue 265 at very low chroma so the #274b8f accent still separates by
@@ -251,6 +254,9 @@ html.dark {
    border would be sliced off by the clip-path. */
 .notch-in {
   clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+}
+.notch-sm-in {
+  clip-path: polygon(5px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px), 0 5px);
 }
 
 /* Seigaiha hairline: a thin strip of the wave repeat standing in for a rule. */

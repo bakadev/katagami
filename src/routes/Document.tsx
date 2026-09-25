@@ -529,8 +529,8 @@ export default function DocumentRoute() {
 
       {composer && (
         <div
-          className="fixed z-50 w-80 rounded border border-border bg-background p-3 shadow-lg"
-          style={{ top: 120, right: 40 }}
+          className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] rounded-sm border border-border bg-background p-3 shadow-lg"
+          style={{ top: 120, right: 16 }}
           data-testid="inline-comment-composer"
         >
           <p className="mb-2 text-xs text-muted-foreground">

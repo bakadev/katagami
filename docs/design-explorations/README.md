@@ -80,7 +80,9 @@ Append `/developers` to any option's URL to see the same bar on the developer pa
 
 Mobbin references consulted: Klarna (tiny "For shoppers / For business" links above the header), Grammarly and Equals (solid announcement bars), Stripe (quiet secondary bar under the nav), mymind (single-row pill nav with status dots).
 
-## Round 5 — Editor header (2026-09-25) — open
+## Round 5 — Editor header (2026-09-25) — closed
+
+**Outcome (2026-09-25):** option A shipped as the default header in `DocHeader`. The `chrome` param, the switcher strip and the entry route were removed; B and C survive only in git history.
 
 Should the editor's header take the utility bar's indigo? There is no mock: each option opens a real document with the header drawn in that tone via a `chrome` search param, and a strip on the document flips between tones on the same doc. Tones live in `DocHeader` (`tone` prop) and the on-indigo token scheme in `styles.css` (`.on-indigo`).
 

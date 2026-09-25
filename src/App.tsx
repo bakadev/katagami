@@ -9,7 +9,6 @@ import ContactA from "./routes/design/contact/ContactA";
 import ContactB from "./routes/design/contact/ContactB";
 import ContactC from "./routes/design/contact/ContactC";
 import TopBarExploration from "./routes/design/topbar/TopBarExploration";
-import EditorHeaderExploration from "./routes/design/EditorHeaderExploration";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
@@ -46,8 +45,7 @@ export default function App() {
         <Route path="/design/contact/a" element={<ContactA />} />
         <Route path="/design/contact/b" element={<ContactB />} />
         <Route path="/design/contact/c" element={<ContactC />} />
-        <Route path="/design/editor-header/:variant" element={<EditorHeaderExploration />} />
-      <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
+        <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
         <Route
           path="/design/topbar/:variant/:audience"
           element={<TopBarExploration />}

@@ -14,8 +14,7 @@ import { downloadAsMarkdown } from "~/lib/export/markdown-download";
 import { Toolbar } from "~/components/editor/Toolbar";
 import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
 import { CommentComposer } from "~/components/editor/CommentComposer";
-import { DocHeader, type HeaderTone } from "~/components/header/DocHeader";
-import { HeaderToneSwitcher } from "~/components/header/HeaderToneSwitcher";
+import { DocHeader } from "~/components/header/DocHeader";
 import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
@@ -51,14 +50,6 @@ export default function DocumentRoute() {
   const { docId } = useParams();
   const [searchParams] = useSearchParams();
   const key = searchParams.get("key");
-  // Round 5 exploration: header tone chosen by URL, e.g. `&chrome=indigo`.
-  const chromeParam = searchParams.get("chrome");
-  const headerTone: HeaderTone =
-    chromeParam === "indigo" ||
-    chromeParam === "indigo-pattern" ||
-    chromeParam === "rail"
-      ? chromeParam
-      : "plain";
   const navigate = useNavigate();
   useHighlightTheme();
 
@@ -421,9 +412,7 @@ export default function DocumentRoute() {
 
   return (
     <main className="flex h-screen flex-col bg-muted/30">
-      {chromeParam !== null && <HeaderToneSwitcher current={headerTone} />}
       <DocHeader
-        tone={headerTone}
         title={title}
         onSaveTitle={handleSaveTitle}
         readOnly={readOnly}

@@ -7,6 +7,7 @@ import DesignIndex from "./routes/design/DesignIndex";
 import PricingA from "./routes/design/pricing/PricingA";
 import PricingB from "./routes/design/pricing/PricingB";
 import PricingC from "./routes/design/pricing/PricingC";
+import PricingD from "./routes/design/pricing/PricingD";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/design/pricing/a" element={<PricingA />} />
       <Route path="/design/pricing/b" element={<PricingB />} />
       <Route path="/design/pricing/c" element={<PricingC />} />
+      <Route path="/design/pricing/d" element={<PricingD />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

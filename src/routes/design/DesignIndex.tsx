@@ -57,6 +57,13 @@ const ROUNDS: Round[] = [
         blurb:
           "A narrative: start with no account, drag a seat slider to see what Team costs, read what Team adds, Enterprise as a quiet band at the end.",
       },
+      {
+        slug: "d",
+        persona: "D · Composite",
+        title: "A's sheets, C's calculator, short answers",
+        blurb:
+          "The pick after review: A's hero and three sheets, C's seat calculator and What Team adds, A's FAQ layout with B's short answers, C's Enterprise close.",
+      },
     ],
   },
   {

@@ -199,6 +199,21 @@ Two to three evenings. First evening: providers, sessions, `/api/auth/me`, avata
 
 ---
 
+## Moving to a new domain later
+
+Nothing has to be registered against the final domain up front. When it exists:
+
+1. hPanel: add an A record for the new domain pointing at `72.62.80.77`.
+2. Nginx Proxy Manager: add a proxy host for it (same container, same port, WebSockets on, request a certificate).
+3. Google: **Credentials → the web client** → add the new callback to Authorised redirect URIs and the new origin to Authorised JavaScript origins. **OAuth consent screen** → add the new domain to Authorised domains. If the consent screen is already published, Google asks you to verify ownership of the new domain in Search Console (a DNS TXT record).
+4. GitHub: edit the production OAuth app's callback URL, or create a third app.
+5. VPS: change `APP_URL` and `API_URL` in `/opt/docker/katagami/.env`, restart the stack.
+6. Optionally keep the old subdomain as a redirect to the new domain in Nginx Proxy Manager so shared links keep working.
+
+No code change, no re-review, and existing accounts and sessions carry over because they are keyed by email, not by domain.
+
+---
+
 ## If you later want Clerk
 
 Clerk replaces steps B, C and D above (you register providers inside Clerk) and the `Account` and `Session` tables. `User` and `Workspace` stay, keyed by Clerk's user id instead of our uuid. The swap touches the auth routes and the `me` hook, not the documents, claim or workspace code, so building our own now does not paint us into a corner. The cost of Clerk is a monthly fee past 10,000 users and a third service in the sign-in path.

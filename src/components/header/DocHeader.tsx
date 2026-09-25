@@ -160,9 +160,10 @@ export function DocHeader({
     <header
       role="banner"
       className={cn(
-        // Header sits on the muted main backdrop; no border or fill of its
-        // own so it reads as part of the page chrome rather than a card.
-        "w-full",
+        // A single hairline separates the chrome from the workspace. The
+        // brand lives in the mark, the serif title and the notched actions;
+        // a divider in a working tool should be invisible.
+        "w-full border-b border-border",
       )}
     >
       <div
@@ -224,7 +225,6 @@ export function DocHeader({
           {avatarSlot}
         </div>
       </div>
-      <div className="cut-edge" aria-hidden />
     </header>
   );
 }

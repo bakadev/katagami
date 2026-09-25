@@ -68,7 +68,7 @@ export default function ContactB() {
         ["--indigo" as string]: INDIGO,
         ["--indigo-soft" as string]: `color-mix(in oklch, ${INDIGO} 10%, transparent)`,
         // Opaque tint for faces that sit on a coloured outer layer.
-        ["--indigo-tint" as string]: `color-mix(in oklch, ${INDIGO} 14%, var(--card))`,
+        ["--indigo-tint" as string]: `color-mix(in srgb, ${INDIGO} 16%, var(--card))`,
       }}
     >
       <ExplorationBar round="contact" current="b" />

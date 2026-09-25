@@ -4,6 +4,9 @@ import Developers from "./routes/Developers";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
+import PricingA from "./routes/design/pricing/PricingA";
+import PricingB from "./routes/design/pricing/PricingB";
+import PricingC from "./routes/design/pricing/PricingC";
 
 export default function App() {
   return (
@@ -15,6 +18,9 @@ export default function App() {
       {/* Design explorations — public but unlinked.
           See docs/design-explorations/README.md */}
       <Route path="/design" element={<DesignIndex />} />
+      <Route path="/design/pricing/a" element={<PricingA />} />
+      <Route path="/design/pricing/b" element={<PricingB />} />
+      <Route path="/design/pricing/c" element={<PricingC />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

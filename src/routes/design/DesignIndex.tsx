@@ -32,6 +32,34 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "pricing",
+    surface: "Pricing",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "a",
+        persona: "A · Three sheets",
+        title: "Three stencil sheets, Team raised",
+        blurb:
+          "The classic three-column card layout. Team lifted and given the indigo head, feature lists under each, FAQ below.",
+      },
+      {
+        slug: "b",
+        persona: "B · Comparison table",
+        title: "Two prices, then every row",
+        blurb:
+          "A short hero with the two real prices, then one long feature table with cut-edge strips between row groups. For people who want to see everything.",
+      },
+      {
+        slug: "c",
+        persona: "C · Start free, grow",
+        title: "One doc first, then a seat calculator",
+        blurb:
+          "A narrative: start with no account, drag a seat slider to see what Team costs, read what Team adds, Enterprise as a quiet band at the end.",
+      },
+    ],
+  },
+  {
     id: "home",
     surface: "Homepage",
     date: "2026-09-24",

@@ -28,3 +28,20 @@ Review, 2026-09-25: Enterprise dropped and replaced by the katagami iteration of
 Mobbin references consulted: Cursor and Height (code-editor hero), Figma, Coda and Vercel (annotated document hero with cursors and comments), Vanta, Notion and Mural (enterprise hero, logo strip, demo CTA), GitHub, Dovetail and TheyDo (three-tier pricing).
 
 Katagami-iteration references: Figma Shortcut (punched-dot card fields, essentially komon), Sketch (hairline hexagon lattice, a kikkō), Dropbox (two-tone riso block with numbered rail), Linear (fine-line geometric ornament under a serif headline).
+
+## Round 2 — Pricing (2026-09-25) — open
+
+Content is fixed by `two-tier-proposal.md` section 5: Free / Team / Enterprise, Team at $39 a month with 5 seats and $8 per extra seat, Enterprise as an unlinked "Contact us". Style is locked to Product v2, so the three options differ in **layout and emphasis** only. All three share the Product v2 header (stencil wordmark, links to `/` and `/developers`, real "Start a spec" CTA via `useCreateDoc`).
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/pricing/a` | **A. Three stencil sheets.** | Classic three-column cards. Team is lifted 24px, bordered in indigo, given an indigo "Recommended" head and registration marks; Free and Enterprise sit lower on plain borders. Feature lists under each, "Everything in Free, plus" for the upper tiers. Three one-line clarifications on a komon band, then a two-column FAQ. Fastest to scan; the least information per screen. |
+| `/design/pricing/b` | **B. Comparison table.** | Hero states the two real prices as two notched cards. Then one long table: rows are features grouped into Documents, People, Sharing, History, Export and support; groups are separated by inline seigaiha cut-edge rules instead of heavy headers. The Team column sits on a soft indigo band, the column heads (with a CTA each) stay pinned under the exploration bar, and CTAs repeat at the foot of the table. FAQ on komon. Best for a reader who wants every limit before deciding. |
+| `/design/pricing/c` | **C. Start free, grow.** | A narrative in four bands: (1) "Start with one doc, no account" with what Free includes on a stencil sheet; (2) a seat calculator on komon, slider plus +/- steppers, live monthly total from $39 + $8 × extra seats, with a per-editor figure above 5 seats and a nudge back to Free at 1 or 2; (3) six numbered things Team adds over Free, each with the Free limit beneath; (4) Enterprise as a quiet seigaiha indigo band with the unlinked button. No FAQ. Best for a reader asking "what will this cost my team". |
+
+Mobbin references consulted:
+
+- Three tiers with highlighted middle: [Dovetail](https://mobbin.com/sites/sections/53746604-f99e-44bf-ac03-c8813dee7883) (Free / Professional / Enterprise, "Start free" twice and "Contact sales"), [Claude](https://mobbin.com/sites/sections/2a178ff0-87fe-469a-9537-cc349c817aeb) (serif display, "Everything in Free, plus"), [Webflow](https://mobbin.com/sites/sections/86a4762c-79ce-4fe5-8aa7-8bdbba561302) (middle card raised with a top bar and fixed-row limits).
+- Comparison table: [Notion](https://mobbin.com/sites/sections/2e43d18a-cf5a-4e00-869a-7dd96014a4af) (row groups with their own headers), [ReadMe](https://mobbin.com/sites/sections/323667a4-3303-4bb1-a6da-81d2195b95bc) (column heads carry a CTA each), [Linear](https://mobbin.com/sites/sections/d9652689-5b02-4754-b585-6f491369f99b) (highlighted middle column band running the full table).
+- Seat calculator: [Coda](https://mobbin.com/sites/sections/2377e733-dfbb-4506-8422-47afd49c203f) (team size vs doc makers, "never pay for collaborators"), [GitBook](https://mobbin.com/sites/sections/8545954a-6e11-46c1-bbb1-d3f5f5487618) (plan plus users, total per month as a receipt), [Teak](https://mobbin.com/sites/sections/58c2e515-2f0f-4696-8cc2-d9d0ad4993c7) (single slider, big total beside it).
+- FAQ: [Harvest](https://mobbin.com/sites/sections/0c073171-fb09-4b13-b140-937acb761f2c) (heading left, questions right), [Zaro](https://mobbin.com/sites/sections/faffeda3-f5a4-4bf9-8fb3-b404473b5c63) (seat question answered first).

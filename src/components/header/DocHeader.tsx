@@ -73,7 +73,7 @@ function EditPreviewTabs({
         aria-label="View mode"
         aria-orientation="horizontal"
         className={cn(
-          "relative items-center rounded-md border border-border bg-muted/40 p-0.5 grid grid-cols-2",
+          "relative items-center rounded-sm border border-border bg-muted/40 p-0.5 grid grid-cols-2",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
         )}
       >
@@ -81,7 +81,7 @@ function EditPreviewTabs({
         <span
           aria-hidden
           className={cn(
-            "pointer-events-none absolute inset-y-0.5 left-0.5 rounded-[5px] bg-secondary",
+            "pointer-events-none absolute inset-y-0.5 left-0.5 rounded-sm bg-secondary",
             "shadow-sm ring-1 ring-border/60",
             "transition-transform duration-200 ease-in-out",
           )}
@@ -111,7 +111,7 @@ function EditPreviewTabs({
                   className={cn(
                     // flex-1 makes Edit + Preview share equal width so the
                     // sliding thumb's `(100% - 4px) / 2` math is correct.
-                    "relative z-10 inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-[5px] px-2.5",
+                    "relative z-10 inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-sm px-2.5",
                     "cursor-pointer outline-none",
                     "text-xs font-medium",
                     "transition-colors duration-150 ease-out",

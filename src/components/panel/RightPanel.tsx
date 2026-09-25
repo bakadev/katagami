@@ -53,7 +53,7 @@ export function RightPanel({
       role="complementary"
       aria-label="Document panel"
       aria-hidden={!open}
-      className={`flex flex-col overflow-hidden rounded-md border border-border bg-background transition-[width] duration-200 ease-out ${
+      className={`flex flex-col overflow-hidden border border-border bg-background transition-[width] duration-200 ease-out ${
         open ? "w-[360px]" : "w-0 border-0"
       }`}
     >

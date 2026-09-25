@@ -100,16 +100,16 @@ export function CommentsTab({
          */}
         <div
           aria-hidden
-          className="pointer-events-none absolute top-1/2 left-1/2 -z-0 size-48 -translate-x-1/2 -translate-y-[calc(50%+28px)] rounded-full bg-primary/10 blur-3xl dark:bg-primary/15"
+          className="komon pointer-events-none absolute inset-0 -z-0 text-brand-ink opacity-[0.10] dark:opacity-[0.16]"
         />
 
         <div className="motion-safe:animate-in motion-safe:fade-in-50 motion-safe:slide-in-from-bottom-1 motion-safe:duration-500 relative z-10 flex h-full flex-col items-center justify-center p-8 text-center">
           {/* Dual-ring icon badge — matches DocsTab/AiTab exactly. */}
-          <div className="relative mb-5 rounded-full p-3 ring-1 ring-primary/15 ring-inset">
-            <div className="flex size-11 items-center justify-center rounded-full bg-primary/10">
+          <div className="notch relative mb-5 bg-brand/10 p-3">
+            <div className="notch-sm flex size-11 items-center justify-center bg-background">
               <MessageSquare
                 aria-hidden
-                className="size-5 text-primary/80"
+                className="size-5 text-brand-ink"
                 strokeWidth={1.75}
               />
             </div>

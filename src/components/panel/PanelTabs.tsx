@@ -198,7 +198,7 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
         aria-label="Panel sections"
         id={listId}
         className={cn(
-          "grid w-full items-center gap-1 rounded-md border border-border bg-muted/40 p-1",
+          "grid w-full items-center gap-1 rounded-sm border border-border bg-muted/40 p-1",
           "shadow-[inset_0_1px_0_rgb(0_0_0/0.02)]",
           "transition-[grid-template-columns] duration-200 ease-in-out",
         )}
@@ -231,7 +231,7 @@ export function PanelTabs({ tabs, active, onChange }: PanelTabsProps) {
                 // The grid track sets the available width; the button fills
                 // it and clips its own overflowing content while the
                 // grid-template-columns transition runs.
-                "relative flex h-8 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-[5px] px-2",
+                "relative flex h-8 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-sm px-2",
                 "cursor-pointer select-none outline-none",
                 // Color/shadow transitions ride along with the grid-track
                 // width transition so the handoff reads as one gesture.

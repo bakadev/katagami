@@ -40,8 +40,8 @@ export function AvatarButton({
       type="button"
       aria-label={`Open user menu for ${name}`}
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full",
-        "border border-border bg-background text-foreground",
+        "notch-sm inline-flex size-8 shrink-0 items-center justify-center",
+        "bg-brand/10 text-brand-ink",
         "outline-none transition-colors duration-150 ease-out",
         "hover:bg-muted hover:text-foreground",
         // Radix toggles data-state="open" on the trigger when the menu is open.

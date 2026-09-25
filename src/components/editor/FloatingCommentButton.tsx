@@ -62,11 +62,10 @@ export function FloatingCommentButton({ editor, disabled }: FloatingCommentButto
   return (
     <div
       data-testid="floating-selection-bar"
-      className="fixed z-50 flex items-center gap-1 rounded border border-border bg-background px-1 py-1 shadow-md"
+      className="fixed z-50 flex items-center gap-1 rounded-sm border border-border bg-background px-1 py-1 shadow-md"
       style={{ top: position.top, left: position.left, transform: "translateX(-50%)" }}
     >
       <Button
-        variant="ghost"
         size="sm"
         onClick={() => invoke("comment")}
         aria-label="Add comment"

@@ -87,7 +87,7 @@ export function ThreadCard({
 
   return (
     <div
-      className="group/thread overflow-hidden rounded-md border border-border bg-card text-sm transition-colors"
+      className="group/thread overflow-hidden rounded-sm border border-border bg-card text-sm transition-colors"
       data-testid={`thread-${thread.id}`}
       data-resolved={thread.resolved ? "true" : "false"}
       data-expanded={expanded ? "true" : "false"}
@@ -178,7 +178,7 @@ export function ThreadCard({
         <div className="flex items-start justify-between gap-2 border-b border-border/60 px-3 pt-2.5 pb-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span
-              className="rounded-full px-2 py-0.5 text-xs font-medium text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14)]"
+              className="notch-sm px-2 py-0.5 text-xs font-medium text-white"
               style={{ background: thread.authorColor }}
             >
               {thread.authorName}

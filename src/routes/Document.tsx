@@ -15,6 +15,7 @@ import { Toolbar } from "~/components/editor/Toolbar";
 import { FloatingCommentButton } from "~/components/editor/FloatingCommentButton";
 import { CommentComposer } from "~/components/editor/CommentComposer";
 import { DocHeader } from "~/components/header/DocHeader";
+import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
 import { RightPanel } from "~/components/panel/RightPanel";
@@ -426,11 +427,13 @@ export default function DocumentRoute() {
         avatarSlot={avatarSlot}
       />
 
-      <div className="flex flex-1 gap-3 overflow-hidden p-3">
+      <div className="flex flex-1 gap-4 overflow-hidden p-4">
         {/* Editor card — toolbar + editor live together inside one rounded
             surface so the bar reads as part of the editor, not a global
             ribbon spanning the whole window. */}
-        <div className="flex flex-1 flex-col overflow-hidden rounded-md border border-border bg-background">
+        <div className="relative flex flex-1 flex-col">
+        <RegMarks />
+        <div className="flex flex-1 flex-col overflow-hidden border border-border bg-background">
           {mode === "edit" && !readOnly && (
             <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
@@ -450,6 +453,7 @@ export default function DocumentRoute() {
               />
             )}
           </div>
+        </div>
         </div>
 
         <RightPanel

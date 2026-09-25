@@ -1,5 +1,6 @@
 import { Extension, Mark, Node, mergeAttributes } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
+import { AddMarkStep, RemoveMarkStep } from "@tiptap/pm/transform";
 import {
   applySuggestion,
   revertSuggestion,
@@ -125,6 +126,12 @@ export const SuggestableDocument = Node.create({
 export interface SuggestChangesOptions {
   /** Called with the ids of suggestions a rewritten transaction created. */
   onNewSuggestions?: (ids: string[]) => void;
+  /**
+   * Marks whose add/remove steps are never rewritten into suggestions.
+   * Anchoring a comment to text isn't a change to the text; without this
+   * the anchor mark would become a spurious replace suggestion.
+   */
+  passthroughMarks?: string[];
 }
 
 export interface SuggestChangesStorage {
@@ -165,8 +172,19 @@ export function collectSuggestionIds(doc: Transaction["doc"]): Set<string> {
   return ids;
 }
 
+/** True when every step only adds or removes one of the given marks. */
+function onlyTouchesMarks(tr: Transaction, names: Set<string>): boolean {
+  if (tr.steps.length === 0) return false;
+  return tr.steps.every(
+    (step) =>
+      (step instanceof AddMarkStep || step instanceof RemoveMarkStep) &&
+      names.has(step.mark.type.name),
+  );
+}
+
 /** Mirrors the library's own guard in `withSuggestChanges`. */
-function shouldRewrite(tr: Transaction): boolean {
+function shouldRewrite(tr: Transaction, passthrough: Set<string>): boolean {
+  if (onlyTouchesMarks(tr, passthrough)) return false;
   const ySync = (tr.getMeta("y-sync$") ?? {}) as {
     isUndoRedoOperation?: boolean;
     isChangeOrigin?: boolean;
@@ -189,7 +207,7 @@ export const SuggestChanges = Extension.create<
   name: "suggestChanges",
 
   addOptions() {
-    return { onNewSuggestions: undefined };
+    return { onNewSuggestions: undefined, passthroughMarks: ["commentAnchor"] };
   },
 
   addStorage() {
@@ -232,7 +250,8 @@ export const SuggestChanges = Extension.create<
   },
 
   dispatchTransaction({ transaction, next }) {
-    if (!this.storage.enabled || !shouldRewrite(transaction)) {
+    const passthrough = new Set(this.options.passthroughMarks ?? []);
+    if (!this.storage.enabled || !shouldRewrite(transaction, passthrough)) {
       next(transaction);
       return;
     }

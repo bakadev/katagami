@@ -8,6 +8,7 @@ import {
   SuggestableDocument,
 } from "../../src/lib/editor/suggest-changes";
 import { getSourceText } from "../../src/lib/editor/source-text";
+import { CommentAnchor } from "../../src/lib/editor/comment-mark";
 
 beforeAll(() => {
   if (!window.matchMedia) {
@@ -57,6 +58,7 @@ function makeEditor(onNewSuggestions = vi.fn()) {
       }),
       SuggestableDocument,
       ...SuggestionMarks,
+      CommentAnchor,
       SuggestChanges.configure({ onNewSuggestions }),
     ],
     content: "<p>Hello world</p>",
@@ -142,6 +144,22 @@ describe("SuggestChanges extension", () => {
     expect(editor.getText()).not.toContain("there");
     editor.commands.rejectSuggestion(delId);
     expect(inspect(editor)).toEqual([{ text: "Hello world", mark: null, id: null }]);
+    editor.destroy();
+  });
+
+  it("lets a comment anchor through untouched while suggesting", () => {
+    const { editor, onNewSuggestions } = makeEditor();
+    editor.commands.enableSuggesting();
+    editor.chain().setTextSelection({ from: 1, to: 6 }).setCommentAnchor("t1").run();
+    const parts = inspect(editor);
+    expect(parts.every((p) => p.mark === null)).toBe(true);
+    expect(onNewSuggestions).not.toHaveBeenCalled();
+    let anchored = "";
+    editor.state.doc.descendants((n) => {
+      if (n.isText && n.marks.some((m) => m.type.name === "commentAnchor")) anchored += n.text;
+      return true;
+    });
+    expect(anchored).toBe("Hello");
     editor.destroy();
   });
 

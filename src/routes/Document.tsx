@@ -569,7 +569,8 @@ export default function DocumentRoute() {
         </RightPanel>
       </div>
 
-      <FloatingCommentButton editor={editor} disabled={readOnly} />
+      {/* Commenting lives in Suggest mode alongside suggestions. */}
+      <FloatingCommentButton editor={editor} disabled={readOnly || mode !== "suggest"} />
 
       {composer && (
         <div

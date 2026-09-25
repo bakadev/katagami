@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
+import { RegMark } from "~/components/site/RegMark";
+import { StencilMark } from "~/components/site/StencilMark";
 
 /**
  * Claim a project, option B: a page.
@@ -61,7 +63,7 @@ export default function Claim() {
         <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-[5fr_7fr] md:items-start md:px-10 md:py-24">
           {/* Explanation */}
           <div>
-            <StencilMark />
+            <StencilMark className="size-6" />
             <p className="mt-4 text-xs text-muted-foreground">Found in this browser</p>
             <h1 style={{ fontFamily: SERIF }} className="mt-2 text-3xl leading-tight sm:text-4xl">
               Bring your documents into {WORKSPACE}
@@ -187,39 +189,5 @@ export default function Claim() {
 
       <SiteFooter />
     </div>
-  );
-}
-
-/* ---- pieces ------------------------------------------------------------- */
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
-  );
-}
-
-function StencilMark() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className="size-6 text-[var(--indigo)] dark:text-blue-300"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
   );
 }

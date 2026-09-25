@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
+import { ASANOHA } from "~/components/site/patterns";
+import { RegMark } from "~/components/site/RegMark";
 
 /**
  * After sign-in, option A: a full-page stepper on the asanoha ground.
@@ -16,20 +18,6 @@ const SERIF =
   "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
 
 const INDIGO = "#274b8f";
-
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-const ASANOHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M28 0 L56 16 L56 48 L28 64 L0 48 L0 16 Z'/>
-<path d='M28 0 L28 64 M0 16 L56 48 M56 16 L0 48'/>
-<path d='M28 32 L56 16 M28 32 L0 16 M28 32 L0 48 M28 32 L56 48 M28 32 L28 0 M28 32 L28 64'/>
-<path d='M28 48 L56 64 L56 96 L28 112 L0 96 L0 64 Z' transform='translate(0,-16)'/>
-<path d='M0 48 L28 64 M56 48 L28 64'/>
-<path d='M0 80 L28 64 L56 80 M28 64 L28 97'/>
-</g></svg>`);
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
@@ -218,22 +206,6 @@ function Check() {
   return (
     <svg aria-hidden viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.75">
       <path d="M3 8.5l3 3 7-7" />
-    </svg>
-  );
-}
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
     </svg>
   );
 }

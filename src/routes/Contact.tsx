@@ -2,6 +2,9 @@ import { useState, type ReactNode } from "react";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
+import { ASANOHA, KOMON, SEIGAIHA } from "~/components/site/patterns";
+import { RegMark } from "~/components/site/RegMark";
+import { StencilMark } from "~/components/site/StencilMark";
 
 /**
  * /contact. Chosen from the Round 3 design exploration (option B, pick a path).
@@ -18,32 +21,6 @@ const SERIF =
   "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
 
 const INDIGO = "#274b8f";
-
-/* ---- stencil tiles ------------------------------------------------------ */
-
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-const ASANOHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M28 0 L56 16 L56 48 L28 64 L0 48 L0 16 Z'/>
-<path d='M28 0 L28 64 M0 16 L56 48 M56 16 L0 48'/>
-<path d='M28 32 L56 16 M28 32 L0 16 M28 32 L0 48 M28 32 L56 48 M28 32 L28 0 M28 32 L28 64'/>
-<path d='M28 48 L56 64 L56 96 L28 112 L0 96 L0 64 Z' transform='translate(0,-16)'/>
-<path d='M0 48 L28 64 M56 48 L28 64'/>
-<path d='M0 80 L28 64 L56 80 M28 64 L28 97'/>
-</g></svg>`);
-
-const KOMON = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'>
-<g fill='currentColor'><circle cx='4' cy='4' r='1.2'/><circle cx='12' cy='12' r='1.2'/></g></svg>`);
-
-const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M0 40 a40 40 0 0 1 80 0'/><path d='M8 40 a32 32 0 0 1 64 0'/><path d='M16 40 a24 24 0 0 1 48 0'/><path d='M24 40 a16 16 0 0 1 32 0'/>
-<path d='M-40 20 a40 40 0 0 1 80 0' /><path d='M-32 20 a32 32 0 0 1 64 0'/><path d='M-24 20 a24 24 0 0 1 48 0'/><path d='M-16 20 a16 16 0 0 1 32 0'/>
-<path d='M40 20 a40 40 0 0 1 80 0' /><path d='M48 20 a32 32 0 0 1 64 0'/><path d='M56 20 a24 24 0 0 1 48 0'/><path d='M64 20 a16 16 0 0 1 32 0'/>
-</g></svg>`);
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
@@ -334,7 +311,7 @@ function Sent({ email, onReset }: { email: string; onReset: () => void }) {
         className="border border-[var(--indigo)] bg-card p-8 text-center"
         role="status"
       >
-        <StencilMark />
+        <StencilMark className="dark:text-brand" />
         <p style={{ fontFamily: SERIF }} className="mt-4 text-2xl">
           Sent.
         </p>
@@ -414,37 +391,5 @@ function CutEdge() {
         backgroundPosition: "center bottom",
       }}
     />
-  );
-}
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
-  );
-}
-
-function StencilMark({ small }: { small?: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className={small ? "size-3.5" : "size-5"}
-      fill="none"
-      stroke="var(--indigo)"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
   );
 }

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { usePageMeta } from "~/hooks/usePageMeta";
+import { KOMON, SEIGAIHA } from "~/components/site/patterns";
+import { RegMark } from "~/components/site/RegMark";
+import { StencilMark } from "~/components/site/StencilMark";
 
 /**
  * /developers — the developer door. Linked from the README, install
@@ -43,22 +46,6 @@ const MONO =
 
 const INDIGO = "#274b8f";
 
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-/** Komon: offset grid of tiny punched dots. */
-const KOMON = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'>
-<g fill='currentColor'><circle cx='4' cy='4' r='1.2'/><circle cx='12' cy='12' r='1.2'/></g></svg>`);
-
-/** Seigaiha: overlapping concentric arcs. */
-const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M0 40 a40 40 0 0 1 80 0'/><path d='M8 40 a32 32 0 0 1 64 0'/><path d='M16 40 a24 24 0 0 1 48 0'/><path d='M24 40 a16 16 0 0 1 32 0'/>
-<path d='M-40 20 a40 40 0 0 1 80 0' /><path d='M-32 20 a32 32 0 0 1 64 0'/><path d='M-24 20 a24 24 0 0 1 48 0'/><path d='M-16 20 a16 16 0 0 1 32 0'/>
-<path d='M40 20 a40 40 0 0 1 80 0' /><path d='M48 20 a32 32 0 0 1 64 0'/><path d='M56 20 a24 24 0 0 1 48 0'/><path d='M64 20 a16 16 0 0 1 32 0'/>
-</g></svg>`);
-
 const NOTCH =
   "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)";
 
@@ -79,7 +66,7 @@ export default function Developers() {
       {/* Top bar */}
       <header className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-5">
         <span className="flex items-center gap-2">
-          <StencilMark />
+          <StencilMark className="size-4" />
           <span style={{ fontFamily: MONO }} className="text-sm font-semibold">
             katagami<span className="text-muted-foreground">.md</span>
           </span>
@@ -311,7 +298,7 @@ export default function Developers() {
         className="mx-auto max-w-4xl px-6 py-8 text-[11px] text-muted-foreground"
       >
         <span className="flex items-center gap-2">
-          <StencilMark small />
+          <StencilMark className="size-3.5" />
           katagami · 型紙 · built with tiptap, yjs, fastify, postgres
         </span>
       </footer>
@@ -344,38 +331,6 @@ function CutEdge() {
         backgroundPosition: "center bottom",
       }}
     />
-  );
-}
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
-  );
-}
-
-function StencilMark({ small }: { small?: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className={(small ? "size-3.5" : "size-4") + " text-[var(--indigo)] dark:text-blue-300"}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
   );
 }
 

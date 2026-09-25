@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { StencilMark } from "~/components/site/StencilMark";
 
 /**
  * Shared header for the teams-side pages: wordmark (root link), Pricing,
@@ -97,21 +98,5 @@ export function SiteHeader() {
         </p>
       )}
     </header>
-  );
-}
-
-function StencilMark() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className="size-5 text-[#274b8f] dark:text-blue-300"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
   );
 }

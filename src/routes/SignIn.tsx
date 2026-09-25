@@ -1,6 +1,9 @@
 import { Link } from "react-router";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
+import { SEIGAIHA } from "~/components/site/patterns";
+import { RegMark } from "~/components/site/RegMark";
+import { StencilMark } from "~/components/site/StencilMark";
 
 /**
  * Sign in, option B: split.
@@ -15,17 +18,6 @@ const SERIF =
   "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif";
 
 const INDIGO = "#274b8f";
-
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M0 40 a40 40 0 0 1 80 0'/><path d='M8 40 a32 32 0 0 1 64 0'/><path d='M16 40 a24 24 0 0 1 48 0'/><path d='M24 40 a16 16 0 0 1 32 0'/>
-<path d='M-40 20 a40 40 0 0 1 80 0' /><path d='M-32 20 a32 32 0 0 1 64 0'/><path d='M-24 20 a24 24 0 0 1 48 0'/><path d='M-16 20 a16 16 0 0 1 32 0'/>
-<path d='M40 20 a40 40 0 0 1 80 0' /><path d='M48 20 a32 32 0 0 1 64 0'/><path d='M56 20 a24 24 0 0 1 48 0'/><path d='M64 20 a16 16 0 0 1 32 0'/>
-</g></svg>`);
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
@@ -60,7 +52,7 @@ export default function SignIn() {
           />
           <div className="relative flex h-full flex-col px-6 py-10 md:px-12 md:py-14 lg:px-16">
             <Link to="/" className="inline-flex items-center gap-2.5">
-              <StencilMark white />
+              <StencilMark className="text-white" />
               <span style={{ fontFamily: SERIF }} className="text-xl">
                 Katagami
               </span>
@@ -74,7 +66,7 @@ export default function SignIn() {
                 {UNLOCKS.map((u) => (
                   <li key={u.title} className="flex gap-4">
                     <span className="mt-1 shrink-0">
-                      <StencilMark white />
+                      <StencilMark className="text-white" />
                     </span>
                     <div>
                       <p className="font-medium">{u.title}</p>
@@ -185,38 +177,6 @@ function GoogleIcon() {
       <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z" />
       <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z" />
       <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" />
-    </svg>
-  );
-}
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
-  );
-}
-
-function StencilMark({ white }: { white?: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className={"size-5 " + (white ? "text-white" : "text-[var(--indigo)] dark:text-blue-300")}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
     </svg>
   );
 }

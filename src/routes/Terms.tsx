@@ -5,6 +5,8 @@ import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { SiteHeader } from "~/components/site/SiteHeader";
+import { ASANOHA, SEIGAIHA } from "~/components/site/patterns";
+import { RegMark } from "~/components/site/RegMark";
 
 /**
  * Terms of use.
@@ -14,8 +16,7 @@ import { SiteHeader } from "~/components/site/SiteHeader";
  * contents on the left, text at a comfortable measure on the right. Each
  * section opens with a one-line "In short" box, then the full text.
  *
- * Helpers are copied from src/routes/Pricing.tsx, not shared; the page is
- * self-contained on purpose.
+ * Stencil tiles and marks come from src/components/site.
  *
  * The text describes what the product does today, per docs/mvp-spec.md
  * sections 6 to 8 and docs/design-explorations/two-tier-proposal.md
@@ -31,29 +32,6 @@ const INDIGO = "#274b8f";
 const CONTACT = "hello@katagami.app";
 
 const LAST_UPDATED = "2026-09-25";
-
-/* ---- stencil tiles ------------------------------------------------------ */
-
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-
-const ASANOHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M28 0 L56 16 L56 48 L28 64 L0 48 L0 16 Z'/>
-<path d='M28 0 L28 64 M0 16 L56 48 M56 16 L0 48'/>
-<path d='M28 32 L56 16 M28 32 L0 16 M28 32 L0 48 M28 32 L56 48 M28 32 L28 0 M28 32 L28 64'/>
-<path d='M28 48 L56 64 L56 96 L28 112 L0 96 L0 64 Z' transform='translate(0,-16)'/>
-<path d='M0 48 L28 64 M56 48 L28 64'/>
-<path d='M0 80 L28 64 L56 80 M28 64 L28 97'/>
-</g></svg>`);
-
-const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M0 40 a40 40 0 0 1 80 0'/><path d='M8 40 a32 32 0 0 1 64 0'/><path d='M16 40 a24 24 0 0 1 48 0'/><path d='M24 40 a16 16 0 0 1 32 0'/>
-<path d='M-40 20 a40 40 0 0 1 80 0' /><path d='M-32 20 a32 32 0 0 1 64 0'/><path d='M-24 20 a24 24 0 0 1 48 0'/><path d='M-16 20 a16 16 0 0 1 32 0'/>
-<path d='M40 20 a40 40 0 0 1 80 0' /><path d='M48 20 a32 32 0 0 1 64 0'/><path d='M56 20 a24 24 0 0 1 48 0'/><path d='M64 20 a16 16 0 0 1 32 0'/>
-</g></svg>`);
 
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
@@ -614,22 +592,6 @@ function CutEdge() {
         backgroundPosition: "center bottom",
       }}
     />
-  );
-}
-
-function RegMark({ className }: { className: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 16 16"
-      className={`absolute size-4 text-[var(--indigo)] opacity-60 dark:text-blue-300 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <circle cx="8" cy="8" r="4" />
-      <path d="M8 0v16M0 8h16" />
-    </svg>
   );
 }
 

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "~/lib/theme/useTheme";
+import { SEIGAIHA } from "~/components/site/patterns";
 
 /**
  * Site-wide utility bar above every marketing page's header. Chosen from the
@@ -12,16 +13,6 @@ import { useTheme } from "~/lib/theme/useTheme";
  */
 
 const INDIGO = "#274b8f";
-
-function tile(svg: string) {
-  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-}
-const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'>
-<g fill='none' stroke='currentColor' stroke-width='1'>
-<path d='M0 40 a40 40 0 0 1 80 0'/><path d='M8 40 a32 32 0 0 1 64 0'/><path d='M16 40 a24 24 0 0 1 48 0'/><path d='M24 40 a16 16 0 0 1 32 0'/>
-<path d='M-40 20 a40 40 0 0 1 80 0' /><path d='M-32 20 a32 32 0 0 1 64 0'/><path d='M-24 20 a24 24 0 0 1 48 0'/><path d='M-16 20 a16 16 0 0 1 32 0'/>
-<path d='M40 20 a40 40 0 0 1 80 0' /><path d='M48 20 a32 32 0 0 1 64 0'/><path d='M56 20 a24 24 0 0 1 48 0'/><path d='M64 20 a16 16 0 0 1 32 0'/>
-</g></svg>`);
 
 export type Audience = "teams" | "developers";
 

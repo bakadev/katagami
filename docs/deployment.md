@@ -108,7 +108,7 @@ cat .env     # keep a copy somewhere safe; you'll never need to type it, but don
 
 The image is published to GitHub Container Registry. Pick one:
 
-- **Easiest:** make the package public. After the first successful workflow run, go to https://github.com/orgs/bakadev/packages → **katagami** → **Package settings** → **Change visibility** → Public. No login needed on the server.
+- **Easiest:** make the package public. After the first successful workflow run, go to https://github.com/users/bakadev/packages/container/package/katagami → **Package settings** → **Danger Zone → Change visibility** → Public. (`bakadev` is a personal account, so the `/orgs/` packages URL 404s.) No login needed on the server.
 - **Private:** create a GitHub personal access token with `read:packages`, then on the server run `docker login ghcr.io -u <github-username>` and paste the token. Docker remembers it.
 
 Check how the portfolio does it: `cat /root/.docker/config.json` shows whether a ghcr.io login already exists. If it does, you're already covered.

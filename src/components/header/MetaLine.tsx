@@ -65,7 +65,7 @@ export function MetaLine({ updatedAt, connection }: MetaLineProps) {
           <TooltipTrigger asChild>
             <span
               tabIndex={0}
-              className="inline-flex items-center gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+              className="hidden items-center gap-1 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/60 md:inline-flex"
             >
               <Clock aria-hidden className="size-3.5" strokeWidth={1.75} />
               <span>

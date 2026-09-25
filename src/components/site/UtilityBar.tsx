@@ -84,12 +84,9 @@ export function UtilityBar() {
             />
             Operational
           </span>
-          <span
-            className="hidden sm:inline"
-            title="Accounts arrive with the Team plan"
-          >
-            Log in · soon
-          </span>
+          <Link to="/signin" className="hidden hover:text-white sm:inline">
+            Sign in
+          </Link>
           <button
             type="button"
             onClick={() => setTheme(next)}

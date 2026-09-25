@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Download, LogIn, PenLine } from "lucide-react";
 import {
@@ -174,7 +175,7 @@ function MenuView({
 
       <DropdownMenuSeparator className="my-0" />
 
-      {/* 4. Disabled "Log in" with tooltip */}
+      {/* 4. Sign in: goes to the standalone page */}
       <div className="p-1">
         <TooltipProvider delayDuration={300}>
           <Tooltip>
@@ -185,17 +186,18 @@ function MenuView({
                 className="block rounded-md outline-none"
               >
                 <DropdownMenuItem
-                  disabled
+                  asChild
                   className="gap-2 px-2 py-1.5 text-sm"
-                  onSelect={(e) => e.preventDefault()}
                 >
-                  <LogIn className="size-4 text-muted-foreground" />
-                  <span>Log in</span>
+                  <Link to="/signin">
+                    <LogIn className="size-4 text-muted-foreground" />
+                    <span>Sign in</span>
+                  </Link>
                 </DropdownMenuItem>
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={4}>
-              Authentication coming in a future phase
+              Accounts arrive with the Team plan
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { AvatarButton } from "../../src/components/header/AvatarButton";
 import { AvatarDropdown } from "../../src/components/avatar-menu/AvatarDropdown";
 import { ThemeTriState } from "../../src/components/avatar-menu/ThemeTriState";
@@ -24,17 +25,20 @@ describe("AvatarDropdown", () => {
     props: Partial<React.ComponentProps<typeof AvatarDropdown>> = {},
   ) {
     const trigger = <AvatarButton name="Sakura" active={false} />;
+    // The menu links to /signin, so it needs a router.
     return render(
-      <AvatarDropdown
-        identity={{ name: "Sakura", color: "#ff66aa" }}
-        theme="system"
-        onThemeChange={() => {}}
-        onRenameSave={() => {}}
-        onDownloadClick={() => {}}
-        trigger={trigger}
-        __testDefaultOpen
-        {...props}
-      />,
+      <MemoryRouter>
+        <AvatarDropdown
+          identity={{ name: "Sakura", color: "#ff66aa" }}
+          theme="system"
+          onThemeChange={() => {}}
+          onRenameSave={() => {}}
+          onDownloadClick={() => {}}
+          trigger={trigger}
+          __testDefaultOpen
+          {...props}
+        />
+      </MemoryRouter>,
     );
   }
 

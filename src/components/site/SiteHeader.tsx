@@ -1,4 +1,12 @@
 import { Link, useLocation } from "react-router";
+import { Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
 
 /**
@@ -31,7 +39,7 @@ export function SiteHeader() {
             Katagami
           </span>
         </Link>
-        <nav className="flex items-center gap-7 text-sm text-muted-foreground">
+        <nav className="flex items-center gap-4 text-sm text-muted-foreground sm:gap-7">
           {NAV.map((item) => {
             const active = pathname === item.to;
             return (
@@ -57,6 +65,30 @@ export function SiteHeader() {
           >
             {loading ? "Opening…" : "Start a spec"}
           </button>
+          {/* Phone: everything else lives in one menu, including the links
+              the utility bar hides at this width. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Open menu"
+              className="inline-flex size-9 items-center justify-center rounded-sm text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:hidden"
+            >
+              <Menu className="size-5" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {NAV.map((item) => (
+                <DropdownMenuItem key={item.to} asChild>
+                  <Link to={item.to}>{item.label}</Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem asChild>
+                <Link to="/developers">For developers</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/signin">Sign in</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </div>
       {error && (

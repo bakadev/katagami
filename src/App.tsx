@@ -9,6 +9,8 @@ import ContactA from "./routes/design/contact/ContactA";
 import ContactB from "./routes/design/contact/ContactB";
 import ContactC from "./routes/design/contact/ContactC";
 import TopBarExploration from "./routes/design/topbar/TopBarExploration";
+import AuthExploration from "./routes/design/auth/AuthExploration";
+import SignIn from "./routes/SignIn";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
@@ -37,6 +39,7 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/contact" element={<Contact />} />
+      <Route path="/signin" element={<SignIn />} />
         <Route path="/p/:projectId" element={<Navigate to="." replace />} />
         <Route path="/p/:projectId/d/:docId" element={<Document />} />
         {/* Design explorations — public but unlinked.
@@ -45,7 +48,8 @@ export default function App() {
         <Route path="/design/contact/a" element={<ContactA />} />
         <Route path="/design/contact/b" element={<ContactB />} />
         <Route path="/design/contact/c" element={<ContactC />} />
-        <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
+        <Route path="/design/auth/:variant" element={<AuthExploration />} />
+      <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
         <Route
           path="/design/topbar/:variant/:audience"
           element={<TopBarExploration />}

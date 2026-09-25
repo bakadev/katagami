@@ -89,7 +89,7 @@ export default function Developers() {
           className="flex items-center gap-5 text-xs text-muted-foreground"
         >
           <a href="#how" className="hover:text-foreground">
-            how it works
+            basics
           </a>
           <a href="#keys" className="hover:text-foreground">
             shortcuts

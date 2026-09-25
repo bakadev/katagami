@@ -115,7 +115,7 @@ function EditPreviewTabs({
                   className={cn(
                     // flex-1 makes the three modes share equal width so the
                     // sliding thumb's `(100% - 4px) / 3` math is correct.
-                    "relative z-10 inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-sm px-2.5",
+                    "relative z-10 inline-flex h-7 w-9 flex-1 items-center justify-center rounded-sm",
                     "cursor-pointer outline-none",
                     "text-xs font-medium",
                     "transition-colors duration-150 ease-out",
@@ -125,8 +125,8 @@ function EditPreviewTabs({
                     "focus-visible:ring-2 focus-visible:ring-ring/60",
                   )}
                 >
-                  <Icon className="size-[13px]" strokeWidth={2} aria-hidden />
-                  <span>{opt.shortLabel}</span>
+                  <Icon className="size-[15px]" strokeWidth={2} aria-hidden />
+                  <span className="sr-only">{opt.shortLabel}</span>
                 </button>
               </TooltipTrigger>
               <TooltipContent sideOffset={6}>{opt.label}</TooltipContent>
@@ -176,12 +176,14 @@ export function DocHeader({
       />
       <div
         className={cn(
-          "relative flex w-full items-center gap-3 md:gap-4",
+          // Phones: identity on the first line, controls on a second line.
+          // From md up, one row.
+          "relative flex w-full flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap md:gap-4",
           "px-4 py-2.5 md:px-6",
         )}
       >
-        {/* ---- LEFT: document identity (single row) ---- */}
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        {/* ---- LEFT: document identity ---- */}
+        <div className="flex min-w-0 basis-full items-center gap-3 md:flex-1 md:basis-auto">
           <Link
             to="/"
             aria-label="Katagami home"
@@ -212,7 +214,7 @@ export function DocHeader({
         </div>
 
         {/* ---- RIGHT: controls cluster ---- */}
-        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-auto md:justify-end md:gap-3">
           <SaveSnapshotButton
             disabled={readOnly}
             onSave={onSaveSnapshot}

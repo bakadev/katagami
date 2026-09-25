@@ -16,8 +16,13 @@ export async function makeTestApp(): Promise<FastifyInstance> {
  * add a deleteMany() call here in the correct dependency order.
  */
 export async function resetDb() {
+  await db.session.deleteMany();
+  await db.account.deleteMany();
+  await db.workspaceMember.deleteMany();
   await db.permission.deleteMany();
   await db.snapshot.deleteMany();
   await db.document.deleteMany();
   await db.project.deleteMany();
+  await db.workspace.deleteMany();
+  await db.user.deleteMany();
 }

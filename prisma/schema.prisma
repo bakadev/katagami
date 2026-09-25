@@ -11,13 +11,84 @@ model Project {
   id            String    @id @default(uuid()) @db.Uuid
   name          String?
   creatorToken  String    @map("creator_token")
+  workspaceId   String?   @map("workspace_id") @db.Uuid
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   documents     Document[]
+  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@map("projects")
   @@index([creatorToken])
+  @@index([workspaceId])
+}
+
+// ---- accounts ---------------------------------------------------------------
+// Email is the identity: one User, any number of provider Accounts.
+
+model User {
+  id         String    @id @default(uuid()) @db.Uuid
+  email      String    @unique
+  name       String
+  avatarUrl  String?   @map("avatar_url")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  accounts   Account[]
+  sessions   Session[]
+  workspaces WorkspaceMember[]
+
+  @@map("users")
+}
+
+model Account {
+  provider    String    // 'github' | 'google'
+  providerId  String    @map("provider_id")
+  userId      String    @map("user_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerId])
+  @@map("accounts")
+  @@index([userId])
+}
+
+model Session {
+  id         String    @id                    // sha256 of the cookie token
+  userId     String    @map("user_id") @db.Uuid
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+  @@index([userId])
+}
+
+model Workspace {
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String
+  slug       String    @unique
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  members    WorkspaceMember[]
+  projects   Project[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  workspaceId  String    @map("workspace_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  role         String    // 'owner' | 'editor'
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@map("workspace_members")
+  @@index([userId])
 }
 
 model Document {

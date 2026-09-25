@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
+import cookie from "@fastify/cookie";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,9 @@ import { projectRoutes } from "./routes/projects.js";
 import { documentRoutes } from "./routes/documents.js";
 import { snapshotRoutes } from "./routes/snapshots.js";
 import { projectAdminRoutes } from "./routes/project-admin.js";
+import { authRoutes } from "./routes/auth.js";
+import { workspaceRoutes } from "./routes/workspaces.js";
+import { providersFromEnv, type ProviderMap } from "./auth/providers.js";
 import { registerYjsHandler } from "./ws/yjs-handler.js";
 import type { ApiError } from "../shared/types.js";
 import { isClientRoute } from "./client-routes.js";
@@ -23,6 +27,8 @@ export interface BuildServerOptions {
    * and in tests.
    */
   staticDir?: string;
+  /** OAuth providers. Defaults to whatever the environment configures. */
+  providers?: ProviderMap;
 }
 
 export async function buildServer(opts: BuildServerOptions = {}) {
@@ -31,12 +37,19 @@ export async function buildServer(opts: BuildServerOptions = {}) {
   });
 
   await app.register(cors, { origin: true, credentials: true });
+  await app.register(cookie, {
+    // Signs the OAuth handshake cookie. A missing secret only disables
+    // sign-in; a random one keeps tests self-contained.
+    secret: env.SESSION_SECRET ?? "unconfigured-" + Math.random().toString(36).slice(2),
+  });
   await app.register(websocket);
   await app.register(healthRoutes);
   await app.register(projectRoutes);
   await app.register(documentRoutes);
   await app.register(snapshotRoutes);
   await app.register(projectAdminRoutes);
+  await app.register(authRoutes, { providers: opts.providers ?? providersFromEnv() });
+  await app.register(workspaceRoutes);
 
   registerYjsHandler(app);
 

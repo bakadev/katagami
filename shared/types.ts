@@ -56,3 +56,59 @@ export interface RenameSnapshotRequest {
 export interface UpdateDocumentRequest {
   title?: string | null;
 }
+
+/* ---- accounts --------------------------------------------------------------- */
+
+export interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export interface WorkspaceSummary {
+  id: string;
+  name: string;
+  slug: string;
+  role: "owner" | "editor";
+}
+
+export interface MeResponse {
+  user: SessionUser;
+  workspaces: WorkspaceSummary[];
+}
+
+export interface CreateWorkspaceRequest {
+  name: string;
+}
+
+export interface CreateWorkspaceResponse {
+  workspace: WorkspaceSummary;
+}
+
+export interface ClaimCandidate {
+  projectId: string;
+  token: string;
+}
+
+export interface ClaimLookupRequest {
+  projects: ClaimCandidate[];
+}
+
+export interface ClaimLookupResponse {
+  projects: {
+    id: string;
+    title: string | null;
+    documentCount: number;
+    updatedAt: string;
+  }[];
+}
+
+export interface ClaimRequest {
+  workspaceId: string;
+  projects: ClaimCandidate[];
+}
+
+export interface ClaimResponse {
+  moved: string[];
+}

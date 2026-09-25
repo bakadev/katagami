@@ -7,7 +7,7 @@ An area of the app (`/design`) for comparing redesign options before committing 
 1. Pick one surface of the app (homepage, document header, right panel, empty state, etc.).
 2. Define **three personas or use cases** that would want genuinely different things from that surface. Personas are chosen to force divergence, not to be realistic market segments.
 3. Research each direction on Mobbin (`search_sections` / `search_screens` / `search_flows`) before designing.
-4. Build one page per persona under `src/routes/design/<round>/`. These are throwaway: one file each, inline Tailwind, hardcoded content, no shared components beyond the `ExplorationBar` and `useCreateDoc` helpers in `DesignIndex.tsx`.
+4. Build one page per persona under `src/routes/design/<round>/`. These are throwaway: one file each, inline Tailwind, hardcoded content, no shared components beyond the `ExplorationBar` and `useCreateDoc` helpers in `DesignIndex.tsx` (a round may keep its own `data.ts` and `pieces.tsx` for what every option must show identically).
 5. Register the routes in `App.tsx`.
 6. Add the round to `ROUNDS` in `DesignIndex.tsx`.
 
@@ -91,6 +91,34 @@ Should the editor's header take the utility bar's indigo? There is no mock: each
 | `/design/editor-header/a` | **A. Indigo with pattern.** | The whole document header on indigo with the faint seigaiha; title, meta and controls in white via scoped token overrides. |
 | `/design/editor-header/b` | **B. Indigo plain.** | Same header, solid indigo, no pattern. |
 | `/design/editor-header/c` | **C. Rail.** | The site's 32px utility bar carried into the app above the current dark header: home link, live connection state, log-in slot, the mark. The document header itself stays quiet. |
+
+## Round 7 — Signed-in home (/documents) (2026-09-25) — open
+
+The page a signed-in person lands on: after sign-in, from the wordmark, and as the first item in the avatar menu. Marketing home stays at `/`. It answers "what am I working on" before anything else. Three options under `/design/documents/*`, rendered by `src/routes/design/documents/DocumentsExploration.tsx`, with fake data in `data.ts` (workspace "Acme", projects "Checkout redesign" ×3 and "Onboarding emails" ×2 plus four single-document projects, four people, edits from 12 minutes to 3 weeks ago) and the pieces every option must show identically in `pieces.tsx` (app header with avatar menu, claim strip, empty state, search, sort, share and overflow). Style is locked to Product v2; the options differ in layout and in how much they say.
+
+Shared by every option: the header row ("Your documents", a notched indigo "New spec"); the claim strip ("3 documents from before you signed in are still on this browser." with "Bring them in" to `/claim`) as an indigo-tinted notched card; rows with title, relative last-edited time, who edited last with their colour dot, a quiet copy-link icon and an overflow with "Move to project" (visual only); search by title; sort by last edited or title; and the empty state on a komon field with the mark: "Nothing cut yet. Start a spec, or bring in the ones on this browser." A "Show empty state" switch in the app header (or `?empty=1`) shows it. At phone width rows keep title and time, editor and share move out of the row, the banner wraps and the header stacks.
+
+| Option | Persona | Direction |
+|---|---|---|
+| `/design/documents/documents-a` | **A. The solo writer.** A Free user with a handful of specs. | One flat list on a narrow column: serif titles at 20px, hairlines between rows, "Sort by last edited · title" as plain text beside the search field, no workspace switcher, no status. A faint asanoha at the head of the sheet. The empty state takes the whole page. A footnote says Free keeps every document and that projects and seats come with Team. |
+| `/design/documents/documents-b` | **B. The team lead.** Several projects, a dozen documents. | Grouped by project: serif group headers with a chevron to collapse (local state), a document count and, when collapsed, the freshest edit; single-document projects sit flat under "Other documents". Workspace switcher (Acme / Personal) beside "New spec". Column heads on desktop; a status chip per row (Draft outlined, In review indigo-outlined, Signed off on the tint) as small notched cards; a sort menu; a pencil to rename the project appears on hover of the group name. |
+| `/design/documents/documents-c` | **C. The reviewer.** Someone who mostly opens what others share. | Three sections in reading order. "Recently opened" as four notched tiles with a sketch of the first lines, opened-when and last editor. "Waiting on you" on an indigo-bordered sheet with registration marks: a row per document with counts of open comments and suggestions addressed to them on the editor's yellow anchor, and the section title on the same anchor. "Everything else" as a flat list with the sort menu. The heading's subline totals what is waiting. |
+
+Mobbin references consulted:
+
+- A: [Basecamp "Your Drafts"](https://mobbin.com/screens/6185209c-22f0-4a58-99d3-11fdb972da54) (one serif heading, one list, a meta line under each title), [Google Gemini Library](https://mobbin.com/screens/48d98554-c6a5-411e-85cf-79c343f5dd66) (rows that are only a title and a time), [Langdock Library](https://mobbin.com/screens/99a33b62-70f7-4b1e-b370-3cdf35cc94f4) (a count, a search field and a sort control on one line above the list), [Craft "Open"](https://mobbin.com/screens/d370247f-a6ec-4e59-a67e-ddf2aa9aae8c) (search filters by title only).
+- B: [Linear issues grouped with collapsible headers and counts](https://mobbin.com/screens/ef923b0e-9a40-4fdd-80f2-f3aafb4f36ce) and [the same with column heads](https://mobbin.com/screens/ea0c3b2c-ecb7-4f3a-8c91-4b96acbec446), [Linear "Move to" submenu](https://mobbin.com/screens/f1e8745b-81b7-4a78-85e1-a325f4843f42) (project picker in the row overflow), [Notion list with status chips](https://mobbin.com/screens/96160820-25ad-459e-a5bd-538e96fd6f04), [Arcade "Switch workspace"](https://mobbin.com/screens/fa26dbf7-16e3-4366-be9f-a5a9cfad1fe5) (workspace list with a check on the current one and "Create or join"), [Figma "Last viewed" sort menu](https://mobbin.com/screens/fb25258c-2581-4c4c-a59f-da737bb4f8a8).
+- C: [Airtable Home](https://mobbin.com/screens/480cc1d5-ec9c-413d-a871-d7ce22565022) (tiles under "Today / Past 7 days" with "Opened 2 minutes ago"), [Craft All Docs](https://mobbin.com/screens/ee17bb00-bceb-4f12-9276-3c684d99e20a) (cards that sketch the first lines, updated time beneath), [Craft Reminders](https://mobbin.com/screens/c80ad028-517d-478e-8a65-dd57d543e3c3) (a short "in progress / overdue" list above everything else), [Figma notifications](https://mobbin.com/screens/fb25258c-2581-4c4c-a59f-da737bb4f8a8) ("Sam commented" as the reason to open a file), [Dropbox Dash](https://mobbin.com/screens/db24613b-901d-4574-9f74-134fdfaa52ab) (a counted "1 of 5" card between the main input and the rest).
+
+Open questions for the owner:
+
+1. Does status (Draft / In review / Signed off) live on the document or on the project? B puts it on rows; if it is a project property the chip moves to the group header and single-document projects show it inline.
+2. Should single-document projects auto-name from the document title, so renaming the doc renames the project, or stay separate names that mostly repeat each other?
+3. Is "Waiting on you" (C) a count of comments and suggestions addressed to the person, or anything unresolved on documents they touched? The first needs mentions or assignment; the second is computable today.
+4. Should the workspace switcher hide when there is one workspace (A) or show a disabled "Acme" so the affordance is learnable before the second workspace exists?
+5. Does the claim strip stay until dismissed, or only until the person has visited `/claim` once? And should it also appear inside the editor?
+6. Sort: is "last edited" the person's own edits or anyone's? Recently opened (C) is per person; last edited (all options) is per document.
+7. Is the "Move to project" action a real need for now, or does dragging between groups (B) replace it later?
 
 ## Round 6 — Authentication (closed)
 

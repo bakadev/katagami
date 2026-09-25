@@ -10,6 +10,7 @@ import ContactB from "./routes/design/contact/ContactB";
 import ContactC from "./routes/design/contact/ContactC";
 import TopBarExploration from "./routes/design/topbar/TopBarExploration";
 import AuthExploration from "./routes/design/auth/AuthExploration";
+import DocumentsExploration from "./routes/design/documents/DocumentsExploration";
 import SignIn from "./routes/SignIn";
 import Welcome from "./routes/Welcome";
 import Claim from "./routes/Claim";
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/design/contact/b" element={<ContactB />} />
         <Route path="/design/contact/c" element={<ContactC />} />
         <Route path="/design/auth/:variant" element={<AuthExploration />} />
+        <Route path="/design/documents/:variant" element={<DocumentsExploration />} />
       <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
         <Route
           path="/design/topbar/:variant/:audience"

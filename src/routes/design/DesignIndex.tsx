@@ -32,6 +32,34 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "documents",
+    surface: "Signed-in home (/documents)",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "documents-a",
+        persona: "A · The solo writer",
+        title: "A desk with a few sheets on it",
+        blurb:
+          "A Free user's handful of specs as one quiet flat list: serif titles, hairlines, search and sort only. No workspace switcher, no status. The empty state takes the sheet.",
+      },
+      {
+        slug: "documents-b",
+        persona: "B · The team lead",
+        title: "A table of contents",
+        blurb:
+          "A dozen documents grouped under collapsible serif project headers, single-doc projects flat at the end. Workspace switcher, notched status chips, sort menu, denser rows.",
+      },
+      {
+        slug: "documents-c",
+        persona: "C · The reviewer",
+        title: "An inbox",
+        blurb:
+          "Recently opened as four tiles, then Waiting on you with counts of open comments and suggestions on the yellow anchor, then everything else as a flat list.",
+      },
+    ],
+  },
+  {
     id: "auth",
     surface: "Authentication",
     date: "2026-09-25",

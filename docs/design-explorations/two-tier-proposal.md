@@ -1,6 +1,6 @@
 # Two-tier proposal: Free vs Team, and how each persona finds its page
 
-> Status: proposal for discussion, 2026-09-25
+> Status: decided 2026-09-25 (see section 5); ready to build the pricing page and routing
 > Inputs: `mvp-spec.md`, the Round 1 homepage explorations (`HomeDeveloper.tsx`, `HomeProduct.tsx`), `prisma/schema.prisma`
 
 ## 1. Does "free = developers, paid = business" hold up?
@@ -26,7 +26,7 @@ Mostly yes, with one fix. "10 docs" is a real wall for anyone who keeps using th
 
 Today nobody is identifiable: a display name lives in localStorage and a share link is the whole permission system. You cannot count "collaborators" you cannot see. Two honest definitions:
 
-- **Free tier: "up to 3 people editing at once".** This is a *concurrent editor* cap on a document, counted from Yjs awareness (the presence list that already powers cursors). It's measurable today, needs no accounts, and is easy to explain. Gameable? Yes, by waiting for someone to leave. That's fine for a free tier.
+- **Free tier: "up to 2 people editing at once".** This is a *concurrent editor* cap on a document, counted from Yjs awareness (the presence list that already powers cursors). It's measurable today, needs no accounts, and is easy to explain. Gameable? Yes, by waiting for someone to leave. That's fine for a free tier.
 - **Team tier: a "seat" is a person with an account who is a member of a workspace.** Seats are what you bill for, so they need identity. This is roadmap items 1 (OAuth) and 9 (team workspaces) pulled forward; item 10 (billing) follows.
 
 Data model changes for Team (Prisma, additive, no rewrite of the link system):
@@ -72,24 +72,24 @@ Nav for both pages: `Katagami · For developers · Pricing · [CTA]` on the root
 
 | | **Free** | **Team** |
 |---|---|---|
-| Price | $0 | **$X / month** (placeholder; something like $29–49 for a 5-person team feels right) + **$Y / extra seat / month** |
+| Price | $0 | **$39 / month** with 5 seats included, then **$8 / extra seat / month** (placeholders, to be tested) |
 | Account | None required | Required (GitHub / Google) |
 | Documents | Up to 10 single docs per creator | Unlimited |
 | Projects | Single docs only | Unlimited projects, many docs each, sidebar |
-| People | Up to 3 editing a doc at once | 5 seats included, then per seat; unlimited view-only links |
+| People | Up to 2 editing a doc at once | 5 seats included, then per seat; unlimited view-only links |
 | Sharing | Edit link + view link | Edit, view and comment-only links; optional login-required links |
 | History | 20 auto-snapshots, 3 named | Unlimited named snapshots (the sign-off feature) |
 | Export | Markdown | Markdown, PDF |
 | Images | No | Yes |
 | AI text ops (later) | No | Yes |
-| Self-host | MIT source, do what you like | Same; paid plan is for the hosted service |
+| Self-host | Not offered | Not offered |
 
 ### Upgrade moments inside the app
 
 | Moment | What the user sees |
 |---|---|
 | Creating an 11th doc | "You've used all 10 free docs. Move them into a workspace to keep going." Upgrade button, plus "delete an old doc" as the honest alternative. |
-| A 4th person opens the edit link | Newcomer gets view-only with a banner: "3 people are already editing. Team workspaces have no limit." The three inside see a quiet notice. |
+| A 3rd person opens the edit link | Newcomer gets view-only with a banner: "2 people are already editing. Team workspaces have no limit." The two inside see a quiet notice. |
 | "Add a doc to this project" | The menu item exists on free, greyed, with "Projects with multiple docs are a Team feature". This is the strongest signal; make it visible early. |
 | Naming a 4th snapshot | "Free includes 3 named versions. Team keeps every sign-off." |
 | Wanting a comment-only link for a stakeholder | Shown in the share dialog as a locked third option. |
@@ -104,3 +104,31 @@ Nav for both pages: `Katagami · For developers · Pricing · [CTA]` on the root
 5. Should the Enterprise exploration survive as a third column on `/pricing` ("contact us"), or wait until someone asks?
 6. Price points: pick a placeholder now so the pricing page can be built, then test.
 7. Is `/developers` also the target for the README link, or does the README stay the developer landing page on its own?
+
+## 5. Decisions (2026-09-25)
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Tier names | **Free** and **Team**. The developer page may describe Free as "free for individuals and small teams" in copy without renaming it. |
+| 2 | Free collaborator cap | **2 concurrent editors** per document, counted from Yjs awareness. A third arrival gets view-only. |
+| 3 | Self-hosting | **Removed from the offer** for now. The MIT repo stays as it is, but no page promises a self-host option and the developer page's "no lock-in" claim rests on Markdown export, not on self-hosting. |
+| 4 | Roadmap order | **OAuth first**, after the design direction is stable. Workspaces, multi-doc UI, comment-only links and billing follow. |
+| 5 | Enterprise | Survives as a **third "Contact us" column on `/pricing`**. The button is unlinked until there's somewhere for it to go. |
+| 6 | Price points | Placeholders: **Team $39 / month with 5 seats, $8 per extra seat / month**. Not validated; chosen so the page can be built and tested. |
+| 7 | README target | README's live link points at **`/developers`** once that page exists. |
+
+### Pricing page columns as decided
+
+| | **Free** | **Team** | **Enterprise** |
+|---|---|---|---|
+| Price | $0 | $39 / month, 5 seats included, $8 / extra seat | Contact us |
+| Account | None | Required | Required, SSO |
+| Documents | Up to 10 single docs | Unlimited | Unlimited |
+| Projects | Single docs only | Unlimited projects, many docs each | Unlimited |
+| People | 2 editing at once | 5 seats included, then per seat | Custom seat agreements |
+| Sharing | Edit + view links | Edit, view, comment-only, login-required links | Same, plus domain restrictions |
+| History | 20 auto, 3 named | Unlimited named | Unlimited named, retention policies |
+| Export | Markdown | Markdown, PDF | Markdown, PDF |
+| Images | No | Yes | Yes |
+| AI text ops (later) | No | Yes | Yes |
+| Support | Community | Email | Named contact, uptime SLA |

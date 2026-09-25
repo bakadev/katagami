@@ -108,10 +108,10 @@ export default function Home() {
             {/* Spec excerpt as a stencil sheet: notched corners, registration marks */}
             <div className="grid gap-4 sm:grid-cols-[1fr_15rem] sm:items-start">
               <div className="relative">
-                <RegMark className="-left-3 -top-3 dark:text-brand" />
-                <RegMark className="-right-3 -top-3 dark:text-brand" />
-                <RegMark className="-bottom-3 -left-3 dark:text-brand" />
-                <RegMark className="-bottom-3 -right-3 dark:text-brand" />
+                <RegMark className="-left-3 -top-3" />
+                <RegMark className="-right-3 -top-3" />
+                <RegMark className="-bottom-3 -left-3" />
+                <RegMark className="-bottom-3 -right-3" />
                 <div
                   style={{ clipPath: NOTCH }}
                   className="border border-border bg-card p-6 shadow-sm sm:p-8"

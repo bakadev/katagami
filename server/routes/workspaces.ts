@@ -31,6 +31,11 @@ export function slugify(name: string): string {
   return base || "workspace";
 }
 
+/** Four lowercase letters or digits, so the slug stays URL-plain. */
+function slugSuffix(): string {
+  return randomToken(12).toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4).padEnd(4, "0");
+}
+
 function unauthenticated(): ApiError {
   return { error: "unauthenticated", message: "Sign in first" };
 }
@@ -72,7 +77,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
     const workspace = await db.$transaction(async (tx) => {
       let slug = base;
       while (await tx.workspace.findUnique({ where: { slug } })) {
-        slug = `${base}-${randomToken(4).toLowerCase()}`;
+        slug = `${base}-${slugSuffix()}`;
       }
       const ws = await tx.workspace.create({ data: { name, slug } });
       await tx.workspaceMember.create({

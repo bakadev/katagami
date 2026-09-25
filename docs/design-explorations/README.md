@@ -48,3 +48,15 @@ Mobbin references consulted:
 - Comparison table: [Notion](https://mobbin.com/sites/sections/2e43d18a-cf5a-4e00-869a-7dd96014a4af) (row groups with their own headers), [ReadMe](https://mobbin.com/sites/sections/323667a4-3303-4bb1-a6da-81d2195b95bc) (column heads carry a CTA each), [Linear](https://mobbin.com/sites/sections/d9652689-5b02-4754-b585-6f491369f99b) (highlighted middle column band running the full table).
 - Seat calculator: [Coda](https://mobbin.com/sites/sections/2377e733-dfbb-4506-8422-47afd49c203f) (team size vs doc makers, "never pay for collaborators"), [GitBook](https://mobbin.com/sites/sections/8545954a-6e11-46c1-bbb1-d3f5f5487618) (plan plus users, total per month as a receipt), [Teak](https://mobbin.com/sites/sections/58c2e515-2f0f-4696-8cc2-d9d0ad4993c7) (single slider, big total beside it).
 - FAQ: [Harvest](https://mobbin.com/sites/sections/0c073171-fb09-4b13-b140-937acb761f2c) (heading left, questions right), [Zaro](https://mobbin.com/sites/sections/faffeda3-f5a4-4bf9-8fb3-b404473b5c63) (seat question answered first).
+
+## Round 3 — Contact (2026-09-25) — open
+
+The page the two "Contact us" buttons on `/pricing` point at. Style is locked (Product v2); the exploration is about how much to ask and in what order. Forms don't post anywhere yet; submit shows a "sent" state.
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/contact/a` | **A. One form, one promise.** | Form on a stencil sheet; beside it a numbered account of what happens after send (a person reads it within a business day, a named reply, a 30-minute walkthrough for Enterprise) and a plain email fallback. |
+| `/design/contact/b` | **B. Pick a path.** | Three notched doors (Enterprise and pricing, help with a document, press and partnerships). The chosen door reshapes the form on a komon band so it only asks what that conversation needs. |
+| `/design/contact/c` | **C. A conversation.** | Four questions one at a time on a single sheet, cut-edge progress along the top, seat stepper and slider for team size, and a live sentence on the left restating the answers, including what the team size means on Team pricing. |
+
+Mobbin references consulted: ToDesktop and Reducto (split form with a "here to help" column), Grammarly and Charma (choose a reason before the form), Dovetail (route-by-reason select with response time up front), Sana AI "Book an intro" flow (stepped request with team size).

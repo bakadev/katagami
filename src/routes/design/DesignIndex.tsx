@@ -32,6 +32,34 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "contact",
+    surface: "Contact",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "a",
+        persona: "A · Form and what happens next",
+        title: "One form, one promise",
+        blurb:
+          "Split layout: the form on one side, a plain account of who reads it and how fast you hear back on the other.",
+      },
+      {
+        slug: "b",
+        persona: "B · Pick a path",
+        title: "Three doors, then a short form",
+        blurb:
+          "Enterprise demo, help with a doc, or press and partnerships. Each door narrows the form to what that person needs.",
+      },
+      {
+        slug: "c",
+        persona: "C · A conversation",
+        title: "One question at a time",
+        blurb:
+          "The form as a stepped conversation on a stencil sheet, with the seat calculator's steppers for team size and a live summary.",
+      },
+    ],
+  },
+  {
     id: "pricing",
     surface: "Pricing",
     date: "2026-09-25",

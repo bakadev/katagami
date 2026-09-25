@@ -13,6 +13,7 @@ import { snapshotRoutes } from "./routes/snapshots.js";
 import { projectAdminRoutes } from "./routes/project-admin.js";
 import { registerYjsHandler } from "./ws/yjs-handler.js";
 import type { ApiError } from "../shared/types.js";
+import { isClientRoute } from "./client-routes.js";
 
 export interface BuildServerOptions {
   /**
@@ -53,7 +54,10 @@ export async function buildServer(opts: BuildServerOptions = {}) {
         const body: ApiError = { error: "not_found", message: "Not found" };
         return reply.code(404).send(body);
       }
-      return reply.header("cache-control", "no-cache").sendFile("index.html");
+      return reply
+        .code(isClientRoute(req.url) ? 200 : 404)
+        .header("cache-control", "no-cache")
+        .sendFile("index.html");
     });
   }
 

@@ -49,6 +49,18 @@ describe("static client serving", () => {
     expect(res.body).toContain("SPA");
   });
 
+  it("serves index.html with a 404 status for paths the app does not own", async () => {
+    const res = await app.inject({ method: "GET", url: "/no-such-page" });
+    expect(res.statusCode).toBe(404);
+    expect(res.headers["content-type"]).toContain("text/html");
+    expect(res.body).toContain("SPA");
+  });
+
+  it("treats trailing slashes and query strings as the same client route", async () => {
+    const res = await app.inject({ method: "GET", url: "/pricing/?utm=x" });
+    expect(res.statusCode).toBe(200);
+  });
+
   it("still returns JSON 404s for unknown API routes", async () => {
     const res = await app.inject({ method: "GET", url: "/api/nope" });
     expect(res.statusCode).toBe(404);

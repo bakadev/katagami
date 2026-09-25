@@ -104,6 +104,12 @@ docs/          Specs, implementation plans, research, deployment guide
 
 Pushing to `main` builds a Docker image and deploys it to the VPS through GitHub Actions. Everything you need to know, including the one-time server setup, is in [`docs/deployment.md`](docs/deployment.md).
 
+## Roadmap docs
+
+- [`docs/oauth-prep.md`](docs/oauth-prep.md): what to register with GitHub and Google before sign-in is built, and the accounts/sessions design.
+- [`docs/contact-form-spec.md`](docs/contact-form-spec.md): store-then-notify contact form, with the mail provider setup.
+- [`docs/suggesting-mode-proposal.md`](docs/suggesting-mode-proposal.md): suggesting mode, steps 3 and 4 still open.
+
 ## Tech stack
 
 React 19, Vite 7, TypeScript, Tailwind 4, shadcn/ui, TipTap 3, Yjs, y-websocket on the client. Fastify, Prisma and PostgreSQL on the server, in a single Node process. Plain-English explanations of the backend pieces are in `docs/mvp-spec.md` section 4.

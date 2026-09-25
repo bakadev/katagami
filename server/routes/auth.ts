@@ -98,11 +98,9 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions) 
       const name = req.params.provider;
       const provider = isProviderName(name) ? providers[name] : undefined;
       if (!provider || !isProviderName(name)) {
-        const body: ApiError = {
-          error: "provider_unavailable",
-          message: "Sign-in with this provider is not configured",
-        };
-        return reply.code(503).send(body);
+        // A browser landed here from a sign-in button; send it back with a
+        // message rather than showing JSON.
+        return fail(reply, "provider_unavailable");
       }
       const state = arctic.generateState();
       const verifier = provider.usesPkce ? arctic.generateCodeVerifier() : "";

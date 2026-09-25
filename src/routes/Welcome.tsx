@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useMemo, useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate } from "react-router";
+import { useAuth } from "~/lib/auth/AuthProvider";
+import { createWorkspace } from "~/lib/api/auth";
+import { listCreatorTokens } from "~/lib/creator-token";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { ASANOHA } from "~/components/site/patterns";
@@ -25,20 +28,68 @@ const NOTCH =
 const NOTCH_IN =
   "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px)";
 
-const USER = { name: "Priya Raman", email: "priya@acme.co", provider: "Google", initials: "PR" };
+/** "priya@acme.co" → "Acme"; personal mailboxes fall back to the first name. */
+export function guessWorkspaceName(email: string, name: string): string {
+  const domain = email.split("@")[1]?.toLowerCase() ?? "";
+  const label = domain.split(".")[0] ?? "";
+  const personal = new Set([
+    "gmail", "googlemail", "yahoo", "outlook", "hotmail", "live", "icloud", "me", "proton",
+    "protonmail", "aol", "msn", "fastmail", "hey", "pm",
+  ]);
+  if (label && !personal.has(label)) {
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
+  const first = name.trim().split(/\s+/)[0] || "My";
+  return `${first}'s workspace`;
+}
 
-const STEPS = [
-  { n: 1, label: "Sign in", state: "done" as const },
-  { n: 2, label: "Name your workspace", state: "active" as const },
-  { n: 3, label: "Invite people", state: "later" as const },
-];
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+}
 
 export default function Welcome() {
   usePageMeta({
     title: "Welcome",
     description: "You're signed in. Name your workspace.",
   });
-  const [name, setName] = useState("Acme");
+  const { user, loading, refresh } = useAuth();
+  const navigate = useNavigate();
+  const hasUnclaimed = useMemo(() => listCreatorTokens().length > 0, []);
+  const [name, setName] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!loading && !user) return <Navigate to="/signin?next=%2Fwelcome" replace />;
+  if (!user) return null;
+
+  const value = name ?? guessWorkspaceName(user.email, user.name);
+  const STEPS = [
+    { n: 1, label: "Sign in", state: "done" as const },
+    { n: 2, label: "Name your workspace", state: "active" as const },
+    hasUnclaimed
+      ? { n: 3, label: "Move your documents", state: "later" as const }
+      : { n: 3, label: "Invite people", state: "later" as const },
+  ];
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await createWorkspace(value.trim());
+      await refresh();
+      navigate(hasUnclaimed ? "/claim" : "/", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't create the workspace");
+      setBusy(false);
+    }
+  }
 
   return (
     <div
@@ -126,11 +177,11 @@ export default function Welcome() {
               className="flex size-14 shrink-0 items-center justify-center bg-[var(--indigo-tint)] text-xl text-[var(--indigo)] dark:text-blue-300"
               aria-hidden
             >
-              {USER.initials}
+              {initialsOf(user.name)}
             </span>
             <div>
               <p className="text-sm text-muted-foreground">
-                Signed in as {USER.name} via {USER.provider}
+                Signed in as {user.name}
               </p>
               <h1 style={{ fontFamily: SERIF }} className="mt-1 text-3xl leading-tight sm:text-4xl">
                 You're signed in.
@@ -147,7 +198,7 @@ export default function Welcome() {
             <form
               style={{ clipPath: NOTCH }}
               className="border border-[var(--indigo)] bg-card p-6 shadow-md sm:p-8 dark:border-blue-300/60"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={submit}
             >
               <p className="text-xs text-muted-foreground">Step 2 of 3</p>
               <h2 style={{ fontFamily: SERIF }} className="mt-2 text-2xl">
@@ -161,25 +212,28 @@ export default function Welcome() {
               <label className="mt-6 grid gap-1.5 text-sm">
                 <span className="font-medium">Workspace name</span>
                 <input
-                  value={name}
+                  value={value}
                   onChange={(e) => setName(e.target.value)}
+                  required
+                  maxLength={80}
                   className="h-10 w-full border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
                 <span className="text-xs text-muted-foreground">
-                  From {USER.email}. You can rename it later.
+                  From {user.email}. You can rename it later.
                 </span>
               </label>
 
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 <button
                   type="submit"
+                  disabled={busy || value.trim().length === 0}
                   style={{ clipPath: NOTCH }}
-                  className="h-11 bg-[var(--indigo)] px-6 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-11 bg-[var(--indigo)] px-6 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 >
-                  Create workspace
+                  {busy ? "Creating…" : "Create workspace"}
                 </button>
                 <Link
-                  to="/"
+                  to={hasUnclaimed ? "/claim" : "/"}
                   className="text-sm text-[var(--indigo)] underline underline-offset-4 dark:text-blue-300"
                 >
                   Skip for now
@@ -188,8 +242,17 @@ export default function Welcome() {
             </form>
           </div>
 
+          {error && (
+            <p role="alert" className="mt-4 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
           <p className="mt-6 text-xs text-muted-foreground">
-            Step 3, inviting people, can wait. 5 seats are included on Team and you
+            {hasUnclaimed
+              ? "Step 3 moves the documents this browser created before you signed in. "
+              : "Step 3, inviting people, can wait. "}
+            5 seats are included on Team and you can add people any time. 5 seats are included on Team and you
             can add people any time.
           </p>
         </div>

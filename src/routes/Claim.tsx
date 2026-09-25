@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router";
+import { useAuth } from "~/lib/auth/AuthProvider";
+import { claimProjects, lookupClaims } from "~/lib/api/auth";
+import { clearCreatorToken, listCreatorTokens } from "~/lib/creator-token";
+import type { ClaimLookupResponse } from "../../shared/types";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { RegMark } from "~/components/site/RegMark";
@@ -26,21 +30,78 @@ const NOTCH =
 const NOTCH_IN =
   "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px)";
 
-const WORKSPACE = "Acme";
+type Found = ClaimLookupResponse["projects"][number];
 
-const FOUND = [
-  { id: "a", title: "Checkout redesign · PRD", edited: "Today, 4:12 PM", people: "3 people" },
-  { id: "b", title: "Onboarding email sequence", edited: "Tue, 11:30 AM", people: "2 people" },
-  { id: "c", title: "Pricing page copy, draft 2", edited: "Sep 18", people: "Just you" },
-];
+function formatEdited(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  if (sameDay) return `Today, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  const days = (now.getTime() - d.getTime()) / 864e5;
+  if (days < 7) {
+    return `${d.toLocaleDateString([], { weekday: "short" })}, ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }
+  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
 
 export default function Claim() {
   usePageMeta({
     title: "Claim your documents",
     description: "Move documents from this browser into your workspace.",
   });
-  const [picked, setPicked] = useState<Set<string>>(new Set(FOUND.map((d) => d.id)));
-  const all = picked.size === FOUND.length;
+  const { user, loading, workspaces } = useAuth();
+  const navigate = useNavigate();
+  const workspace = workspaces[0] ?? null;
+  const [found, setFound] = useState<Found[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const candidates = listCreatorTokens();
+    if (candidates.length === 0) {
+      setFound([]);
+      return;
+    }
+    let cancelled = false;
+    lookupClaims(candidates)
+      .then((res) => {
+        if (cancelled) return;
+        setFound(res.projects);
+        setPicked(new Set(res.projects.map((p) => p.id)));
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Couldn't look up documents");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  if (!loading && !user) return <Navigate to="/signin?next=%2Fclaim" replace />;
+  if (!loading && user && !workspace) return <Navigate to="/welcome" replace />;
+  if (!user || !workspace) return null;
+
+  const FOUND = found ?? [];
+  const WORKSPACE = workspace.name;
+  const all = FOUND.length > 0 && picked.size === FOUND.length;
+
+  async function move() {
+    if (busy || picked.size === 0 || !workspace) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const tokens = listCreatorTokens().filter((c) => picked.has(c.projectId));
+      const res = await claimProjects(workspace.id, tokens);
+      // The key has done its job; the workspace owns these now.
+      for (const id of res.moved) clearCreatorToken(id);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't move the documents");
+      setBusy(false);
+    }
+  }
   const toggle = (id: string) =>
     setPicked((p) => {
       const n = new Set(p);
@@ -125,6 +186,20 @@ export default function Claim() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
+                  {found === null && (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                        Looking for documents in this browser…
+                      </td>
+                    </tr>
+                  )}
+                  {found !== null && FOUND.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                        Nothing to move. Documents you create while signed out will show up here.
+                      </td>
+                    </tr>
+                  )}
                   {FOUND.map((d) => {
                     const on = picked.has(d.id);
                     return (
@@ -140,14 +215,14 @@ export default function Claim() {
                         </td>
                         <td className="py-3 pr-4">
                           <label htmlFor={`claim-${d.id}`} className="block cursor-pointer">
-                            {d.title}
+                            {d.title ?? "Untitled"}
                           </label>
                         </td>
                         <td className="hidden py-3 pr-4 text-muted-foreground sm:table-cell">
-                          {d.people}
+                          {d.documentCount === 1 ? "1 document" : `${d.documentCount} documents`}
                         </td>
                         <td className="whitespace-nowrap py-3 pr-4 text-right text-xs text-muted-foreground">
-                          {d.edited}
+                          {formatEdited(d.updatedAt)}
                         </td>
                       </tr>
                     );
@@ -155,6 +230,11 @@ export default function Claim() {
                 </tbody>
               </table>
 
+              {error && (
+                <p role="alert" className="border-t border-border px-4 py-3 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:px-5">
                 <p className="text-xs text-muted-foreground">
                   {picked.size} of {FOUND.length} selected
@@ -174,11 +254,14 @@ export default function Claim() {
                   </Link>
                   <button
                     type="button"
-                    disabled={picked.size === 0}
+                    onClick={() => void move()}
+                    disabled={busy || picked.size === 0}
                     style={{ clipPath: NOTCH }}
                     className="h-11 bg-[var(--indigo)] px-6 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                   >
-                    Move {picked.size === FOUND.length ? "these" : picked.size} into {WORKSPACE}
+                    {busy
+                      ? "Moving…"
+                      : `Move ${all ? "these" : picked.size} into ${WORKSPACE}`}
                   </button>
                 </div>
               </div>

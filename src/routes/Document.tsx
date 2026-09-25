@@ -23,6 +23,7 @@ import {
 } from "~/lib/suggestions/suggestions";
 import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
+import { useAuth } from "~/lib/auth/AuthProvider";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
 import { RightPanel } from "~/components/panel/RightPanel";
 import { DocsTab } from "~/components/panel/tabs/DocsTab";
@@ -74,6 +75,18 @@ export default function DocumentRoute() {
   const [title, setTitle] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [identity, setIdentity] = useState(() => getOrCreateIdentity());
+  const auth = useAuth();
+
+  // A signed-in person edits under their account name, not the random one.
+  useEffect(() => {
+    if (!auth.user) return;
+    setIdentity((prev) => {
+      if (prev.name === auth.user!.name) return prev;
+      const next = { name: auth.user!.name, color: prev.color };
+      storeIdentity(next);
+      return next;
+    });
+  }, [auth.user]);
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
@@ -425,6 +438,8 @@ export default function DocumentRoute() {
   const avatarSlot = (
     <AvatarDropdown
       identity={identity}
+      account={auth.user ? { name: auth.user.name, email: auth.user.email } : null}
+      onSignOut={() => void auth.signOut()}
       theme={theme}
       onThemeChange={setTheme}
       onRenameSave={handleRenameSave}

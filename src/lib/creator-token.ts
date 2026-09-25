@@ -11,3 +11,19 @@ export function getCreatorToken(projectId: string): string | null {
 export function clearCreatorToken(projectId: string) {
   localStorage.removeItem(PREFIX + projectId);
 }
+
+/** Every project this browser created and still holds the key for. */
+export function listCreatorTokens(): { projectId: string; token: string }[] {
+  const out: { projectId: string; token: string }[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(PREFIX)) continue;
+      const token = localStorage.getItem(key);
+      if (token) out.push({ projectId: key.slice(PREFIX.length), token });
+    }
+  } catch {
+    // storage blocked: nothing to claim
+  }
+  return out;
+}

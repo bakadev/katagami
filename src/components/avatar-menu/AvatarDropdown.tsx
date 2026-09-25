@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Download, LogIn, PenLine } from "lucide-react";
+import { Download, LogIn, LogOut, PenLine } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,18 +8,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
 import { Button } from "~/components/ui/button";
 import { ThemeTriState, type Theme } from "./ThemeTriState";
 import { cn } from "~/lib/utils";
 
 export interface AvatarDropdownProps {
   identity: { name: string; color: string };
+  /** The signed-in account, when there is one. */
+  account?: { name: string; email: string } | null;
+  onSignOut?: () => void;
   theme: Theme;
   onThemeChange: (next: Theme) => void;
   onRenameSave: (nextName: string) => void;
@@ -50,6 +47,8 @@ const NAME_MAX = 40;
  */
 export function AvatarDropdown({
   identity,
+  account,
+  onSignOut,
   theme,
   onThemeChange,
   onRenameSave,
@@ -77,6 +76,11 @@ export function AvatarDropdown({
         {view === "menu" ? (
           <MenuView
             identity={identity}
+            account={account}
+            onSignOut={() => {
+              setOpen(false);
+              onSignOut?.();
+            }}
             theme={theme}
             onThemeChange={onThemeChange}
             onRenameClick={() => setView("rename")}
@@ -106,6 +110,8 @@ export function AvatarDropdown({
 
 interface MenuViewProps {
   identity: { name: string; color: string };
+  account?: { name: string; email: string } | null;
+  onSignOut?: () => void;
   theme: Theme;
   onThemeChange: (next: Theme) => void;
   onRenameClick: () => void;
@@ -114,6 +120,8 @@ interface MenuViewProps {
 
 function MenuView({
   identity,
+  account,
+  onSignOut,
   theme,
   onThemeChange,
   onRenameClick,
@@ -132,8 +140,8 @@ function MenuView({
           <div className="truncate text-sm font-semibold leading-tight text-foreground">
             {identity.name}
           </div>
-          <div className="mt-0.5 text-xs tracking-wider leading-tight text-muted-foreground">
-            (You)
+          <div className="mt-0.5 truncate text-xs tracking-wider leading-tight text-muted-foreground">
+            {account ? account.email : "(You)"}
           </div>
         </div>
       </div>
@@ -175,32 +183,24 @@ function MenuView({
 
       <DropdownMenuSeparator className="my-0" />
 
-      {/* 4. Sign in: goes to the standalone page */}
+      {/* 4. Account: sign in, or sign out of the current account */}
       <div className="p-1">
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                role="presentation"
-                tabIndex={-1}
-                className="block rounded-md outline-none"
-              >
-                <DropdownMenuItem
-                  asChild
-                  className="gap-2 px-2 py-1.5 text-sm"
-                >
-                  <Link to="/signin">
-                    <LogIn className="size-4 text-muted-foreground" />
-                    <span>Sign in</span>
-                  </Link>
-                </DropdownMenuItem>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4}>
-              Accounts arrive with the Team plan
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {account ? (
+          <DropdownMenuItem
+            onSelect={() => onSignOut?.()}
+            className="gap-2 px-2 py-1.5 text-sm"
+          >
+            <LogOut className="size-4 text-muted-foreground" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem asChild className="gap-2 px-2 py-1.5 text-sm">
+            <Link to={`/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`}>
+              <LogIn className="size-4 text-muted-foreground" />
+              <span>Sign in</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
       </div>
     </>
   );

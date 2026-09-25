@@ -1,4 +1,7 @@
-import { Link } from "react-router";
+import { useEffect } from "react";
+import { Link, Navigate, useSearchParams } from "react-router";
+import { useAuth } from "~/lib/auth/AuthProvider";
+import { signInUrl } from "~/lib/api/auth";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SEIGAIHA } from "~/components/site/patterns";
@@ -31,11 +34,32 @@ const UNLOCKS = [
   { title: "Named history", body: "Every snapshot says who took it and who signed off." },
 ];
 
+const ERRORS: Record<string, string> = {
+  denied: "You cancelled on the provider's page. Nothing was changed.",
+  email_unverified:
+    "That account has no verified email address, so we can't tell who you are. Verify it with the provider, or use the other one.",
+  provider_unavailable: "That provider isn't set up on this server yet.",
+  state_missing: "The sign-in took too long or the browser dropped its cookie. Try again.",
+  state_mismatch: "The sign-in didn't match the one we started. Try again.",
+  state_invalid: "The sign-in didn't match the one we started. Try again.",
+  exchange_failed: "The provider didn't accept the sign-in. Try again in a moment.",
+};
+
 export default function SignIn() {
   usePageMeta({
     title: "Sign in",
     description: "Sign in to Katagami with GitHub or Google.",
   });
+  const [params] = useSearchParams();
+  const error = params.get("error");
+  const next = params.get("next") ?? undefined;
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (error) document.getElementById("signin-error")?.focus();
+  }, [error]);
+
+  if (!loading && user) return <Navigate to={next && next.startsWith("/") ? next : "/"} replace />;
 
   return (
     <div
@@ -103,9 +127,24 @@ export default function SignIn() {
                   Free documents never need one.
                 </p>
 
+                {error && (
+                  <p
+                    id="signin-error"
+                    tabIndex={-1}
+                    role="alert"
+                    className="mt-5 border-l-2 border-destructive pl-3 text-sm text-foreground outline-none"
+                  >
+                    {ERRORS[error] ?? "Sign-in didn't complete. Try again."}
+                  </p>
+                )}
+
                 <div className="mt-7 grid gap-3">
-                  <Provider icon={<GitHubIcon />}>Continue with GitHub</Provider>
-                  <Provider icon={<GoogleIcon />}>Continue with Google</Provider>
+                  <Provider href={signInUrl("github", next)} icon={<GitHubIcon />}>
+                    Continue with GitHub
+                  </Provider>
+                  <Provider href={signInUrl("google", next)} icon={<GoogleIcon />}>
+                    Continue with Google
+                  </Provider>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   First time with a provider creates your account. No password to keep.
@@ -144,12 +183,21 @@ export default function SignIn() {
 
 /* ---- pieces ------------------------------------------------------------- */
 
-function Provider({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function Provider({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  // A plain link: the server answers with a redirect to the provider.
   return (
-    <button
-      type="button"
+    <a
+      href={href}
       style={{ clipPath: NOTCH }}
-      className="group w-full bg-[var(--indigo)] p-px text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-blue-300"
+      className="group block w-full bg-[var(--indigo)] p-px text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-blue-300"
     >
       <span
         style={{ clipPath: NOTCH_IN }}
@@ -158,7 +206,7 @@ function Provider({ icon, children }: { icon: React.ReactNode; children: React.R
         <span className="inline-flex size-5 items-center justify-center">{icon}</span>
         {children}
       </span>
-    </button>
+    </a>
   );
 }
 

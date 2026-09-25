@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "~/lib/theme/useTheme";
+import { useAuth } from "~/lib/auth/AuthProvider";
 import { SEIGAIHA } from "~/components/site/patterns";
 
 /**
@@ -27,6 +28,7 @@ export function UtilityBar() {
   const { pathname } = useLocation();
   const audience = audienceFor(pathname);
   const { resolvedTheme, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const next = resolvedTheme === "dark" ? "light" : "dark";
 
   return (
@@ -75,9 +77,19 @@ export function UtilityBar() {
             />
             Operational
           </span>
-          <Link to="/signin" className="hidden hover:text-white sm:inline">
-            Sign in
-          </Link>
+          {user ? (
+            <span className="hidden items-center gap-2 sm:inline-flex">
+              <span className="max-w-[16ch] truncate text-white">{user.name}</span>
+              <span aria-hidden>·</span>
+              <button type="button" onClick={() => void signOut()} className="hover:text-white">
+                Sign out
+              </button>
+            </span>
+          ) : (
+            <Link to="/signin" className="hidden hover:text-white sm:inline">
+              Sign in
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => setTheme(next)}

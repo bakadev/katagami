@@ -91,11 +91,11 @@ describe("auth", () => {
     expect(c.path).toBe("/api/auth");
   });
 
-  it("answers 503 for a provider that isn't configured", async () => {
+  it("sends the browser back to /signin when a provider isn't configured", async () => {
     const bare = await buildServer({ providers: {} });
     const res = await bare.inject({ method: "GET", url: "/api/auth/github" });
-    expect(res.statusCode).toBe(503);
-    expect(res.json().error).toBe("provider_unavailable");
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toBe("http://localhost:5173/signin?error=provider_unavailable");
     await bare.close();
   });
 

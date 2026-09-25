@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
+import { useAuth } from "~/lib/auth/AuthProvider";
 import { StencilMark } from "~/components/site/StencilMark";
 
 /**
@@ -30,6 +31,7 @@ const NAV: { label: string; to: string }[] = [
 export function SiteHeader() {
   const { pathname } = useLocation();
   const { create, loading, error } = useCreateDoc();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="mx-auto max-w-6xl px-6 py-6 md:px-10">
@@ -85,9 +87,15 @@ export function SiteHeader() {
                 <Link to="/developers">For developers</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/signin">Sign in</Link>
-              </DropdownMenuItem>
+              {user ? (
+                <DropdownMenuItem onSelect={() => void signOut()}>
+                  Sign out ({user.name})
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link to="/signin">Sign in</Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>

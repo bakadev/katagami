@@ -1,6 +1,6 @@
 # Suggesting mode — proposal
 
-> Status: proposal, 2026-09-25.
+> Status: accepted 2026-09-25; steps 1 and 2 shipped the same day (marks, Suggest mode, Review cards with Accept and Reject). Steps 3 (CriticMarkup export and import) and 4 (suggest-and-comment link) are open.
 
 ## Summary
 

@@ -4,7 +4,7 @@ import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
 import HomeDeveloper from "./routes/design/home/HomeDeveloper";
-import HomeProduct from "./routes/design/home/HomeProduct";
+import HomeDeveloperKatagami from "./routes/design/home/HomeDeveloperKatagami";
 import HomeProductKatagami from "./routes/design/home/HomeProductKatagami";
 
 export default function App() {
@@ -17,7 +17,7 @@ export default function App() {
           See docs/design-explorations/README.md */}
       <Route path="/design" element={<DesignIndex />} />
       <Route path="/design/home/developer" element={<HomeDeveloper />} />
-      <Route path="/design/home/product" element={<HomeProduct />} />
+      <Route path="/design/home/developer-v2" element={<HomeDeveloperKatagami />} />
       <Route path="/design/home/katagami" element={<HomeProductKatagami />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

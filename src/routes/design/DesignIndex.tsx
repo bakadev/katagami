@@ -43,18 +43,18 @@ const ROUNDS: Round[] = [
           "For engineers who create, edit and maintain Markdown docs and want a tool, not a platform.",
       },
       {
-        slug: "product",
-        persona: "Product / Business",
-        title: "Get everyone to yes",
+        slug: "developer-v2",
+        persona: "Developer v2",
+        title: "The file is the product, same cloth",
         blurb:
-          "For POs, PMs and business users writing specs that the dev team or an AI agent will build from.",
+          "The Developer page with the Product v2 DNA: indigo, stencil wordmark, notched buttons, cut edges. Still minimal.",
       },
       {
         slug: "katagami",
-        persona: "Product / Business · katagami",
+        persona: "Product v2",
         title: "Get everyone to yes, cut in paper",
         blurb:
-          "Same page as Product, re-materialised with stencil motifs, cut-paper edges and aizome indigo.",
+          "For POs, PMs and business users. Stencil motifs, cut-paper edges and aizome indigo.",
       },
     ],
   },

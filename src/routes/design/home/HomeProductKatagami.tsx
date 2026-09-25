@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { ExplorationBar, useCreateDoc } from "../DesignIndex";
 
 /**
@@ -88,6 +89,12 @@ export default function HomeProductKatagami() {
           <a href="#handoff" className="hover:text-foreground">
             Handoff
           </a>
+          <Link
+            to="/design/home/developer-v2"
+            className="text-[var(--indigo)] hover:underline dark:text-blue-300"
+          >
+            For developers
+          </Link>
           <button
             type="button"
             onClick={create}

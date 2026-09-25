@@ -35,6 +35,8 @@ Google allows several redirect URIs in one client, so one Google client covers b
 5. Click **Generate a new client secret**, copy it once, and treat it like a password. Do not paste it in chat or commit it.
 6. Repeat for the second environment.
 
+   Done 2026-09-25. Production app "Katagami", Client ID (public): `Ov23liMQzcdzG6HGnmmt`. The local app's ID lives only in the local `.env`.
+
 What we ask GitHub for: the `read:user` and `user:email` scopes, meaning your name, avatar and verified email. Nothing about repositories.
 
 ### C. Google (about 15 minutes, once)

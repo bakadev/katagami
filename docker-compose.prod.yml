@@ -1,0 +1,55 @@
+# Production stack for the VPS. Lives at /opt/docker/katagami on the server
+# next to a `.env` file (see .env.production.example).
+#
+# The app joins the shared `proxy` network so Nginx Proxy Manager can route
+# katagami.bakadev.cloud to it. Postgres is only reachable on the private
+# `internal` network; nothing publishes a host port.
+
+services:
+  app:
+    image: ghcr.io/bakadev/katagami:latest
+    container_name: katagami-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgresql://katagami:${POSTGRES_PASSWORD}@postgres:5432/katagami?schema=public
+    networks:
+      - proxy
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: katagami-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: katagami
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: katagami
+    volumes:
+      - katagami_pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U katagami -d katagami"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  katagami_pgdata:
+
+networks:
+  proxy:
+    external: true
+  internal:
+    driver: bridge

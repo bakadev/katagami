@@ -10,7 +10,7 @@
     "build": "pnpm build:client && pnpm build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "start": "node dist/server/index.js",
+    "start": "node dist/server/server/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "prisma generate",
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
+    "@fastify/static": "^10.1.4",
     "@fastify/websocket": "^11.0.1",
     "@fontsource-variable/geist": "^5.2.8",
     "@prisma/client": "^5.22.0",

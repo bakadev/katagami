@@ -12,3 +12,6 @@ coverage/
 # Claude Code: local-only settings (permission allowlist, etc.)
 # Shared settings would go in .claude/settings.json (committed)
 .claude/settings.local.json
+
+# Production secrets live on the VPS only
+.env.production

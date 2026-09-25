@@ -73,14 +73,14 @@ export function TitleEditor({ title, onSave, readOnly }: TitleEditorProps) {
   };
 
   const isEmpty = title === null || title === "";
-  const typography = "text-[18px] font-semibold leading-tight tracking-[-0.005em]";
+  const typography = "font-serif text-[21px] font-normal leading-tight tracking-[-0.01em]";
 
   // Static label — used in both readOnly and a few sub-cases below.
   const labelText = isEmpty ? PLACEHOLDER : title;
   const labelClassName = cn(
     typography,
     "max-w-full truncate",
-    isEmpty ? "italic text-muted-foreground/80" : "text-foreground",
+    isEmpty ? "text-muted-foreground/80" : "text-foreground",
   );
 
   if (readOnly) {

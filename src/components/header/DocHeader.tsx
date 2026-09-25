@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from "react";
-import { Eye, FileText, PenLine } from "lucide-react";
+import { Eye, PenLine } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -7,6 +7,8 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { cn } from "~/lib/utils";
+import { Link } from "react-router";
+import { StencilMark } from "~/components/site/StencilMark";
 import { MetaLine, type ConnectionState, type Permission } from "./MetaLine";
 import { PanelToggle } from "./PanelToggle";
 import { SaveSnapshotButton } from "./SaveSnapshotButton";
@@ -171,11 +173,14 @@ export function DocHeader({
       >
         {/* ---- LEFT: document identity (single row) ---- */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <FileText
-            aria-hidden
-            className="size-6 shrink-0 text-muted-foreground"
-            strokeWidth={1.75}
-          />
+          <Link
+            to="/"
+            aria-label="Katagami home"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <StencilMark />
+          </Link>
+          <span aria-hidden className="h-5 w-px shrink-0 bg-border" />
           <div className="min-w-0 max-w-[60ch] shrink">
             <TitleEditor
               title={title}
@@ -219,6 +224,7 @@ export function DocHeader({
           {avatarSlot}
         </div>
       </div>
+      <div className="cut-edge" aria-hidden />
     </header>
   );
 }

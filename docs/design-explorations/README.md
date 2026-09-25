@@ -79,3 +79,13 @@ A strip above the site header that switches between the teams pages and `/develo
 Append `/developers` to any option's URL to see the same bar on the developer page.
 
 Mobbin references consulted: Klarna (tiny "For shoppers / For business" links above the header), Grammarly and Equals (solid announcement bars), Stripe (quiet secondary bar under the nav), mymind (single-row pill nav with status dots).
+
+## Round 5 — Editor header (2026-09-25) — open
+
+Should the editor's header take the utility bar's indigo? There is no mock: each option opens a real document with the header drawn in that tone via a `chrome` search param, and a strip on the document flips between tones on the same doc. Tones live in `DocHeader` (`tone` prop) and the on-indigo token scheme in `styles.css` (`.on-indigo`).
+
+| Option | Layout | Direction |
+|---|---|---|
+| `/design/editor-header/a` | **A. Indigo with pattern.** | The whole document header on indigo with the faint seigaiha; title, meta and controls in white via scoped token overrides. |
+| `/design/editor-header/b` | **B. Indigo plain.** | Same header, solid indigo, no pattern. |
+| `/design/editor-header/c` | **C. Rail.** | The site's 32px utility bar carried into the app above the current dark header: home link, live connection state, log-in slot, the mark. The document header itself stays quiet. |

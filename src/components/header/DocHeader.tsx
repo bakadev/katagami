@@ -29,7 +29,15 @@ export interface DocHeaderProps {
   onTogglePanel: () => void;
   onSaveSnapshot: (name: string) => void | Promise<void>;
   avatarSlot: ReactNode;
+  /**
+   * Header treatment. "plain" is the shipped default. The indigo tones and
+   * the rail exist for the Round 5 exploration and are selected by the
+   * document route from a `chrome` search param.
+   */
+  tone?: HeaderTone;
 }
+
+export type HeaderTone = "plain" | "indigo" | "indigo-pattern" | "rail";
 
 type ModeOption = {
   value: EditorMode;
@@ -155,7 +163,9 @@ export function DocHeader({
   onTogglePanel,
   onSaveSnapshot,
   avatarSlot,
+  tone = "plain",
 }: DocHeaderProps) {
+  const onIndigo = tone === "indigo" || tone === "indigo-pattern";
   return (
     <header
       role="banner"
@@ -163,12 +173,20 @@ export function DocHeader({
         // A single hairline separates the chrome from the workspace. The
         // brand lives in the mark, the serif title and the notched actions;
         // a divider in a working tool should be invisible.
-        "w-full border-b border-border",
+        "relative w-full border-b border-border",
+        onIndigo && "on-indigo bg-brand",
       )}
     >
+      {tone === "rail" && <AppRail connection={connection} />}
+      {tone === "indigo-pattern" && (
+        <div
+          aria-hidden
+          className="seigaiha pointer-events-none absolute inset-0 text-white opacity-[0.12]"
+        />
+      )}
       <div
         className={cn(
-          "flex w-full items-center gap-3 md:gap-4",
+          "relative flex w-full items-center gap-3 md:gap-4",
           "px-4 py-2.5 md:px-6",
         )}
       >
@@ -226,5 +244,47 @@ export function DocHeader({
         </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * Rail — the site's utility bar carried into the app: a 32px indigo strip
+ * with the wave ground above the plain header. Home link on the left;
+ * live connection state, the log-in slot and the mark on the right.
+ */
+function AppRail({ connection }: { connection: ConnectionState }) {
+  const label =
+    connection === "connected"
+      ? "Connected"
+      : connection === "connecting"
+        ? "Connecting"
+        : "Offline";
+  const dot =
+    connection === "connected"
+      ? "bg-emerald-300"
+      : connection === "connecting"
+        ? "bg-amber-300 animate-pulse"
+        : "bg-red-300";
+  return (
+    <div className="on-indigo relative bg-brand text-[11px] text-white/80">
+      <div
+        aria-hidden
+        className="seigaiha pointer-events-none absolute inset-0 text-white opacity-[0.12]"
+      />
+      <div className="relative flex h-8 items-center justify-between px-4 md:px-6">
+        <Link to="/" className="flex items-center gap-2 hover:text-white">
+          <StencilMark className="size-3.5" />
+          <span className="font-serif text-[13px] text-white">Katagami</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className={cn("inline-block size-1.5 rounded-full", dot)} />
+            {label}
+          </span>
+          <span title="Accounts arrive with the Team plan">Log in · soon</span>
+          <span aria-hidden>型紙</span>
+        </div>
+      </div>
+    </div>
   );
 }

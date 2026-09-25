@@ -258,6 +258,35 @@ html.dark {
   background-position: center bottom;
 }
 
+/* Seigaiha as a fill pattern (the utility bar's ground). */
+.seigaiha {
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cg fill='none' stroke='currentColor' stroke-width='1'%3E%3Cpath d='M0 40 a40 40 0 0 1 80 0'/%3E%3Cpath d='M8 40 a32 32 0 0 1 64 0'/%3E%3Cpath d='M16 40 a24 24 0 0 1 48 0'/%3E%3Cpath d='M24 40 a16 16 0 0 1 32 0'/%3E%3Cpath d='M-40 20 a40 40 0 0 1 80 0'/%3E%3Cpath d='M-32 20 a32 32 0 0 1 64 0'/%3E%3Cpath d='M-24 20 a24 24 0 0 1 48 0'/%3E%3Cpath d='M-16 20 a16 16 0 0 1 32 0'/%3E%3Cpath d='M40 20 a40 40 0 0 1 80 0'/%3E%3Cpath d='M48 20 a32 32 0 0 1 64 0'/%3E%3Cpath d='M56 20 a24 24 0 0 1 48 0'/%3E%3Cpath d='M64 20 a16 16 0 0 1 32 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 40px;
+}
+
+/* On-indigo scheme: scoped token overrides so any component using the
+   standard tokens reads correctly on an indigo ground (used by the editor
+   header's indigo tones). */
+.on-indigo {
+  --background: #274b8f;
+  --foreground: #ffffff;
+  --card: #274b8f;
+  --card-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.12);
+  --muted-foreground: rgba(255, 255, 255, 0.74);
+  --secondary: rgba(255, 255, 255, 0.18);
+  --secondary-foreground: #ffffff;
+  --accent: rgba(255, 255, 255, 0.14);
+  --accent-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.24);
+  --input: rgba(255, 255, 255, 0.3);
+  --ring: rgba(255, 255, 255, 0.6);
+  --primary: #ffffff;
+  --primary-foreground: #274b8f;
+  --brand-ink: #ffffff;
+  color: var(--foreground);
+}
+
 /* Komon: the fine punched-dot field, for empty states and quiet bands. */
 .komon {
   background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cg fill='currentColor'%3E%3Ccircle cx='4' cy='4' r='1.2'/%3E%3Ccircle cx='12' cy='12' r='1.2'/%3E%3C/g%3E%3C/svg%3E");

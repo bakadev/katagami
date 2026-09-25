@@ -32,6 +32,34 @@ interface Round {
 
 const ROUNDS: Round[] = [
   {
+    id: "editor-header",
+    surface: "Editor header",
+    date: "2026-09-25",
+    options: [
+      {
+        slug: "a",
+        persona: "A · Indigo with pattern",
+        title: "The utility bar's ground, full height",
+        blurb:
+          "The document header on indigo with the faint seigaiha, white text and controls. Opens a real document.",
+      },
+      {
+        slug: "b",
+        persona: "B · Indigo plain",
+        title: "Same, without the pattern",
+        blurb:
+          "Solid indigo header, white text and controls. Opens a real document.",
+      },
+      {
+        slug: "c",
+        persona: "C · Rail",
+        title: "The site's utility bar carried into the app",
+        blurb:
+          "A 32px indigo rail with the pattern above the current dark header: home link, live connection state, log-in slot, the mark. Opens a real document.",
+      },
+    ],
+  },
+  {
     id: "topbar",
     surface: "Audience top bar",
     date: "2026-09-25",

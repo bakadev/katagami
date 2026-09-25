@@ -39,7 +39,9 @@ const md = new MarkdownIt({
   html: true,
   linkify: true,
   breaks: false,
-  typographer: true,
+  // Off: it turned the --- in table divider rows into em dashes and
+  // rewrote quotes, which is wrong for a source-faithful spec tool.
+  typographer: false,
   highlight(code: string, lang: string): string {
     const lower = lang.toLowerCase();
     if (lower && hljs.getLanguage(lower)) {

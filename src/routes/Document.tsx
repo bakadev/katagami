@@ -126,7 +126,10 @@ export default function DocumentRoute() {
     setEditor(tipTapEditor);
 
     const syncMarkdown = () => {
-      setMarkdown(tipTapEditor.getText({ blockSeparator: "\n\n" }));
+      // One editor paragraph is one source line, and a blank line is an empty
+      // paragraph, so paragraphs join with a single newline. Joining with a
+      // blank line broke anything that spans lines: tables, lists, quotes.
+      setMarkdown(tipTapEditor.getText({ blockSeparator: "\n" }));
     };
     syncMarkdown();
     tipTapEditor.on("update", syncMarkdown);

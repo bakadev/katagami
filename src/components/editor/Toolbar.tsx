@@ -36,7 +36,7 @@ export function Toolbar({ editor, disabled = false }: ToolbarProps) {
       <div
         role="toolbar"
         aria-label="Formatting toolbar"
-        className="flex items-center gap-1 bg-background p-2"
+        className="flex items-center gap-1 bg-background px-2 py-[13px]"
       >
         <ToolbarButton
           label="Heading 1"

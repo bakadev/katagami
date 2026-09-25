@@ -42,9 +42,10 @@ describe("buildFilename", () => {
 });
 
 describe("buildMarkdownFromEditor", () => {
-  it("returns editor text with blank-line block separators", () => {
-    const editor = stubEditor("line1\nline2");
-    expect(buildMarkdownFromEditor(editor)).toBe("line1\n\nline2");
+  it("joins one paragraph per source line with a single newline", () => {
+    // A blank line in the source is an empty paragraph, so it survives too.
+    const editor = stubEditor("line1\nline2\n\nline4");
+    expect(buildMarkdownFromEditor(editor)).toBe("line1\nline2\n\nline4");
   });
 
   it("returns empty string for an empty editor", () => {

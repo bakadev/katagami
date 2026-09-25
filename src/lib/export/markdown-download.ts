@@ -1,7 +1,8 @@
 import type { Editor } from "@tiptap/core";
 
 export function buildMarkdownFromEditor(editor: Editor): string {
-  return editor.getText({ blockSeparator: "\n\n" });
+  // One paragraph per source line; blank lines are empty paragraphs.
+  return editor.getText({ blockSeparator: "\n" });
 }
 
 export function buildFilename(title: string | null | undefined, docId: string): string {

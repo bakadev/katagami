@@ -59,4 +59,22 @@ describe("preview pipeline — heading cases", () => {
     expect(html).toMatch(/<strong>Bold<\/strong>/);
     expect(html).toMatch(/<hr/);
   });
+
+  it("renders a GFM table whose rows are consecutive lines", () => {
+    // The editor holds one paragraph per source line and joins them with a
+    // single newline; a table must survive that round trip.
+    const source = [
+      "| # | Question | Decision |",
+      "|---|---|---|",
+      "| 1 | Tier names | Free and Team |",
+    ].join("\n");
+    const html = renderMarkdown(source);
+    expect(html).toContain("<table>");
+    expect(html).toContain("<th>Question</th>");
+    expect(html).toContain("<td>Free and Team</td>");
+  });
+
+  it("keeps --- literal outside a rule (no typographer)", () => {
+    expect(renderMarkdown("a --- b")).not.toContain("\u2014");
+  });
 });

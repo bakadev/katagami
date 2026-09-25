@@ -448,7 +448,7 @@ export default function DocumentRoute() {
             />
             {mode === "preview" && (
               <div
-                className="prose min-h-full max-w-none p-6 dark:prose-invert"
+                className="prose min-h-full max-w-none p-6 prose-headings:font-serif prose-headings:font-normal prose-headings:tracking-[-0.01em] dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
               />
             )}

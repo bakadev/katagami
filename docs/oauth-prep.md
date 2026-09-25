@@ -53,6 +53,9 @@ What we ask GitHub for: the `read:user` and `user:email` scopes, meaning your na
    - Authorised redirect URIs: both Google callback URLs from the table.
    - Create. Copy the **Client ID** and **Client secret**.
 
+   Done 2026-09-25. Project `katagami-509721`, client `Katagami web`, Client ID (public):
+   `389018847326-ge5r5ipd5st9uvf7kn0haugm0t4cqdbu.apps.googleusercontent.com`
+
 ### D. Generate a session secret
 
 The server signs its session cookie with a secret so nobody can forge one. Generate one per environment on your laptop:

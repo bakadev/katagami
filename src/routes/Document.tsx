@@ -440,10 +440,20 @@ export default function DocumentRoute() {
             </div>
           )}
           <div className="flex-1 overflow-auto">
+            {/* The editable element is only as tall as its content, so the
+                host stretches it with flex and turns a click in the empty
+                space below into "focus at the end". Without this, clicking
+                anywhere but the text does nothing. */}
             <div
               ref={editorHostRef}
+              onMouseDown={(e) => {
+                if (e.target === e.currentTarget && editor && !readOnly) {
+                  e.preventDefault();
+                  editor.commands.focus("end");
+                }
+              }}
               className={`prose min-h-full max-w-none p-4 font-mono text-sm dark:prose-invert ${
-                mode === "edit" ? "" : "hidden"
+                mode === "edit" ? "flex flex-col" : "hidden"
               }`}
             />
             {mode === "preview" && (

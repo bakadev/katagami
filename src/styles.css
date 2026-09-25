@@ -300,6 +300,13 @@ html.dark {
   outline: none;
 }
 
+/* Fill the host so the whole white area is the editor, not just the lines
+   with text in them. */
+.ProseMirror {
+  flex: 1 1 auto;
+  min-height: 100%;
+}
+
 /* Respect the user's OS-level motion preference. WCAG 2.3.3. */
 @media (prefers-reduced-motion: reduce) {
   *,

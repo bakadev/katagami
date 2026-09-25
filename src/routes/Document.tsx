@@ -433,7 +433,10 @@ export default function DocumentRoute() {
             ribbon spanning the whole window. */}
         <div className="relative flex flex-1 flex-col">
         <RegMarks />
-        <div className="flex flex-1 flex-col overflow-hidden border border-border bg-background">
+        {/* Outlined notch: a border-coloured outer face with the card face
+            inside, so the 1px edge follows the cut corners. */}
+        <div className="notch flex flex-1 flex-col bg-border p-px">
+        <div className="notch-in flex flex-1 flex-col overflow-hidden bg-background">
           {mode === "edit" && !readOnly && (
             <div className="border-b border-border">
               <Toolbar editor={editor} disabled={readOnly} />
@@ -463,6 +466,7 @@ export default function DocumentRoute() {
               />
             )}
           </div>
+        </div>
         </div>
         </div>
 

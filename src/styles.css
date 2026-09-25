@@ -246,6 +246,12 @@ html.dark {
 .notch-sm {
   clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
 }
+/* Inner face of an outlined notch, 1px smaller, so a `notch bg-border p-px`
+   outer layer reads as a 1px border that follows the cut corners. A CSS
+   border would be sliced off by the clip-path. */
+.notch-in {
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+}
 
 /* Seigaiha hairline: a thin strip of the wave repeat standing in for a rule. */
 .cut-edge {

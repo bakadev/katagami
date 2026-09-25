@@ -12,27 +12,34 @@ import TopBarExploration from "./routes/design/topbar/TopBarExploration";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
+import { ScrollToTop } from "./components/site/ScrollToTop";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/developers" element={<Developers />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/p/:projectId" element={<Navigate to="." replace />} />
-      <Route path="/p/:projectId/d/:docId" element={<Document />} />
-      {/* Design explorations — public but unlinked.
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/developers" element={<Developers />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/p/:projectId" element={<Navigate to="." replace />} />
+        <Route path="/p/:projectId/d/:docId" element={<Document />} />
+        {/* Design explorations — public but unlinked.
           See docs/design-explorations/README.md */}
-      <Route path="/design" element={<DesignIndex />} />
-      <Route path="/design/contact/a" element={<ContactA />} />
-      <Route path="/design/contact/b" element={<ContactB />} />
-      <Route path="/design/contact/c" element={<ContactC />} />
-      <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
-      <Route path="/design/topbar/:variant/:audience" element={<TopBarExploration />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="/design" element={<DesignIndex />} />
+        <Route path="/design/contact/a" element={<ContactA />} />
+        <Route path="/design/contact/b" element={<ContactB />} />
+        <Route path="/design/contact/c" element={<ContactC />} />
+        <Route path="/design/topbar/:variant" element={<TopBarExploration />} />
+        <Route
+          path="/design/topbar/:variant/:audience"
+          element={<TopBarExploration />}
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }

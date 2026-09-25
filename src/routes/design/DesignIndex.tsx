@@ -57,6 +57,13 @@ const ROUNDS: Round[] = [
         blurb:
           "A bordered strip on the page background: Katagami for Teams · Developers, status, log in, theme toggle, the mark.",
       },
+      {
+        slug: "d",
+        persona: "D · Hairline v2",
+        title: "C's content on B's indigo wave ground",
+        blurb:
+          "Same 32px strip and small text as C, but filled indigo with the faint seigaiha pattern from B. White text.",
+      },
     ],
   },
   {

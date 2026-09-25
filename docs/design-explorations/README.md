@@ -72,6 +72,7 @@ A strip above the site header that switches between the teams pages and `/develo
 | `/design/topbar/a` | **A. Utility bar.** | Solid indigo, white text. Notched two-way audience switch on the left; on the right a live status dot, a one-line pilot note, and a "Log in · soon" slot that becomes real when accounts ship. |
 | `/design/topbar/b` | **B. Announcement bar.** | Indigo with a faint seigaiha ground. Plain audience links with the current one underlined, one dismissible message ("every plan is free while billing is built") linking to pricing. |
 | `/design/topbar/c` | **C. Hairline bar.** | No fill: a bordered 32px strip on the page background with 11px text. "Katagami for Teams · Developers", operational status, log in, a theme toggle and the 型紙 mark. |
+| `/design/topbar/d` | **D. Hairline v2** (added after review). | C's content and 32px height on B's indigo seigaiha ground, white text, current audience underlined. |
 
 Append `/developers` to any option's URL to see the same bar on the developer page.
 

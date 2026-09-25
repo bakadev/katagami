@@ -35,6 +35,8 @@ const ROUNDS: Round[] = [
     id: "topbar",
     surface: "Audience top bar",
     date: "2026-09-25",
+    outcome:
+      "Locked in on 2026-09-25: option D became the site-wide utility bar (src/components/site/UtilityBar.tsx). All four variants are kept here.",
     options: [
       {
         slug: "a",
@@ -63,6 +65,7 @@ const ROUNDS: Round[] = [
         title: "C's content on B's indigo wave ground",
         blurb:
           "Same 32px strip and small text as C, but filled indigo with the faint seigaiha pattern from B. White text.",
+        liveAt: "/",
       },
     ],
   },

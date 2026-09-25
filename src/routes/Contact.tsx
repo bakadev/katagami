@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { Link } from "react-router";
-import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
+import { SiteHeader } from "~/components/site/SiteHeader";
 
 /**
  * /contact. Chosen from the Round 3 design exploration (option B, pick a path).
@@ -61,7 +60,6 @@ export default function Contact() {
     description:
       "Enterprise and pricing, help with a document, or press and partnerships. A person reads every message.",
   });
-  const { create, loading } = useCreateDoc();
   const [sent, setSent] = useState(false);
   const [path, setPath] = useState<PathId>("enterprise");
   const [email, setEmail] = useState("");
@@ -77,7 +75,7 @@ export default function Contact() {
         ["--indigo-tint" as string]: `color-mix(in srgb, ${INDIGO} 16%, var(--card))`,
       }}
     >
-      <Header create={create} loading={loading} />
+      <SiteHeader />
 
       <main>
         <section className="relative">
@@ -271,39 +269,6 @@ export default function Contact() {
 }
 
 /* ---- pieces ------------------------------------------------------------- */
-
-function Header({ create, loading }: { create: () => void; loading: boolean }) {
-  return (
-    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-      <Link to="/" className="flex items-center gap-2.5">
-        <StencilMark />
-        <span style={{ fontFamily: SERIF }} className="text-xl">
-          Katagami
-        </span>
-      </Link>
-      <nav className="flex items-center gap-7 text-sm text-muted-foreground">
-        <Link to="/pricing" className="hidden hover:text-foreground sm:inline">
-          Pricing
-        </Link>
-        <span aria-current="page" className="hidden text-foreground sm:inline">
-          Contact
-        </span>
-        <Link to="/developers" className="hidden hover:text-foreground sm:inline">
-          For developers
-        </Link>
-        <button
-          type="button"
-          onClick={create}
-          disabled={loading}
-          className="bg-[var(--indigo)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
-          style={{ clipPath: NOTCH }}
-        >
-          Start a spec
-        </button>
-      </nav>
-    </header>
-  );
-}
 
 function Field({
   label,

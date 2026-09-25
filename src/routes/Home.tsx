@@ -1,7 +1,7 @@
-import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
+import { SiteHeader } from "~/components/site/SiteHeader";
 
 /**
  * Homepage (root). Aimed at product, design, content and business people
@@ -61,12 +61,7 @@ const SEIGAIHA = tile(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height
 const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
 
-export default function Home({
-  audienceLink = true,
-}: {
-  /** Show the "For developers" cross-link in the nav. Off when a top bar carries it. */
-  audienceLink?: boolean;
-} = {}) {
+export default function Home() {
   usePageMeta({
     title: "Katagami",
     description:
@@ -84,48 +79,7 @@ export default function Home({
         ["--anchor" as string]: "color-mix(in oklch, #f2c94c 35%, transparent)",
       }}
     >
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-        <span className="flex items-center gap-2.5">
-          <StencilMark />
-          <span style={{ fontFamily: SERIF }} className="text-xl">
-            Katagami
-          </span>
-        </span>
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
-          <a href="#process" className="hover:text-foreground">
-            How teams use it
-          </a>
-          <a href="#history" className="hover:text-foreground">
-            Sign-off
-          </a>
-          <a href="#handoff" className="hover:text-foreground">
-            Handoff
-          </a>
-          <Link to="/pricing" className="hover:text-foreground">
-            Pricing
-          </Link>
-          <Link to="/contact" className="hover:text-foreground">
-            Contact
-          </Link>
-          {audienceLink && (
-            <Link
-              to="/developers"
-              className="text-[var(--indigo)] hover:underline dark:text-blue-300"
-            >
-              For developers
-            </Link>
-          )}
-          <button
-            type="button"
-            onClick={create}
-            disabled={loading}
-            className="bg-[var(--indigo)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
-            style={{ clipPath: NOTCH }}
-          >
-            Start a spec
-          </button>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main>
         {/* Hero, on an asanoha ground that fades out toward the bottom */}
@@ -412,22 +366,6 @@ function RegMark({ className }: { className: string }) {
   );
 }
 
-/** Wordmark glyph: a single asanoha cell, cut out. */
-function StencilMark({ small }: { small?: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className={small ? "size-3.5" : "size-5"}
-      fill="none"
-      stroke="var(--indigo)"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
-  );
-}
 
 function CursorLabel({ name, color }: { name: string; color: string }) {
   return (

@@ -20,6 +20,8 @@ import Developers from "~/routes/Developers";
  *   D. Hairline v2: C's content and size on B's indigo seigaiha ground.
  *
  * Routes: /design/topbar/:variant and /design/topbar/:variant/developers.
+ * Option D shipped as src/components/site/UtilityBar.tsx; the site-wide bar
+ * is not rendered under /design so each variant can be seen on its own.
  */
 
 const INDIGO = "#274b8f";
@@ -54,9 +56,9 @@ export default function TopBarExploration() {
       {v === "c" && <BarC audience={aud} to={to} />}
       {v === "d" && <BarD audience={aud} to={to} />}
       {aud === "developers" ? (
-        <Developers audienceLink={false} />
+        <Developers />
       ) : (
-        <Home audienceLink={false} />
+        <Home />
       )}
     </div>
   );

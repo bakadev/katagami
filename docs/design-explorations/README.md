@@ -63,7 +63,9 @@ The page the two "Contact us" buttons on `/pricing` point at. Style is locked (P
 
 Mobbin references consulted: ToDesktop and Reducto (split form with a "here to help" column), Grammarly and Charma (choose a reason before the form), Dovetail (route-by-reason select with response time up front), Sana AI "Book an intro" flow (stepped request with team size).
 
-## Round 4 — Audience top bar (2026-09-25) — open
+## Round 4 — Audience top bar (2026-09-25) — closed
+
+**Outcome (2026-09-25):** option D is the site-wide utility bar (`src/components/site/UtilityBar.tsx`), rendered above every marketing page. With the audience switch there, the teams-side pages share one header (`SiteHeader`: wordmark, Pricing, Contact, Start a spec) and the developer page drops its "for teams" link. All four variants stay under `/design/topbar/*`.
 
 A strip above the site header that switches between the teams pages and `/developers`, so the "For developers" / "for teams" cross-links can leave the main nav. Each option is shown on the real homepage and developer page with the nav cross-link hidden (`audienceLink={false}`).
 

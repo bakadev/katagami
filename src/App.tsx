@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate, useLocation } from "react-router";
 import Home from "./routes/Home";
 import Developers from "./routes/Developers";
 import Pricing from "./routes/Pricing";
@@ -13,11 +13,23 @@ import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
 import { ScrollToTop } from "./components/site/ScrollToTop";
+import { UtilityBar } from "./components/site/UtilityBar";
+
+/** The utility bar belongs to the marketing pages, not the editor or the
+ *  design explorations (which render their own bar variants). */
+function SiteChrome() {
+  const { pathname } = useLocation();
+  const inApp = pathname.startsWith("/p/");
+  const inDesign = pathname.startsWith("/design");
+  if (inApp || inDesign) return null;
+  return <UtilityBar />;
+}
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
+      <SiteChrome />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/developers" element={<Developers />} />

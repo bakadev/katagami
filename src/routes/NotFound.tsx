@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
+import { SiteHeader } from "~/components/site/SiteHeader";
 
 /**
  * 404: a stencil with nothing cut.
@@ -57,37 +58,7 @@ export default function NotFound() {
         ["--indigo-soft" as string]: `color-mix(in oklch, ${INDIGO} 10%, transparent)`,
       }}
     >
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-        <Link to="/" className="flex items-center gap-2.5">
-          <StencilMark />
-          <span style={{ fontFamily: SERIF }} className="text-xl">
-            Katagami
-          </span>
-        </Link>
-        <nav className="flex items-center gap-7 text-sm text-muted-foreground">
-          <Link to="/" className="hidden hover:text-foreground sm:inline">
-            For teams
-          </Link>
-          <Link
-            to="/developers"
-            className="hidden hover:text-foreground sm:inline"
-          >
-            For developers
-          </Link>
-          <Link to="/pricing" className="hidden hover:text-foreground sm:inline">
-            Pricing
-          </Link>
-          <button
-            type="button"
-            onClick={create}
-            disabled={loading}
-            className="bg-[var(--indigo)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
-            style={{ clipPath: NOTCH }}
-          >
-            Start a spec
-          </button>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <main className="flex flex-1 items-center">
         <div className="mx-auto w-full max-w-6xl px-6 py-10 md:px-10 md:py-16">
@@ -200,18 +171,3 @@ function RegMark({ className }: { className: string }) {
   );
 }
 
-function StencilMark({ small }: { small?: boolean }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className={small ? "size-3.5" : "size-5"}
-      fill="none"
-      stroke="var(--indigo)"
-      strokeWidth="1.25"
-    >
-      <path d="M12 1.5 L21 6.75 L21 17.25 L12 22.5 L3 17.25 L3 6.75 Z" />
-      <path d="M12 1.5v21M3 6.75l18 10.5M21 6.75L3 17.25" />
-    </svg>
-  );
-}

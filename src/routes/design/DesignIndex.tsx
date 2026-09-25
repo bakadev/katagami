@@ -35,34 +35,16 @@ const ROUNDS: Round[] = [
     id: "pricing",
     surface: "Pricing",
     date: "2026-09-25",
+    outcome:
+      "Locked in on 2026-09-25: option D, a composite of A's sheets, C's calculator and Enterprise band, and B's short answers, became /pricing. A, B and C were retired.",
     options: [
-      {
-        slug: "a",
-        persona: "A · Three sheets",
-        title: "Three stencil sheets, Team raised",
-        blurb:
-          "The classic three-column card layout. Team lifted and given the indigo head, feature lists under each, FAQ below.",
-      },
-      {
-        slug: "b",
-        persona: "B · Comparison table",
-        title: "Two prices, then every row",
-        blurb:
-          "A short hero with the two real prices, then one long feature table with cut-edge strips between row groups. For people who want to see everything.",
-      },
-      {
-        slug: "c",
-        persona: "C · Start free, grow",
-        title: "One doc first, then a seat calculator",
-        blurb:
-          "A narrative: start with no account, drag a seat slider to see what Team costs, read what Team adds, Enterprise as a quiet band at the end.",
-      },
       {
         slug: "d",
         persona: "D · Composite",
         title: "A's sheets, C's calculator, short answers",
         blurb:
-          "The pick after review: A's hero and three sheets, C's seat calculator and What Team adds, A's FAQ layout with B's short answers, C's Enterprise close.",
+          "A's hero and three sheets, C's seat calculator and What Team adds, A's FAQ layout with B's short answers, C's Enterprise close.",
+        liveAt: "/pricing",
       },
     ],
   },

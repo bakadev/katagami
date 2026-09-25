@@ -29,7 +29,9 @@ Mobbin references consulted: Cursor and Height (code-editor hero), Figma, Coda a
 
 Katagami-iteration references: Figma Shortcut (punched-dot card fields, essentially komon), Sketch (hairline hexagon lattice, a kikkō), Dropbox (two-tone riso block with numbered rail), Linear (fine-line geometric ornament under a serif headline).
 
-## Round 2 — Pricing (2026-09-25) — open
+## Round 2 — Pricing (2026-09-25) — closed
+
+**Outcome (2026-09-25):** option D, the composite, is now `/pricing` (`src/routes/Pricing.tsx`). A, B and C were deleted; the routes below no longer exist.
 
 Content is fixed by `two-tier-proposal.md` section 5: Free / Team / Enterprise, Team at $39 a month with 5 seats and $8 per extra seat, Enterprise as an unlinked "Contact us". Style is locked to Product v2, so the three options differ in **layout and emphasis** only. All three share the Product v2 header (stencil wordmark, links to `/` and `/developers`, real "Start a spec" CTA via `useCreateDoc`).
 

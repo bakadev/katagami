@@ -88,6 +88,9 @@ export default function Home() {
           <a href="#handoff" className="hover:text-foreground">
             Handoff
           </a>
+          <Link to="/pricing" className="hover:text-foreground">
+            Pricing
+          </Link>
           <Link
             to="/developers"
             className="text-[var(--indigo)] hover:underline dark:text-blue-300"

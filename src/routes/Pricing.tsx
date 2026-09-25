@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+/** Pricing option D: composite of A (hero, FAQ layout), B (short answers), C (calculator, what Team adds, Enterprise band). */
+import { useState } from "react";
 import { Link } from "react-router";
 import { useCreateDoc } from "~/hooks/useCreateDoc";
-import { ExplorationBar } from "../DesignIndex";
+
 
 /**
  * Pricing exploration, option A: "Three stencil sheets".
@@ -57,31 +59,74 @@ const NOTCH_IN =
 
 /* ---- content ------------------------------------------------------------ */
 
-const FAQ: { q: string; a: string }[] = [
+const BASE_PRICE = 39;
+const INCLUDED_SEATS = 5;
+const EXTRA_SEAT = 8;
+const MAX_SEATS = 40;
+
+
+const TEAM_ADDS: { title: string; body: string; free: string }[] = [
   {
-    q: "What counts as an editor on Free?",
-    a: "Anyone with the document open and the edit link is an editor while they have it open. Free allows two at a time. A third person who arrives sees the doc in view-only until someone leaves. Closing the tab frees the seat.",
+    title: "As many docs as the work needs",
+    body: "Projects hold many docs each, with one share setting for the lot. No counting.",
+    free: "Free: 10 single docs",
   },
   {
-    q: "What happens when I create an 11th doc?",
-    a: "Free stops at 10 single documents. You can keep editing, sharing and exporting the ones you have, and you can delete one to make room. Team removes the limit and adds projects that hold many docs each.",
+    title: "Everyone in the doc at once",
+    body: "Every seat can edit at the same time. Viewers and commenters still cost nothing.",
+    free: "Free: 2 editing at once",
   },
   {
-    q: "Can I export my documents?",
-    a: "Yes, on every plan. Free exports Markdown. Team and Enterprise export Markdown and PDF. The file you download is the file you wrote; nothing is locked inside the app.",
+    title: "Links that match the audience",
+    body: "Comment-only links for reviewers, login-required links for anything sensitive.",
+    free: "Free: edit and view links",
   },
   {
-    q: "Do viewers cost anything?",
-    a: "No. Seats are for people who edit. Anyone with a view link, or a comment-only link on Team, reads the doc without taking a seat and without an account.",
+    title: "Every sign-off kept",
+    body: "Name as many versions as you have decisions. Go back to any of them.",
+    free: "Free: 3 named versions",
   },
   {
-    q: "What is in Enterprise?",
-    a: "Everything in Team, plus single sign-on, domain restrictions on share links, retention policies for history, custom seat agreements, a named support contact and an uptime SLA. Pricing depends on the agreement, so it starts with a conversation.",
+    title: "PDF alongside Markdown",
+    body: "Export the same doc as a PDF for people who want to read it, and Markdown for people who want to build from it.",
+    free: "Free: Markdown",
+  },
+  {
+    title: "Images, and later AI text operations",
+    body: "Put screenshots and diagrams in the spec. AI rewrites and summaries arrive on Team when they ship.",
+    free: "Free: text only",
   },
 ];
 
-export default function PricingA() {
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "What counts as an editor on Free?",
+    a: "Anyone with the edit link and the document open. Free allows two at once. A third arrival gets view-only until someone closes the tab.",
+  },
+  {
+    q: "What happens on the 11th doc?",
+    a: "Free stops at 10 single docs. The ten you have keep working; delete one to make room, or move to Team for unlimited docs and projects.",
+  },
+  {
+    q: "Can I export?",
+    a: "On every plan. Free exports Markdown; Team and Enterprise add PDF. What you download is exactly what you wrote.",
+  },
+  {
+    q: "Do viewers cost anything?",
+    a: "No. Seats are for editors. Viewers and commenters read without a seat and without an account.",
+  },
+  {
+    q: "What is in Enterprise?",
+    a: "Team plus single sign-on, domain-restricted links, retention policies, custom seat agreements, a named support contact and an uptime SLA.",
+  },
+];
+
+export default function Pricing() {
   const { create, loading, error } = useCreateDoc();
+  const [seats, setSeats] = useState(8);
+
+  const extra = Math.max(0, seats - INCLUDED_SEATS);
+  const total = BASE_PRICE + extra * EXTRA_SEAT;
 
   return (
     <div
@@ -92,8 +137,6 @@ export default function PricingA() {
         ["--anchor" as string]: "color-mix(in oklch, #f2c94c 35%, transparent)",
       }}
     >
-      <ExplorationBar round="pricing" current="a" />
-
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 md:px-10">
         <Link to="/" className="flex items-center gap-2.5">
           <StencilMark />
@@ -226,27 +269,174 @@ export default function PricingA() {
 
         <CutEdge />
 
-        {/* One-line clarifications on a komon ground */}
+        {/* 2. Seat calculator on a komon ground */}
         <section className="relative">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 text-[var(--indigo)] opacity-[0.12] dark:text-blue-300 dark:opacity-[0.22]"
             style={{ backgroundImage: KOMON, backgroundSize: "16px 16px" }}
           />
-          <div className="relative mx-auto grid max-w-6xl gap-8 px-6 py-14 md:grid-cols-3 md:px-10">
-            <Note
-              title="Seats are for editors"
-              body="People who only read or comment never take a seat, on any plan."
-            />
-            <Note
-              title="Your files stay yours"
-              body="Every plan exports plain Markdown. Move it to a repo, a wiki or another tool whenever you like."
-            />
-            <Note
-              title="Prices are placeholders"
-              body="Team pricing is a working figure while billing is built. Nothing is charged today."
-            />
+          <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-20 md:grid-cols-[5fr_6fr] md:items-center md:px-10">
+            <div>
+              <h2
+                style={{ fontFamily: SERIF }}
+                className="max-w-[20ch] text-3xl leading-tight sm:text-4xl"
+              >
+                What would Team cost your team?
+              </h2>
+              <p className="mt-5 max-w-[48ch] leading-relaxed text-muted-foreground">
+                Team is ${BASE_PRICE} a month and comes with {INCLUDED_SEATS}{" "}
+                seats. Each seat after that is ${EXTRA_SEAT} a month. A seat is
+                someone who edits; people who read or comment never need one.
+              </p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Working figures while billing is built. Nothing is charged
+                today.
+              </p>
+            </div>
+
+            <div className="relative">
+              <RegMark className="-left-3 -top-3" />
+              <RegMark className="-right-3 -top-3" />
+              <RegMark className="-bottom-3 -left-3" />
+              <RegMark className="-bottom-3 -right-3" />
+              <div
+                style={{ clipPath: NOTCH }}
+                className="border border-[var(--indigo)] bg-card p-6 shadow-md sm:p-8"
+              >
+                <div className="flex items-center justify-between">
+                  <label htmlFor="seats" className="text-sm font-medium">
+                    People who edit
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Stepper
+                      label="Fewer seats"
+                      onClick={() => setSeats((s) => Math.max(1, s - 1))}
+                      disabled={seats <= 1}
+                    >
+                      –
+                    </Stepper>
+                    <span
+                      style={{ fontFamily: SERIF }}
+                      className="w-10 text-center text-2xl tabular-nums"
+                    >
+                      {seats}
+                    </span>
+                    <Stepper
+                      label="More seats"
+                      onClick={() =>
+                        setSeats((s) => Math.min(MAX_SEATS, s + 1))
+                      }
+                      disabled={seats >= MAX_SEATS}
+                    >
+                      +
+                    </Stepper>
+                  </div>
+                </div>
+                <input
+                  id="seats"
+                  type="range"
+                  min={1}
+                  max={MAX_SEATS}
+                  value={seats}
+                  onChange={(e) => setSeats(Number(e.target.value))}
+                  className="mt-5 w-full accent-[var(--indigo)]"
+                />
+                <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+                  <span>1</span>
+                  <span>{INCLUDED_SEATS} included</span>
+                  <span>{MAX_SEATS}</span>
+                </div>
+
+                <dl className="mt-6 divide-y divide-border text-sm">
+                  <div className="flex justify-between py-2.5">
+                    <dt className="text-muted-foreground">
+                      Team, {INCLUDED_SEATS} seats included
+                    </dt>
+                    <dd className="tabular-nums">${BASE_PRICE}</dd>
+                  </div>
+                  <div className="flex justify-between py-2.5">
+                    <dt className="text-muted-foreground">
+                      {extra === 0
+                        ? "No extra seats"
+                        : `${extra} extra ${extra === 1 ? "seat" : "seats"} × $${EXTRA_SEAT}`}
+                    </dt>
+                    <dd className="tabular-nums">${extra * EXTRA_SEAT}</dd>
+                  </div>
+                  <div className="flex items-baseline justify-between py-3">
+                    <dt className="font-medium">Per month</dt>
+                    <dd
+                      style={{ fontFamily: SERIF }}
+                      className="text-4xl tabular-nums tracking-tight"
+                      aria-live="polite"
+                    >
+                      ${total}
+                    </dd>
+                  </div>
+                </dl>
+                {seats > INCLUDED_SEATS && (
+                  <p className="text-xs text-muted-foreground">
+                    About ${(total / seats).toFixed(2)} per editor.
+                  </p>
+                )}
+                {seats <= 2 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Two people can edit on Free. Team is worth it for projects,
+                    unlimited docs and comment-only links.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={create}
+                  disabled={loading}
+                  style={{ clipPath: NOTCH }}
+                  className="mt-6 h-11 w-full bg-[var(--indigo)] px-6 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                >
+                  {loading ? "Opening…" : "Start a spec"}
+                </button>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Start on Free today. Move to Team when billing opens.
+                </p>
+              </div>
+            </div>
           </div>
+        </section>
+
+        <CutEdge />
+
+        {/* 3. What Team adds over Free */}
+        <section className="mx-auto max-w-6xl px-6 py-20 md:px-10">
+          <h2
+            style={{ fontFamily: SERIF }}
+            className="max-w-[24ch] text-3xl leading-tight sm:text-4xl"
+          >
+            What Team adds
+          </h2>
+          <p className="mt-4 max-w-[52ch] text-muted-foreground">
+            Everything Free does, plus the things a group needs once the
+            spec is more than one doc and two people.
+          </p>
+          <ol className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 md:grid-cols-3">
+            {TEAM_ADDS.map((t, i) => (
+              <li key={t.title} className="flex gap-4">
+                <span
+                  style={{ fontFamily: SERIF, clipPath: NOTCH }}
+                  className="mt-0.5 flex size-8 shrink-0 items-center justify-center bg-[var(--indigo)] text-sm text-white"
+                >
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className="font-medium">{t.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {t.body}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground/80">
+                    {t.free}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <CutEdge />
@@ -261,8 +451,8 @@ export default function PricingA() {
               Questions people ask before they pick
             </h2>
             <p className="mt-4 max-w-[36ch] text-muted-foreground">
-              If yours is not here, start a spec and find out. Free has no
-              account and no card.
+              Short answers. If yours is not here, start a spec and find
+              out; Free has no account and no card.
             </p>
           </div>
           <dl className="divide-y divide-border">
@@ -277,29 +467,43 @@ export default function PricingA() {
           </dl>
         </section>
 
-        {/* Indigo close */}
+        {/* 4. Enterprise, a quiet indigo band */}
         <section className="relative bg-[var(--indigo)] text-white">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 text-white opacity-[0.16]"
             style={{ backgroundImage: SEIGAIHA, backgroundSize: "80px 40px" }}
           />
-          <div className="relative mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 md:flex-row md:items-center md:justify-between md:px-10">
-            <p
-              style={{ fontFamily: SERIF }}
-              className="max-w-[28ch] text-2xl leading-snug sm:text-3xl"
-            >
-              The first doc is free and takes one click.
-            </p>
-            <button
-              type="button"
-              onClick={create}
-              disabled={loading}
-              style={{ clipPath: NOTCH }}
-              className="h-11 shrink-0 bg-white px-6 text-sm font-medium text-[var(--indigo)] hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
-            >
-              Start a spec
-            </button>
+          <div className="relative mx-auto grid max-w-6xl gap-8 px-6 py-16 md:grid-cols-[6fr_5fr] md:items-center md:px-10">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-white/70">
+                Enterprise
+              </p>
+              <h2
+                style={{ fontFamily: SERIF }}
+                className="mt-3 max-w-[26ch] text-2xl leading-snug sm:text-3xl"
+              >
+                For organisations with sign-on, retention and uptime
+                requirements
+              </h2>
+              <p className="mt-4 max-w-[50ch] text-sm leading-relaxed text-white/80">
+                Everything in Team, plus single sign-on, domain restrictions on
+                share links, retention policies for history, custom seat
+                agreements, a named support contact and an uptime SLA.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-3 md:items-end">
+              <button
+                type="button"
+                style={{ clipPath: NOTCH }}
+                className="h-11 bg-white px-6 text-sm font-medium text-[var(--indigo)] hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                Contact us
+              </button>
+              <span className="text-xs text-white/70">
+                Priced per agreement.
+              </span>
+            </div>
           </div>
         </section>
       </main>
@@ -316,6 +520,36 @@ export default function PricingA() {
 }
 
 /* ---- pieces ------------------------------------------------------------- */
+
+function Stepper({
+  children,
+  label,
+  onClick,
+  disabled,
+}: {
+  children: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      style={{ clipPath: NOTCH }}
+      className="group size-8 bg-[var(--indigo)] p-px text-lg leading-none text-[var(--indigo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 dark:bg-blue-300 dark:text-blue-300"
+    >
+      <span
+        style={{ clipPath: NOTCH_IN }}
+        className="flex h-full w-full items-center justify-center bg-card group-hover:bg-[var(--indigo-soft)]"
+      >
+        {children}
+      </span>
+    </button>
+  );
+}
 
 function Sheet({
   name,
@@ -462,17 +696,6 @@ function Tick() {
     >
       <path d="M3 8.5l3 3 7-7" />
     </svg>
-  );
-}
-
-function Note({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="border-l-2 border-[var(--indigo)] pl-4">
-      <h3 className="font-medium">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        {body}
-      </p>
-    </div>
   );
 }
 

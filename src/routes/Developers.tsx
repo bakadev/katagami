@@ -98,6 +98,9 @@ export default function Developers() {
           >
             source
           </a>
+          <Link to="/pricing" className="hover:text-foreground">
+            pricing
+          </Link>
           <Link
             to="/"
             className="text-[var(--indigo)] hover:underline dark:text-blue-300"

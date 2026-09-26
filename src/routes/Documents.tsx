@@ -288,12 +288,9 @@ function Home() {
       <main className="flex-1">
         <div className="mx-auto max-w-5xl px-6 pb-24 pt-8 md:px-10 sm:pt-12">
           {/* Header row */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h1 style={{ fontFamily: SERIF }} className="text-3xl leading-tight sm:text-4xl">
-              Your documents
-            </h1>
-            <NewSpecButton className="self-start sm:self-auto" />
-          </div>
+          <h1 style={{ fontFamily: SERIF }} className="text-3xl leading-tight sm:text-4xl">
+            Your documents
+          </h1>
 
           {showClaim && (
             <div className="mt-6">
@@ -414,15 +411,20 @@ function Home() {
 
           {/* Documents */}
           <section className="mt-12" aria-labelledby="documents">
-            <div className="flex items-baseline gap-3">
-              <h2 id="documents" style={{ fontFamily: SERIF }} className="text-2xl">
-                Documents
-              </h2>
-              {docs.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {free ? docs.length : `${docs.length} not in a project`}
-                </span>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+              <div className="flex items-baseline gap-3">
+                <h2 id="documents" style={{ fontFamily: SERIF }} className="text-2xl">
+                  Documents
+                </h2>
+                {docs.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {free ? docs.length : `${docs.length} not in a project`}
+                  </span>
+                )}
+              </div>
+              {/* The empty state carries its own New spec, so only show this
+                  one once there is a list. */}
+              {docs.length > 0 && <NewSpecButton />}
             </div>
             <SectionError text={docsError} />
 

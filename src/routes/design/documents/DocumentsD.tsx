@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ExplorationBar } from "../DesignIndex";
 import { usePageMeta } from "~/hooks/usePageMeta";
@@ -8,6 +8,8 @@ import {
   D_DOCS,
   D_FREE_DOCS,
   D_HOME,
+  D_MANY_DOCS,
+  D_MANY_PROJECTS,
   D_PROJECTS,
   D_PROJECT_PAGE,
   ME,
@@ -16,19 +18,32 @@ import {
   sortDocs,
   type Doc,
   type Project,
+  type ProjectSortKey,
   type SortKey,
 } from "./data";
 import {
   AppHeader,
   ClaimBanner,
   EmptyState,
+  ManyProjectsToggle,
   NewSpecButton,
   PlanToggle,
   SERIF,
   useEmptyState,
+  useManyProjects,
   usePlan,
 } from "./pieces";
-import { DashedNotch, DocTable, OutlinedButton, ProjectCard, type RowActions } from "./dPieces";
+import {
+  DashedNotch,
+  DocTable,
+  OutlinedButton,
+  ProjectCard,
+  ProjectTable,
+  filterProjects,
+  sortProjects,
+  type ProjectRowHandlers,
+  type RowActions,
+} from "./dPieces";
 
 /**
  * Signed-in home, option D: the composite the owner specified after A, B, C.
@@ -37,8 +52,13 @@ import { DashedNotch, DocTable, OutlinedButton, ProjectCard, type RowActions } f
  * sort; C's flat table for the documents that are in no project. No status,
  * no "Waiting on you", no switcher: the container is the team and there is
  * one. Moving and deleting animate the row out and update the cards, all in
- * local state. `?plan=free` shows the same layout with projects locked.
+ * local state. `?plan=free` shows the same layout with projects locked;
+ * `?projects=many` gives the team fourteen projects, so the grid shows the
+ * six freshest and a link swaps it for a compact table.
  */
+
+/** Cards shown before the grid gives way to "Show all N projects". */
+const CARD_LIMIT = 6;
 
 type Pending = { kind: "move"; projectId: string } | { kind: "delete" };
 
@@ -46,11 +66,22 @@ export default function DocumentsD() {
   usePageMeta({ title: "Your documents", description: "What Acme is working on." });
   const [empty, toggleEmpty] = useEmptyState();
   const [plan, togglePlan] = usePlan();
+  const [many, toggleMany] = useManyProjects();
   const free = plan === "free";
 
   /* The dataset follows the reviewer switches; local edits reset with them. */
-  const key = `${plan}:${empty}`;
-  return <Home key={key} empty={empty} toggleEmpty={toggleEmpty} free={free} togglePlan={togglePlan} />;
+  const key = `${plan}:${empty}:${many}`;
+  return (
+    <Home
+      key={key}
+      empty={empty}
+      toggleEmpty={toggleEmpty}
+      free={free}
+      togglePlan={togglePlan}
+      many={many}
+      toggleMany={toggleMany}
+    />
+  );
 }
 
 function Home({
@@ -58,14 +89,22 @@ function Home({
   toggleEmpty,
   free,
   togglePlan,
+  many,
+  toggleMany,
 }: {
   empty: boolean;
   toggleEmpty: () => void;
   free: boolean;
   togglePlan: () => void;
+  many: boolean;
+  toggleMany: () => void;
 }) {
-  const [projects, setProjects] = useState<Project[]>(empty || free ? [] : D_PROJECTS);
-  const [docs, setDocs] = useState<Doc[]>(empty ? [] : free ? D_FREE_DOCS : D_DOCS);
+  const [projects, setProjects] = useState<Project[]>(
+    empty || free ? [] : many ? D_MANY_PROJECTS : D_PROJECTS,
+  );
+  const [docs, setDocs] = useState<Doc[]>(
+    empty ? [] : free ? D_FREE_DOCS : many ? D_MANY_DOCS : D_DOCS,
+  );
   const [banner, setBanner] = useState(true);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("edited");
@@ -79,11 +118,26 @@ function Home({
   const [leavingProject, setLeavingProject] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
 
+  /* Projects: cards for the six freshest, or the whole set as a table. */
+  const [projectView, setProjectView] = useState<"cards" | "table">("cards");
+  const [projectQ, setProjectQ] = useState("");
+  const [projectSort, setProjectSort] = useState<ProjectSortKey>("updated");
+  const [projectPage, setProjectPage] = useState(1);
+
   const loose = useMemo(
     () => sortDocs(filterDocs(docs.filter((d) => d.projectId === NO_PROJECT), q), sort),
     [docs, q, sort],
   );
-  const byProject = (id: string) => docs.filter((d) => d.projectId === id);
+  const byProject = useCallback((id: string) => docs.filter((d) => d.projectId === id), [docs]);
+
+  const freshest = useMemo(
+    () => sortProjects(projects, byProject, "updated").slice(0, CARD_LIMIT),
+    [projects, byProject],
+  );
+  const tabled = useMemo(
+    () => sortProjects(filterProjects(projects, projectQ), byProject, projectSort),
+    [projects, byProject, projectQ, projectSort],
+  );
 
   const setLeaving = (id: string, p: Pending) =>
     setPending((m) => new Map(m).set(id, p));
@@ -121,9 +175,25 @@ function Home({
 
   const newProject = () => {
     const id = `p${Date.now()}`;
-    setProjects((list) => [{ id, name: "Untitled project" }, ...list]);
+    setProjects((list) => [{ id, name: "Untitled project", createdMinutesAgo: 0 }, ...list]);
     setRenaming(id);
+    setProjectPage(1);
   };
+
+  const projectHandlers = (p: Project): ProjectRowHandlers => ({
+    leaving: leavingProject === p.id,
+    onGone: () => onProjectGone(p.id),
+    confirming: confirmingProject === p.id,
+    onAskDelete: () => setConfirmingProject(p.id),
+    onConfirmDelete: () => {
+      setConfirmingProject(null);
+      setLeavingProject(p.id);
+    },
+    onKeep: () => setConfirmingProject(null),
+    onRename: (name) => setProjects((list) => list.map((x) => (x.id === p.id ? { ...x, name } : x))),
+    renaming: renaming === p.id,
+    onRenamingChange: (v) => setRenaming(v ? p.id : null),
+  });
 
   const nothingAtAll = docs.length === 0 && projects.length === 0;
 
@@ -132,6 +202,7 @@ function Home({
       <ExplorationBar round="documents" current="documents-d" />
       <AppHeader empty={empty} onToggleEmpty={toggleEmpty} homeTo={D_HOME}>
         <PlanToggle plan={free ? "free" : "team"} onToggle={togglePlan} />
+        <ManyProjectsToggle many={many} onToggle={toggleMany} />
       </AppHeader>
 
       <main className="flex-1">
@@ -141,12 +212,7 @@ function Home({
             <h1 style={{ fontFamily: SERIF }} className="text-3xl leading-tight sm:text-4xl">
               Your documents
             </h1>
-            <div className="flex flex-wrap items-center gap-3">
-              <OutlinedButton onClick={newProject} disabled={free} lock={free}>
-                New project
-              </OutlinedButton>
-              <NewSpecButton />
-            </div>
+            <NewSpecButton notch="sm" className="self-start sm:self-auto" />
           </div>
 
           {banner && (
@@ -157,17 +223,26 @@ function Home({
 
           {/* Projects */}
           <section className="mt-10" aria-labelledby="projects">
-            <div className="flex items-baseline gap-3">
-              <h2 id="projects" style={{ fontFamily: SERIF }} className="text-2xl">
-                Projects
-              </h2>
-              {!free && projects.length > 0 && (
-                <span className="text-xs text-muted-foreground">{projects.length}</span>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+              <div className="flex items-baseline gap-3">
+                <h2 id="projects" style={{ fontFamily: SERIF }} className="text-2xl">
+                  Projects
+                </h2>
+                {!free && projects.length > 0 && (
+                  <span className="text-xs text-muted-foreground">{projects.length}</span>
+                )}
+              </div>
+              <OutlinedButton onClick={newProject} disabled={free} lock={free}>
+                New project
+              </OutlinedButton>
             </div>
 
             {free ? (
-              <NotchCard className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-muted/40 px-4 py-4 text-sm sm:px-5">
+              <NotchCard
+                outerClassName="mt-4"
+                fill="none"
+                className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))] px-4 py-4 text-sm sm:px-5"
+              >
                 <p>
                   <span className="font-medium">Projects come with Team.</span>{" "}
                   <span className="text-muted-foreground">
@@ -193,31 +268,62 @@ function Home({
                   </button>
                 </div>
               </DashedNotch>
+            ) : projectView === "table" ? (
+              <div className="mt-4">
+                <ProjectTable
+                  projects={tabled}
+                  total={projects.length}
+                  docsOf={byProject}
+                  to={D_PROJECT_PAGE}
+                  q={projectQ}
+                  onQ={(v) => {
+                    setProjectQ(v);
+                    setProjectPage(1);
+                  }}
+                  sort={projectSort}
+                  onSort={(v) => {
+                    setProjectSort(v);
+                    setProjectPage(1);
+                  }}
+                  page={projectPage}
+                  onPage={setProjectPage}
+                  handlers={projectHandlers}
+                />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => setProjectView("cards")}
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
+                    Show as cards
+                  </button>
+                </p>
+              </div>
             ) : (
-              <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-                {projects.map((p) => (
-                  <ProjectCard
-                    key={p.id}
-                    project={p}
-                    docs={byProject(p.id)}
-                    to={D_PROJECT_PAGE}
-                    leaving={leavingProject === p.id}
-                    onGone={() => onProjectGone(p.id)}
-                    confirming={confirmingProject === p.id}
-                    onAskDelete={() => setConfirmingProject(p.id)}
-                    onConfirmDelete={() => {
-                      setConfirmingProject(null);
-                      setLeavingProject(p.id);
-                    }}
-                    onKeep={() => setConfirmingProject(null)}
-                    onRename={(name) =>
-                      setProjects((list) => list.map((x) => (x.id === p.id ? { ...x, name } : x)))
-                    }
-                    renaming={renaming === p.id}
-                    onRenamingChange={(v) => setRenaming(v ? p.id : null)}
-                  />
-                ))}
-              </ul>
+              <>
+                <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                  {freshest.map((p) => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      docs={byProject(p.id)}
+                      to={D_PROJECT_PAGE}
+                      {...projectHandlers(p)}
+                    />
+                  ))}
+                </ul>
+                {projects.length > CARD_LIMIT && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={() => setProjectView("table")}
+                      className="underline underline-offset-4 hover:text-foreground"
+                    >
+                      Show all {projects.length} projects
+                    </button>
+                  </p>
+                )}
+              </>
             )}
           </section>
 
@@ -236,7 +342,7 @@ function Home({
 
             {nothingAtAll ? (
               <div className="mt-4">
-                <EmptyState />
+                <EmptyState buttonNotch="sm" />
               </div>
             ) : (
               <div className="mt-4">

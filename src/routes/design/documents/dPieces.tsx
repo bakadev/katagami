@@ -1,4 +1,5 @@
 import {
+  forwardRef,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -8,7 +9,16 @@ import {
   type ReactNode,
 } from "react";
 import { Link } from "react-router";
-import { Check, Lock, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  Lock,
+  MessageSquare,
+  MoreHorizontal,
+  Pencil,
+  PenLine,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +31,17 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { NotchCard } from "~/components/site/NotchCard";
 import { cn } from "~/lib/utils";
-import { NO_PROJECT, latestDoc, personById, relative, type Doc, type Project, type SortKey } from "./data";
+import {
+  NO_PROJECT,
+  latestDoc,
+  personById,
+  projectUpdatedMinutesAgo,
+  relative,
+  type Doc,
+  type Project,
+  type ProjectSortKey,
+  type SortKey,
+} from "./data";
 import { Editor, SERIF, SearchField, ShareButton, SortText } from "./pieces";
 
 /**
@@ -138,14 +158,9 @@ export function ConfirmInline({
         >
           Delete
         </button>
-        <button
-          ref={keepRef}
-          type="button"
-          onClick={onCancel}
-          className="inline-flex h-8 items-center px-2 text-xs underline underline-offset-4 hover:text-brand-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
+        <OutlinedButton ref={keepRef} onClick={onCancel} size="sm" icon={null}>
           Keep
-        </button>
+        </OutlinedButton>
       </span>
     </div>
   );
@@ -153,48 +168,57 @@ export function ConfirmInline({
 
 /* ---- Buttons ----------------------------------------------------------- */
 
-/** Secondary outlined notched button ("New project"). Disabled shows a lock. */
-export function OutlinedButton({
-  children,
-  onClick,
-  disabled = false,
-  lock = false,
-  className,
-  icon,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  lock?: boolean;
-  className?: string;
-  icon?: ReactNode;
-}) {
+/**
+ * Secondary outlined notched button ("New project", "Keep"). The 6px cut with
+ * the border following it: an outer box in the border colour with 1px of
+ * padding and an inner face one pixel smaller. Disabled shows a lock.
+ */
+export const OutlinedButton = forwardRef<
+  HTMLButtonElement,
+  {
+    children: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    lock?: boolean;
+    className?: string;
+    /** Leading icon; `null` for none. Defaults to a plus. */
+    icon?: ReactNode;
+    /** `md` is the 40px page button, `sm` the 32px inline one. */
+    size?: "md" | "sm";
+  }
+>(function OutlinedButton(
+  { children, onClick, disabled = false, lock = false, className, icon, size = "md" },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-disabled={disabled || undefined}
       title={disabled && lock ? "Projects come with Team" : undefined}
       className={cn(
-        "notch-sm inline-flex h-10 items-center border-0 bg-border p-px text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "notch-sm inline-flex items-center border-0 bg-border p-px outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        size === "md" ? "h-10 text-sm" : "h-8 text-xs",
         disabled && "cursor-not-allowed opacity-60",
         className,
       )}
     >
       <span
         className={cn(
-          "notch-sm-in flex h-full items-center gap-2 bg-card px-3.5",
+          "notch-sm-in flex h-full items-center gap-2 bg-card",
+          size === "md" ? "px-3.5" : "px-3 font-medium",
           !disabled && "hover:bg-muted/60",
         )}
       >
-        {icon ?? <Plus className="size-4" aria-hidden />}
+        {icon === undefined ? <Plus className="size-4" aria-hidden /> : icon}
         {children}
         {lock && <Lock className="size-3.5 text-muted-foreground" aria-hidden />}
       </span>
     </button>
   );
-}
+});
 
 /* ---- Inline rename ----------------------------------------------------- */
 
@@ -336,6 +360,34 @@ function RowMenuD({ doc, actions }: { doc: Doc; actions: RowActions }) {
 
 /* ---- Document table ---------------------------------------------------- */
 
+/**
+ * Open comment and suggestion counts on the yellow anchor (option C's chips),
+ * in their own column just left of the row actions. Zero hides the chip; the
+ * column keeps its width so the actions line up down the table.
+ */
+function OpenCounts({ doc }: { doc: Doc }) {
+  const comments = doc.comments ?? 0;
+  const suggestions = doc.suggestions ?? 0;
+  return (
+    <span className="flex w-16 shrink-0 items-center justify-end gap-1.5 text-xs sm:w-20 sm:gap-2">
+      {comments > 0 && (
+        <span className="comment-anchor inline-flex items-center gap-1 px-1.5 py-0.5">
+          <MessageSquare className="size-3" aria-hidden />
+          {comments}
+          <span className="sr-only"> open comments</span>
+        </span>
+      )}
+      {suggestions > 0 && (
+        <span className="comment-anchor inline-flex items-center gap-1 px-1.5 py-0.5">
+          <PenLine className="size-3" aria-hidden />
+          {suggestions}
+          <span className="sr-only"> open suggestions</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** One row: title, last edited (anyone's), who, share, overflow. Or the delete confirm. */
 export function DocRow({
   doc,
@@ -382,6 +434,7 @@ export function DocRow({
             person={by}
             className="hidden w-36 shrink-0 text-xs text-muted-foreground md:inline-flex"
           />
+          <OpenCounts doc={doc} />
           <div className="flex items-center gap-0.5">
             <span className="hidden sm:inline-flex">
               <ShareButton title={doc.title} />
@@ -486,6 +539,39 @@ export function projectMeta(docs: Doc[]): { count: string; updated: string | nul
   };
 }
 
+/** Project overflow: Rename, Delete project. Shared by the card and the table row. */
+function ProjectMenu({
+  project,
+  onRename,
+  onAskDelete,
+}: {
+  project: Project;
+  onRename: () => void;
+  onAskDelete: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`More actions for ${project.name}`}
+        className="inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <MoreHorizontal className="size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuItem onSelect={onRename}>
+          <Pencil className="size-3.5" aria-hidden />
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onSelect={onAskDelete}>
+          <Trash2 className="size-3.5" aria-hidden />
+          Delete project
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /**
  * A project tile. The whole card links to the project page (stretched link
  * under the name) except the overflow, which sits above it.
@@ -503,20 +589,7 @@ export function ProjectCard({
   onRename,
   renaming,
   onRenamingChange,
-}: {
-  project: Project;
-  docs: Doc[];
-  to: string;
-  leaving: boolean;
-  onGone: () => void;
-  confirming: boolean;
-  onAskDelete: () => void;
-  onConfirmDelete: () => void;
-  onKeep: () => void;
-  onRename: (name: string) => void;
-  renaming: boolean;
-  onRenamingChange: (v: boolean) => void;
-}) {
+}: { project: Project; docs: Doc[]; to: string } & ProjectRowHandlers) {
   const { count, updated, by } = projectMeta(docs);
   const n = docs.length;
   return (
@@ -559,25 +632,11 @@ export function ProjectCard({
                 </Link>
               )}
               <div className="relative z-10 -mr-2 -mt-1.5">
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    aria-label={`More actions for ${project.name}`}
-                    className="inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <MoreHorizontal className="size-4" aria-hidden />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem onSelect={() => onRenamingChange(true)}>
-                      <Pencil className="size-3.5" aria-hidden />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" onSelect={onAskDelete}>
-                      <Trash2 className="size-3.5" aria-hidden />
-                      Delete project
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <ProjectMenu
+                  project={project}
+                  onRename={() => onRenamingChange(true)}
+                  onAskDelete={onAskDelete}
+                />
               </div>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">{count}</p>
@@ -591,6 +650,250 @@ export function ProjectCard({
         )}
       </NotchCard>
     </Leaving>
+  );
+}
+
+/* ---- Project table ----------------------------------------------------- */
+
+/** Everything a project row needs from the page: the same handlers the card gets. */
+export interface ProjectRowHandlers {
+  leaving: boolean;
+  onGone: () => void;
+  confirming: boolean;
+  onAskDelete: () => void;
+  onConfirmDelete: () => void;
+  onKeep: () => void;
+  onRename: (name: string) => void;
+  renaming: boolean;
+  onRenamingChange: (v: boolean) => void;
+}
+
+export const PROJECT_PAGE_SIZE = 10;
+
+export function sortProjects(
+  projects: Project[],
+  docsOf: (id: string) => Doc[],
+  by: ProjectSortKey,
+): Project[] {
+  const out = [...projects];
+  if (by === "name") out.sort((a, b) => a.name.localeCompare(b.name));
+  else
+    out.sort(
+      (a, b) => projectUpdatedMinutesAgo(a, docsOf(a.id)) - projectUpdatedMinutesAgo(b, docsOf(b.id)),
+    );
+  return out;
+}
+
+export function filterProjects(projects: Project[], q: string): Project[] {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return projects;
+  return projects.filter((p) => p.name.toLowerCase().includes(needle));
+}
+
+/** Sort as plain text: "Sort by last updated · name". */
+function ProjectSortText({
+  value,
+  onChange,
+}: {
+  value: ProjectSortKey;
+  onChange: (v: ProjectSortKey) => void;
+}) {
+  return (
+    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span>Sort by</span>
+      {(["updated", "name"] as ProjectSortKey[]).map((k, i) => (
+        <span key={k} className="flex items-center gap-1">
+          {i > 0 && <span aria-hidden>·</span>}
+          <button
+            type="button"
+            onClick={() => onChange(k)}
+            aria-pressed={value === k}
+            className={
+              "px-1 py-0.5 underline-offset-4 hover:text-foreground " +
+              (value === k ? "text-foreground underline" : "")
+            }
+          >
+            {k === "updated" ? "last updated" : "name"}
+          </button>
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** One row of the compact table, or the delete confirmation in its place. */
+function ProjectRow({
+  project,
+  docs,
+  to,
+  h,
+}: {
+  project: Project;
+  docs: Doc[];
+  to: string;
+  h: ProjectRowHandlers;
+}) {
+  const latest = latestDoc(docs);
+  const by = latest ? personById(latest.editedBy) : null;
+  const n = docs.length;
+  return (
+    <Leaving leaving={h.leaving} onGone={h.onGone} className="group" data-project={project.id}>
+      {h.confirming ? (
+        <ConfirmInline
+          question={<>Delete “{project.name}”?</>}
+          note={
+            n > 0
+              ? `Its ${n} document${n === 1 ? "" : "s"} go${n === 1 ? "es" : ""} back to Documents.`
+              : "This can't be undone."
+          }
+          onConfirm={h.onConfirmDelete}
+          onCancel={h.onKeep}
+          className="bg-destructive/5 px-3 py-3"
+        />
+      ) : (
+        <div className="flex items-center gap-4 py-3 hover:bg-muted/40">
+          <div className="min-w-0 flex-1">
+            {h.renaming ? (
+              <InlineName
+                value={project.name}
+                onChange={h.onRename}
+                editing
+                onEditingChange={h.onRenamingChange}
+                className="text-base"
+                inputClassName="max-w-sm"
+              />
+            ) : (
+              <Link
+                to={to}
+                style={{ fontFamily: SERIF }}
+                className="block truncate text-base leading-tight hover:text-brand-ink"
+              >
+                {project.name}
+              </Link>
+            )}
+            <p className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+              {n} doc{n === 1 ? "" : "s"}
+              {latest && <> · {relative(latest.editedMinutesAgo)}</>}
+            </p>
+          </div>
+          <span className="hidden w-24 shrink-0 text-xs text-muted-foreground sm:block">
+            {n} document{n === 1 ? "" : "s"}
+          </span>
+          <span className="hidden w-32 shrink-0 text-xs text-muted-foreground sm:block">
+            {latest ? relative(latest.editedMinutesAgo) : "—"}
+          </span>
+          <span className="hidden w-36 shrink-0 text-xs text-muted-foreground md:block">
+            {by ? <Editor person={by} /> : "—"}
+          </span>
+          <ProjectMenu project={project} onRename={() => h.onRenamingChange(true)} onAskDelete={h.onAskDelete} />
+        </div>
+      )}
+    </Leaving>
+  );
+}
+
+/**
+ * The compact table the cards give way to past six projects: search on the
+ * left, text sort on the right, column headings, ten rows a page and a
+ * "1–10 of 14 · Next" line. Search and sort come from the page so the
+ * page stays the one source of truth for what is shown.
+ */
+export function ProjectTable({
+  projects,
+  total,
+  docsOf,
+  to,
+  q,
+  onQ,
+  sort,
+  onSort,
+  page,
+  onPage,
+  handlers,
+}: {
+  /** Already filtered and sorted; the table only slices the page. */
+  projects: Project[];
+  /** Count before filtering, for the empty message. */
+  total: number;
+  docsOf: (id: string) => Doc[];
+  to: string;
+  q: string;
+  onQ: (v: string) => void;
+  sort: ProjectSortKey;
+  onSort: (v: ProjectSortKey) => void;
+  page: number;
+  onPage: (n: number) => void;
+  handlers: (project: Project) => ProjectRowHandlers;
+}) {
+  const pages = Math.max(1, Math.ceil(projects.length / PROJECT_PAGE_SIZE));
+  const current = Math.min(page, pages);
+  const start = (current - 1) * PROJECT_PAGE_SIZE;
+  const shown = projects.slice(start, start + PROJECT_PAGE_SIZE);
+  return (
+    <>
+      <div className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <SearchField
+          value={q}
+          onChange={onQ}
+          className="sm:w-72"
+          label="Search projects by name"
+          placeholder="Search projects"
+        />
+        <ProjectSortText value={sort} onChange={onSort} />
+      </div>
+      <div
+        aria-hidden
+        className="hidden items-center gap-4 border-b border-border py-2 text-[11px] uppercase tracking-wide text-muted-foreground sm:flex"
+      >
+        <span className="flex-1">Name</span>
+        <span className="w-24 shrink-0">Documents</span>
+        <span className="w-32 shrink-0">Updated</span>
+        <span className="hidden w-36 shrink-0 md:block">Last editor</span>
+        <span className="size-8 shrink-0" />
+      </div>
+      {shown.length === 0 ? (
+        <p className="border-t border-border py-12 text-center text-sm text-muted-foreground sm:border-t-0">
+          {q.trim() ? <>No project named “{q}”.</> : total === 0 ? "No projects yet." : null}
+        </p>
+      ) : (
+        <ul className="divide-y divide-border border-t border-border sm:border-t-0">
+          {shown.map((p) => (
+            <ProjectRow key={p.id} project={p} docs={docsOf(p.id)} to={to} h={handlers(p)} />
+          ))}
+        </ul>
+      )}
+      {projects.length > PROJECT_PAGE_SIZE && (
+        <p className="flex items-center gap-1 border-t border-border pt-3 text-xs text-muted-foreground">
+          <span>
+            {start + 1}–{start + shown.length} of {projects.length}
+          </span>
+          {current > 1 && (
+            <>
+              <span aria-hidden>·</span>
+              <button
+                type="button"
+                onClick={() => onPage(current - 1)}
+                className="px-1 py-0.5 underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Previous
+              </button>
+            </>
+          )}
+          {current < pages && (
+            <>
+              <span aria-hidden>·</span>
+              <button
+                type="button"
+                onClick={() => onPage(current + 1)}
+                className="px-1 py-0.5 underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Next
+              </button>
+            </>
+          )}
+        </p>
+      )}
+    </>
   );
 }
 

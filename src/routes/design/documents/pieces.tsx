@@ -64,6 +64,29 @@ export function usePlan(): [Plan, () => void] {
   return [plan, toggle];
 }
 
+/** `?projects=many` gives option D fourteen projects; the toggle in `AppHeader` flips it. */
+export function useManyProjects(): [boolean, () => void] {
+  const [params, setParams] = useSearchParams();
+  const many = params.get("projects") === "many";
+  const toggle = () => {
+    const next = new URLSearchParams(params);
+    if (many) next.delete("projects");
+    else next.set("projects", "many");
+    setParams(next, { replace: true });
+  };
+  return [many, toggle];
+}
+
+/** "Many projects" reviewer checkbox, beside "Show empty state". Exploration chrome. */
+export function ManyProjectsToggle({ many, onToggle }: { many: boolean; onToggle: () => void }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+      <input type="checkbox" checked={many} onChange={onToggle} className="size-3.5 accent-brand" />
+      Many projects
+    </label>
+  );
+}
+
 /** "Plan: Free / Team" reviewer switch, beside "Show empty state". Exploration chrome. */
 export function PlanToggle({ plan, onToggle }: { plan: Plan; onToggle: () => void }) {
   return (
@@ -160,13 +183,20 @@ export function AppHeader({
   );
 }
 
-/** Primary "New spec" button, notched, indigo. */
-export function NewSpecButton({ className = "" }: { className?: string }) {
+/** Primary "New spec" button, notched, indigo. `notch="sm"` is the 6px button cut (option D). */
+export function NewSpecButton({
+  className = "",
+  notch = "md",
+}: {
+  className?: string;
+  notch?: "md" | "sm";
+}) {
   return (
     <Link
       to="/"
       className={
-        "notch inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-medium text-brand-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+        (notch === "sm" ? "notch-sm" : "notch") +
+        " inline-flex h-10 items-center gap-2 bg-brand px-4 text-sm font-medium text-brand-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
         className
       }
     >
@@ -242,7 +272,14 @@ export function ClaimBanner({ onDismiss }: { onDismiss?: () => void }) {
 }
 
 /** Komon field with the mark. Used by all three options when there is nothing to list. */
-export function EmptyState({ prominent = false }: { prominent?: boolean }) {
+export function EmptyState({
+  prominent = false,
+  buttonNotch = "md",
+}: {
+  prominent?: boolean;
+  /** Cut on the "New spec" button; option D uses the small button cut everywhere. */
+  buttonNotch?: "md" | "sm";
+}) {
   return (
     <div className="relative">
       <div
@@ -271,7 +308,7 @@ export function EmptyState({ prominent = false }: { prominent?: boolean }) {
           Start a spec, or bring in the ones on this browser.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
-          <NewSpecButton />
+          <NewSpecButton notch={buttonNotch} />
           <Link to="/claim" className="text-sm text-brand-ink underline underline-offset-4">
             Bring in {UNCLAIMED_COUNT} from this browser
           </Link>
@@ -286,14 +323,18 @@ export function SearchField({
   value,
   onChange,
   className = "",
+  label = "Search documents by title",
+  placeholder = "Search by title",
 }: {
   value: string;
   onChange: (v: string) => void;
   className?: string;
+  label?: string;
+  placeholder?: string;
 }) {
   return (
     <label className={"relative block " + className}>
-      <span className="sr-only">Search documents by title</span>
+      <span className="sr-only">{label}</span>
       <Search
         className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden
@@ -302,7 +343,7 @@ export function SearchField({
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search by title"
+        placeholder={placeholder}
         className="h-10 w-full border border-border bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     </label>

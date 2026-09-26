@@ -16,6 +16,8 @@ export interface Person {
 export interface Project {
   id: string;
   name: string;
+  /** Minutes before now the project was made; the freshness of one with no documents (option D). */
+  createdMinutesAgo?: number;
 }
 
 export type DocStatus = "draft" | "review" | "signed";
@@ -32,6 +34,9 @@ export interface Doc {
   waiting?: { comments: number; suggestions: number };
   /** Minutes before now the signed-in person last opened it (option C). */
   openedMinutesAgo?: number;
+  /** Open comments and suggestions on the document, anyone's (option D). */
+  comments?: number;
+  suggestions?: number;
 }
 
 export const ME: Person = { id: "priya", name: "Priya Raman", color: "#274b8f" };
@@ -215,12 +220,72 @@ export const D_PROJECTS: Project[] = PROJECTS.slice(0, 2);
 
 const D_PROJECT_IDS = new Set(D_PROJECTS.map((p) => p.id));
 
+/** Open comments and suggestions per document, shown as chips on the row. */
+const D_COUNTS: Record<string, { comments: number; suggestions: number }> = {
+  d1: { comments: 3, suggestions: 1 },
+  d2: { comments: 1, suggestions: 3 },
+  d4: { comments: 2, suggestions: 0 },
+  d6: { comments: 0, suggestions: 2 },
+  d7: { comments: 0, suggestions: 5 },
+  d9: { comments: 1, suggestions: 0 },
+};
+
+function withCounts(d: Doc): Doc {
+  const c = D_COUNTS[d.id];
+  return c ? { ...d, ...c } : d;
+}
+
 export const D_DOCS: Doc[] = DOCS.map((d) =>
-  D_PROJECT_IDS.has(d.projectId) ? d : { ...d, projectId: NO_PROJECT },
+  withCounts(D_PROJECT_IDS.has(d.projectId) ? d : { ...d, projectId: NO_PROJECT }),
 );
 
 /** Free has no projects: the server keeps every document in one hidden default project. */
-export const D_FREE_DOCS: Doc[] = DOCS.map((d) => ({ ...d, projectId: NO_PROJECT }));
+export const D_FREE_DOCS: Doc[] = DOCS.map((d) => withCounts({ ...d, projectId: NO_PROJECT }));
+
+/**
+ * `?projects=many`: the two rich projects plus twelve more, each with one to
+ * six documents edited between two hours and eight weeks ago, so the home
+ * has fourteen projects and the cards give way to a table.
+ */
+const MANY: [name: string, count: number, updatedMinutesAgo: number, editor: string][] = [
+  ["Mobile navigation", 4, 2 * H, "sofia"],
+  ["Help centre IA", 2, 7 * H, "tom"],
+  ["Invoice emails", 3, 28 * H, "marcus"],
+  ["Account settings", 6, 2 * D, "priya"],
+  ["Notifications audit", 1, 3 * D, "sofia"],
+  ["Design tokens v2", 5, 5 * D, "tom"],
+  ["Referral programme", 2, 8 * D, "marcus"],
+  ["Empty states", 3, 12 * D, "priya"],
+  ["Dashboard widgets", 4, 16 * D, "sofia"],
+  ["Data export", 1, 24 * D, "tom"],
+  ["Accessibility review", 6, 38 * D, "marcus"],
+  ["Signup flow", 2, 56 * D, "priya"],
+];
+
+const MANY_TITLES = ["PRD", "Research readout", "Copy deck", "Open questions", "Rollout plan", "Retro"];
+const MANY_EDITORS = PEOPLE.map((p) => p.id);
+
+const MANY_PROJECTS: Project[] = MANY.map(([name], i) => ({ id: `m${i + 1}`, name }));
+
+const MANY_DOCS: Doc[] = MANY.flatMap(([name, count, updated, editor], i) =>
+  Array.from({ length: count }, (_, j): Doc => {
+    const first = MANY_EDITORS.indexOf(editor);
+    return {
+      id: `m${i + 1}-${j + 1}`,
+      title: `${name} · ${MANY_TITLES[j]!}`,
+      projectId: `m${i + 1}`,
+      /* The first document sets the project's freshness; the rest are older. */
+      editedMinutesAgo: updated + j * (6 * H + i * H),
+      editedBy: j === 0 ? editor : MANY_EDITORS[(first + j) % MANY_EDITORS.length]!,
+      status: j % 3 === 0 ? "review" : j % 3 === 1 ? "draft" : "signed",
+      ...(j === 0 && i % 2 === 0 ? { comments: (i % 3) + 1 } : {}),
+      ...(j === 1 && i % 3 === 0 ? { suggestions: (i % 4) + 1 } : {}),
+    };
+  }),
+);
+
+export const D_MANY_PROJECTS: Project[] = [...D_PROJECTS, ...MANY_PROJECTS];
+export const D_MANY_DOCS: Doc[] = [...D_DOCS, ...MANY_DOCS];
 
 /** Freshest document in a list, or undefined. */
 export function latestDoc(docs: Doc[]): Doc | undefined {
@@ -229,6 +294,14 @@ export function latestDoc(docs: Doc[]): Doc | undefined {
     undefined,
   );
 }
+
+/** Minutes since a project last changed: its freshest document, else when it was made. */
+export function projectUpdatedMinutesAgo(project: Project, docs: Doc[]): number {
+  const latest = latestDoc(docs);
+  return latest ? latest.editedMinutesAgo : (project.createdMinutesAgo ?? Number.POSITIVE_INFINITY);
+}
+
+export type ProjectSortKey = "updated" | "name";
 
 export const D_HOME = "/design/documents/documents-d";
 export const D_PROJECT_PAGE = "/design/documents/documents-d-project";

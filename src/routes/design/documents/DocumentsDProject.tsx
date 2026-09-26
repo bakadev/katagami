@@ -112,7 +112,7 @@ function ProjectPage({ empty, toggleEmpty }: { empty: boolean; toggleEmpty: () =
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <NewSpecButton />
+              <NewSpecButton notch="sm" />
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="More actions for this project"

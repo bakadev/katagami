@@ -13,7 +13,7 @@ describe("guessTeamName", () => {
     expect(guessTeamName("priya@acme.co", "Priya Raman")).toBe("Acme");
   });
   it("falls back to the first name for personal mail", () => {
-    expect(guessTeamName("travis@gmail.com", "Travis Wilson")).toBe("Travis's team");
+    expect(guessTeamName("travis@gmail.com", "Travis Wilson")).toBe("Team Travis");
   });
 });
 

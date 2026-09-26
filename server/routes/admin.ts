@@ -168,7 +168,7 @@ export async function adminRoutes(app: FastifyInstance) {
         while (await db.workspace.findUnique({ where: { slug } })) slug += "-x";
         await db.workspace.create({
           data: {
-            name: `${base}'s team`,
+            name: `Team ${base}`,
             slug,
             members: { create: { userId: target.id, role: "owner" } },
           },

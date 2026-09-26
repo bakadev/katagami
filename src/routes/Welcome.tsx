@@ -37,7 +37,7 @@ export function guessTeamName(email: string, name: string): string {
     return label.charAt(0).toUpperCase() + label.slice(1);
   }
   const first = name.trim().split(/\s+/)[0] || "My";
-  return `${first}'s team`;
+  return `Team ${first}`;
 }
 
 

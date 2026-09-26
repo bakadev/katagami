@@ -30,7 +30,51 @@ async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Promise<S
   return user;
 }
 
+/**
+ * Remove a person and everything only they own: their projects (including
+ * the hidden default one) with all documents, and any team where they were
+ * the last member, with that team's projects. Teams with other members are
+ * left alone; the person just leaves them.
+ */
+export async function deleteUserCompletely(userId: string): Promise<{ projects: number; documents: number; teams: number }> {
+  return db.$transaction(async (tx) => {
+    const memberships = await tx.workspaceMember.findMany({ where: { userId } });
+    let teams = 0;
+    for (const m of memberships) {
+      const others = await tx.workspaceMember.count({
+        where: { workspaceId: m.workspaceId, userId: { not: userId } },
+      });
+      if (others === 0) {
+        // Cascades to the team's projects and their documents.
+        await tx.workspace.delete({ where: { id: m.workspaceId } });
+        teams++;
+      }
+    }
+    const owned = await tx.project.findMany({ where: { ownerId: userId }, select: { id: true } });
+    const documents = await tx.document.count({ where: { projectId: { in: owned.map((p) => p.id) } } });
+    await tx.project.deleteMany({ where: { ownerId: userId } });
+    await tx.user.delete({ where: { id: userId } });
+    return { projects: owned.length, documents, teams };
+  });
+}
+
 export async function adminRoutes(app: FastifyInstance) {
+  app.delete<{ Params: { id: string } }>("/api/admin/users/:id", async (req, reply) => {
+    const admin = await requireAdmin(req, reply);
+    if (!admin) return;
+    if (req.params.id === admin.id) {
+      const body: ApiError = { error: "not_yourself", message: "You can't delete your own account from here" };
+      return reply.code(400).send(body);
+    }
+    const target = await db.user.findUnique({ where: { id: req.params.id } });
+    if (!target) {
+      const body: ApiError = { error: "not_found", message: "No such user" };
+      return reply.code(404).send(body);
+    }
+    const removed = await deleteUserCompletely(target.id);
+    return { id: target.id, removed };
+  });
+
   app.get("/api/admin/overview", async (req, reply) => {
     if (!(await requireAdmin(req, reply))) return;
 

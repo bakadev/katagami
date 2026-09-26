@@ -42,3 +42,7 @@ These are known gaps, in roughly the order they are likely to matter:
 - **Impersonation** ("view as this user") for support.
 - **Audit log** of who changed what. Plan changes are not recorded beyond the current value.
 - **Deleting or suspending users and teams** from the page.
+
+## Deleting a user
+
+Each user row (except your own) has a Delete link. It asks for confirmation inline, then removes the person, their projects with all documents, and any team where they were the last member. Teams with other members are left in place; the person just leaves them. Meant for cleaning up test accounts; there is no undo.

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, Navigate } from "react-router";
 import type { AdminOverviewResponse, AdminTeamRow, AdminUserRow } from "../../shared/types";
 import { useAuth } from "~/lib/auth/AuthProvider";
-import { getAdminOverview, setUserPlan } from "~/lib/api/auth";
+import { deleteUser, getAdminOverview, setUserPlan } from "~/lib/api/auth";
+import { ConfirmInline } from "~/components/app/documents/ConfirmInline";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { formatRelative } from "~/hooks/useRelativeTime";
 import { SiteFooter } from "~/components/site/SiteFooter";
@@ -31,7 +32,7 @@ export default function Admin() {
   if (!loading && !user) return <Navigate to="/signin?next=%2Fadmin" replace />;
   if (!user) return null;
   if (!isAdmin) return <AdminsOnly />;
-  return <Overview />;
+  return <Overview selfId={user.id} />;
 }
 
 function AdminsOnly() {
@@ -55,7 +56,7 @@ function AdminsOnly() {
   );
 }
 
-function Overview() {
+function Overview({ selfId }: { selfId: string }) {
   const [data, setData] = useState<AdminOverviewResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -95,6 +96,16 @@ function Overview() {
     );
   }, [data, needle]);
 
+  const removeUser = (id: string) =>
+    setData((d) =>
+      d
+        ? {
+            ...d,
+            users: d.users.filter((u) => u.id !== id),
+            totals: { ...d.totals, users: d.totals.users - 1 },
+          }
+        : d,
+    );
   const updateUser = (id: string, patch: Partial<AdminUserRow>) =>
     setData((d) =>
       d ? { ...d, users: d.users.map((u) => (u.id === id ? { ...u, ...patch } : u)) } : d,
@@ -166,11 +177,24 @@ function Overview() {
                       <Th>Teams</Th>
                       <Th className="text-right">Documents</Th>
                       <Th>Override</Th>
+                      <Th className="text-right">
+                        <span className="sr-only">Actions</span>
+                      </Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {users.map((u) => (
-                      <UserRow key={u.id} user={u} onChange={(patch) => updateUser(u.id, patch)} />
+                      <UserRow
+                        key={u.id}
+                        user={u}
+                        self={u.id === selfId}
+                        onChange={(patch) => updateUser(u.id, patch)}
+                        onRemoved={() => {
+                          removeUser(u.id);
+                          // Totals and the teams table may have changed too.
+                          void getAdminOverview().then(setData).catch(() => undefined);
+                        }}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -252,8 +276,20 @@ function Th({ children, className = "" }: { children: ReactNode; className?: str
   );
 }
 
-function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <td className={"px-4 py-3 align-top " + className}>{children}</td>;
+function Td({
+  children,
+  className = "",
+  colSpan,
+}: {
+  children: ReactNode;
+  className?: string;
+  colSpan?: number;
+}) {
+  return (
+    <td colSpan={colSpan} className={"px-4 py-3 align-top " + className}>
+      {children}
+    </td>
+  );
 }
 
 function Chip({ children, tone = "gray" }: { children: ReactNode; tone?: "gray" | "indigo" }) {
@@ -271,12 +307,32 @@ function Chip({ children, tone = "gray" }: { children: ReactNode; tone?: "gray" 
 
 function UserRow({
   user,
+  self,
   onChange,
+  onRemoved,
 }: {
   user: AdminUserRow;
+  /** The signed-in admin's own row: no delete. */
+  self: boolean;
   onChange: (patch: Partial<AdminUserRow>) => void;
+  onRemoved: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteUser(user.id);
+      onRemoved();
+    } catch (e) {
+      setError(message(e, "Couldn't delete the user."));
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const choice: PlanChoice = user.planOverride ?? "auto";
@@ -302,6 +358,31 @@ function UserRow({
       setBusy(false);
     }
   };
+
+  if (confirming) {
+    return (
+      <tr>
+        <Td className="bg-destructive/5" colSpan={8}>
+          <ConfirmInline
+            question={
+              <>
+                Delete <strong>{user.name}</strong> ({user.email})?
+              </>
+            }
+            note={`Removes their ${user.documentCount === 1 ? "document" : `${user.documentCount} documents`}, their projects, and any team they were the last member of. This can't be undone.`}
+            busy={deleting}
+            onConfirm={() => void remove()}
+            onCancel={() => setConfirming(false)}
+          />
+          {error && (
+            <p role="alert" className="mt-2 text-xs text-destructive">
+              {error}
+            </p>
+          )}
+        </Td>
+      </tr>
+    );
+  }
 
   return (
     <tr>
@@ -333,6 +414,17 @@ function UserRow({
           <p role="alert" className="mt-1 text-xs text-destructive">
             {error}
           </p>
+        )}
+      </Td>
+      <Td className="text-right">
+        {!self && (
+          <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-destructive"
+          >
+            Delete
+          </button>
         )}
       </Td>
     </tr>

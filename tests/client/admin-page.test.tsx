@@ -10,6 +10,7 @@ vi.mock("../../src/lib/api/auth", () => ({
   getMe: vi.fn(),
   signOut: vi.fn(),
   getAdminOverview: vi.fn(),
+  deleteUser: vi.fn(),
   setUserPlan: vi.fn(),
 }));
 

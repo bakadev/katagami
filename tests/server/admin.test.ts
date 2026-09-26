@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../../server/env.js";
 import { buildServer } from "../../server/index.js";
 import { resetDb } from "../helpers.js";
+import { db } from "../../server/db.js";
 import type { OAuthProfile, OAuthProvider } from "../../server/auth/providers.js";
 
 function fake(profile: OAuthProfile): OAuthProvider {
@@ -44,6 +45,27 @@ describe("admin", () => {
   });
   beforeEach(async () => {
     await resetDb();
+  });
+
+  it("deletes a user with their projects, documents and lone teams", async () => {
+    const admin = await signIn(adminApp);
+    const tester = await signIn(testerApp);
+    await testerApp.inject({ method: "POST", url: "/api/documents", headers: { cookie: tester }, payload: {} });
+    const me = (await testerApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: tester } })).json();
+
+    const self = await adminApp.inject({ method: "DELETE", url: `/api/admin/users/${me.user.id}`, headers: { cookie: tester } });
+    expect(self.statusCode).toBe(403);
+    const adminMe = (await adminApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: admin } })).json();
+    const notMe = await adminApp.inject({ method: "DELETE", url: `/api/admin/users/${adminMe.user.id}`, headers: { cookie: admin } });
+    expect(notMe.statusCode).toBe(400);
+
+    const res = await adminApp.inject({ method: "DELETE", url: `/api/admin/users/${me.user.id}`, headers: { cookie: admin } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().removed).toMatchObject({ projects: 1, documents: 1, teams: 1 });
+    expect(await db.user.findUnique({ where: { id: me.user.id } })).toBeNull();
+    expect(await db.workspace.count()).toBe(1);
+    expect(await db.document.count()).toBe(0);
+    expect((await testerApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: tester } })).statusCode).toBe(401);
   });
 
   it("is only for listed admins", async () => {

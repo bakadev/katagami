@@ -114,3 +114,18 @@ export const setUserPlan = (userId: string, planOverride: "free" | "team" | null
     `/api/admin/users/${userId}/plan`,
     { planOverride },
   );
+export const deleteUser = (userId: string) =>
+  fetch(`/api/admin/users/${userId}`, { method: "DELETE", credentials: "same-origin" }).then(
+    async (res) => {
+      if (!res.ok) {
+        let message = `${res.status}`;
+        try {
+          message = ((await res.json()) as { message?: string }).message ?? message;
+        } catch {
+          // keep status
+        }
+        throw new Error(message);
+      }
+      return (await res.json()) as { id: string; removed: { projects: number; documents: number; teams: number } };
+    },
+  );

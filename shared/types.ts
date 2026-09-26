@@ -114,7 +114,15 @@ export interface AdminTeamRow {
 export interface AdminOverviewResponse {
   users: AdminUserRow[];
   teams: AdminTeamRow[];
-  totals: { users: number; teams: number; projects: number; documents: number };
+  totals: {
+    users: number;
+    teams: number;
+    /** Projects people made: not hidden default buckets, not anonymous ones. */
+    projects: number;
+    documents: number;
+    /** Documents in projects nobody has claimed (made without signing in). */
+    anonymousDocuments: number;
+  };
 }
 
 export interface AdminSetPlanRequest {

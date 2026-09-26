@@ -49,7 +49,13 @@ export async function adminRoutes(app: FastifyInstance) {
           projects: { select: { _count: { select: { documents: true } } } },
         },
       }),
-      Promise.all([db.user.count(), db.workspace.count(), db.project.count(), db.document.count()]),
+      Promise.all([
+        db.user.count(),
+        db.workspace.count(),
+        db.project.count({ where: { isDefault: false, ownerId: { not: null } } }),
+        db.document.count(),
+        db.document.count({ where: { project: { ownerId: null, workspaceId: null } } }),
+      ]),
     ]);
 
     const body: AdminOverviewResponse = {
@@ -78,7 +84,13 @@ export async function adminRoutes(app: FastifyInstance) {
         projectCount: t.projects.length,
         documentCount: t.projects.reduce((n, p) => n + p._count.documents, 0),
       })),
-      totals: { users: totals[0], teams: totals[1], projects: totals[2], documents: totals[3] },
+      totals: {
+        users: totals[0],
+        teams: totals[1],
+        projects: totals[2],
+        documents: totals[3],
+        anonymousDocuments: totals[4],
+      },
     };
     return body;
   });

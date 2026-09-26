@@ -62,6 +62,11 @@ describe("admin", () => {
 
     const before = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
     expect(before.totals.users).toBe(2);
+    // Default buckets and anonymous projects don't count as projects.
+    await testerApp.inject({ method: "POST", url: "/api/documents", headers: { cookie: tester }, payload: {} });
+    await testerApp.inject({ method: "POST", url: "/api/projects" });
+    const counted = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
+    expect(counted.totals).toMatchObject({ projects: 0, documents: 2, anonymousDocuments: 1 });
     const row = before.users.find((u: { email: string }) => u.email === "tester@acme.co");
     expect(row).toMatchObject({ plan: "free", planOverride: null, teams: [] });
 

@@ -127,11 +127,12 @@ function Overview() {
 
           {/* Totals */}
           <section className="mt-8" aria-label="Totals">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
               <Stat label="Users" value={data?.totals.users} />
               <Stat label="Teams" value={data?.totals.teams} />
               <Stat label="Projects" value={data?.totals.projects} />
               <Stat label="Documents" value={data?.totals.documents} />
+              <Stat label="Anonymous documents" value={data?.totals.anonymousDocuments} />
             </div>
           </section>
 

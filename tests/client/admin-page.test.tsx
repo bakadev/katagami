@@ -54,7 +54,7 @@ const OVERVIEW: AdminOverviewResponse = {
       documentCount: 7,
     },
   ],
-  totals: { users: 2, teams: 1, projects: 3, documents: 10 },
+  totals: { users: 2, teams: 1, projects: 3, documents: 10, anonymousDocuments: 1 },
 };
 
 function renderAdmin(me: MeResponse | null) {

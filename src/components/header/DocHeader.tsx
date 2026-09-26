@@ -11,6 +11,7 @@ import { Link } from "react-router";
 import { StencilMark } from "~/components/site/StencilMark";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { MetaLine, type ConnectionState, type Permission } from "./MetaLine";
+import { ExportMenu } from "./ExportMenu";
 import { PanelToggle } from "./PanelToggle";
 import { SaveSnapshotButton } from "./SaveSnapshotButton";
 import { TitleEditor } from "./TitleEditor";
@@ -29,6 +30,7 @@ export interface DocHeaderProps {
   panelOpen: boolean;
   onTogglePanel: () => void;
   onSaveSnapshot: (name: string) => void | Promise<void>;
+  onExportMarkdown: () => void;
   avatarSlot: ReactNode;
 }
 
@@ -159,6 +161,7 @@ export function DocHeader({
   panelOpen,
   onTogglePanel,
   onSaveSnapshot,
+  onExportMarkdown,
   avatarSlot,
 }: DocHeaderProps) {
   const signedIn = useAuth().user !== null;
@@ -233,9 +236,12 @@ export function DocHeader({
 
           <PanelToggle open={panelOpen} onToggle={onTogglePanel} />
 
-          {/* Avatar slot is a pass-through — whatever the route wires in.
-              On phones it sits at the far end of the controls row. */}
-          <div className="ml-auto md:ml-0">{avatarSlot}</div>
+          {/* Export and the account menu sit together at the far end; on
+              phones the pair is pushed to the end of the controls row. */}
+          <div className="ml-auto flex items-center gap-2 md:ml-0 md:gap-3">
+            <ExportMenu onExportMarkdown={onExportMarkdown} />
+            {avatarSlot}
+          </div>
         </div>
       </div>
     </header>

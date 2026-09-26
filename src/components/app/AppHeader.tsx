@@ -1,25 +1,46 @@
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+import { AccountMenu } from "~/components/account/AccountMenu";
 import { StencilMark } from "~/components/site/StencilMark";
 import { useAuth } from "~/lib/auth/AuthProvider";
+import { getOrCreateIdentity, storeIdentity } from "~/lib/user/identity";
 import { initialsOf } from "~/lib/user/initials";
 import { SERIF } from "./serif";
 
 /**
  * The signed-in app header: wordmark linking to the documents home, and on
- * the right the person's initials opening the account menu. Ported from the
- * Round 7 option D exploration, minus the reviewer switches.
+ * the right the person's initials opening the shared account menu.
  */
 export function AppHeader() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  // The local editing identity, so name/colour edits here carry into the
+  // editor too. The account's saved values win when present.
+  const [identity, setIdentity] = useState(() => getOrCreateIdentity());
+  useEffect(() => {
+    if (!user) return;
+    setIdentity((prev) => {
+      const next = { name: user.name, color: user.color ?? prev.color };
+      if (next.name === prev.name && next.color === prev.color) return prev;
+      storeIdentity(next);
+      return next;
+    });
+  }, [user]);
+
+  const onNameChange = useCallback((name: string) => {
+    setIdentity((prev) => {
+      const next = { ...prev, name };
+      storeIdentity(next);
+      return next;
+    });
+  }, []);
+  const onColorChange = useCallback((color: string) => {
+    setIdentity((prev) => {
+      const next = { ...prev, color };
+      storeIdentity(next);
+      return next;
+    });
+  }, []);
 
   const onSignOut = async () => {
     try {
@@ -38,29 +59,22 @@ export function AppHeader() {
         </span>
       </Link>
       {user && (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Account menu"
-            style={{ fontFamily: SERIF }}
-            className="notch-sm flex size-9 items-center justify-center bg-brand-tint text-sm text-brand-ink outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {initialsOf(user.name)}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              <span className="block truncate text-foreground">{user.name}</span>
-              <span className="block truncate">{user.email}</span>
-            </DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link to="/documents">Your documents</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/">Marketing home</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => void onSignOut()}>Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AccountMenu
+          identity={identity}
+          onNameChange={onNameChange}
+          onColorChange={onColorChange}
+          onSignOut={() => void onSignOut()}
+          trigger={
+            <button
+              type="button"
+              aria-label="Account menu"
+              style={{ fontFamily: SERIF }}
+              className="notch-sm flex size-9 items-center justify-center bg-brand-tint text-sm text-brand-ink outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {initialsOf(user.name)}
+            </button>
+          }
+        />
       )}
     </header>
   );

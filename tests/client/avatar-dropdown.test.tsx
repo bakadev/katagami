@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { AvatarButton } from "../../src/components/header/AvatarButton";
 import { AvatarDropdown } from "../../src/components/avatar-menu/AvatarDropdown";
@@ -32,8 +32,8 @@ describe("AvatarDropdown", () => {
           identity={{ name: "Sakura", color: "#ff66aa" }}
           theme="system"
           onThemeChange={() => {}}
-          onRenameSave={() => {}}
-          onDownloadClick={() => {}}
+          onNameChange={() => {}}
+          onColorChange={() => {}}
           trigger={trigger}
           __testDefaultOpen
           {...props}
@@ -47,55 +47,51 @@ describe("AvatarDropdown", () => {
     expect(screen.getByText("Sakura")).toBeTruthy();
   });
 
-  it("calls onDownloadClick when Download as Markdown is activated", async () => {
-    const onDownloadClick = vi.fn();
-    renderDropdown({ onDownloadClick });
-    const dl = screen.getByRole("menuitem", { name: /Download as Markdown/i });
-    fireEvent.click(dl);
-    await waitFor(() => expect(onDownloadClick).toHaveBeenCalled());
-  });
-
-  it("swaps the dropdown content to a rename form when Rename is selected", () => {
+  it("no longer offers the Markdown download (export has its own button)", () => {
     renderDropdown();
-    const renameItem = screen.getByRole("menuitem", { name: /Rename/i });
-    fireEvent.click(renameItem);
-    // After click, the menu items are gone and a textbox appears
-    expect(screen.getByRole("textbox")).toBeTruthy();
     expect(screen.queryByRole("menuitem", { name: /Download as Markdown/i })).toBeNull();
   });
 
-  it("calls onRenameSave with the trimmed value when the form is submitted", () => {
-    const onRenameSave = vi.fn();
-    renderDropdown({ onRenameSave });
-    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
+  it("swaps the dropdown content to a rename form when Change name is selected", () => {
+    renderDropdown();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Change name/i }));
+    // After click, the menu items are gone and a textbox appears
+    expect(screen.getByRole("textbox")).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: /Change colour/i })).toBeNull();
+  });
+
+  it("calls onNameChange with the trimmed value when the form is submitted", () => {
+    const onNameChange = vi.fn();
+    renderDropdown({ onNameChange });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Change name/i }));
     const input = screen.getByRole("textbox") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "  Hanami  " } });
     fireEvent.submit(input.closest("form")!);
-    expect(onRenameSave).toHaveBeenCalledWith("Hanami");
+    expect(onNameChange).toHaveBeenCalledWith("Hanami");
   });
 
-  it("rejects empty + over-40-char names without calling onRenameSave", () => {
-    const onRenameSave = vi.fn();
-    renderDropdown({ onRenameSave });
-    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
+  it("rejects empty + over-40-char names without calling onNameChange", () => {
+    const onNameChange = vi.fn();
+    renderDropdown({ onNameChange });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Change name/i }));
     const input = screen.getByRole("textbox") as HTMLInputElement;
     const form = input.closest("form")!;
     fireEvent.change(input, { target: { value: "" } });
     fireEvent.submit(form);
-    expect(onRenameSave).not.toHaveBeenCalled();
+    expect(onNameChange).not.toHaveBeenCalled();
     fireEvent.change(input, { target: { value: "a".repeat(41) } });
     fireEvent.submit(form);
-    expect(onRenameSave).not.toHaveBeenCalled();
+    expect(onNameChange).not.toHaveBeenCalled();
   });
 
   it("Cancel returns to the menu view without saving", () => {
-    const onRenameSave = vi.fn();
-    renderDropdown({ onRenameSave });
-    fireEvent.click(screen.getByRole("menuitem", { name: /Rename/i }));
+    const onNameChange = vi.fn();
+    renderDropdown({ onNameChange });
+    fireEvent.click(screen.getByRole("menuitem", { name: /Change name/i }));
     fireEvent.click(screen.getByRole("button", { name: /Cancel/i }));
     // Menu items are back
-    expect(screen.getByRole("menuitem", { name: /Download as Markdown/i })).toBeTruthy();
-    expect(onRenameSave).not.toHaveBeenCalled();
+    expect(screen.getByRole("menuitem", { name: /Change colour/i })).toBeTruthy();
+    expect(onNameChange).not.toHaveBeenCalled();
   });
 });
 

@@ -25,7 +25,8 @@ const TABS: readonly PanelTabDescriptor[] = [
  *
  * Three responsibilities:
  * 1. Open/closed transition. On md+ it is an in-flow column (360px → 0 with
- *    a width transition). On phones it is a drawer that slides in from the
+ *    a width transition; the inner box stays 360px wide so text never
+ *    reflows mid-animation, it is simply clipped). On phones it is a drawer that slides in from the
  *    right over the editor card, inside the content area, so the header and
  *    its toggle stay reachable and the card never resizes.
  * 2. Render the PanelTabs header with dynamic count + notification signals
@@ -83,7 +84,10 @@ export function RightPanel({
           "md:static md:inset-auto md:z-auto md:translate-x-0 md:shadow-none md:pointer-events-auto"
         } ${open ? "md:w-[360px]" : "md:w-0 md:p-0"}`}
       >
-        <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+        {/* md+: the inner box keeps a fixed width while the aside animates,
+            so the content is clipped by the narrowing container instead of
+            rewrapping on every frame. 2px accounts for the p-px border. */}
+        <div className="notch-in flex min-h-0 flex-1 flex-col overflow-hidden bg-background md:w-[calc(360px-2px)] md:shrink-0">
           <div className="border-b border-border p-2">
             <PanelTabs
               tabs={tabs}

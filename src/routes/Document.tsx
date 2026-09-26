@@ -45,6 +45,7 @@ import {
 } from "~/lib/comments/threads";
 import { useThreads } from "~/hooks/useThreads";
 import { usePanelVisibility } from "~/hooks/usePanelVisibility";
+import { useProjectDocuments } from "~/hooks/useProjectDocuments";
 import { useTheme } from "~/lib/theme/useTheme";
 import type { Thread } from "~/lib/comments/types";
 import type { PermissionLevel } from "@shared/types";
@@ -76,19 +77,28 @@ export default function DocumentRoute() {
   const [composer, setComposer] = useState<ComposerState | null>(null);
   const [title, setTitle] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [identity, setIdentity] = useState(() => getOrCreateIdentity());
   const auth = useAuth();
 
-  // A signed-in person edits under their account name, not the random one.
+  // A signed-in person edits under their account name (and colour, once
+  // they've picked one), not the random ones.
   useEffect(() => {
     if (!auth.user) return;
+    const account = auth.user;
     setIdentity((prev) => {
-      if (prev.name === auth.user!.name) return prev;
-      const next = { name: auth.user!.name, color: prev.color };
+      const next = { name: account.name, color: account.color ?? prev.color };
+      if (prev.name === next.name && prev.color === next.color) return prev;
       storeIdentity(next);
       return next;
     });
   }, [auth.user]);
+
+  // The right rail's Documents tab: fetched the first time it's opened.
+  const projectDocs = useProjectDocuments(
+    projectId,
+    panelOpen && activeTab === "documents",
+  );
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
   const connectionRef = useRef<ReturnType<typeof connect> | null>(null);
@@ -121,6 +131,7 @@ export default function DocumentRoute() {
         setPermissionLevel(res.permissionLevel);
         setTitle(res.document.title);
         setUpdatedAt(res.document.updatedAt);
+        setProjectId(res.document.projectId);
       })
       .catch((e) => {
         if (!cancelled) setLoadError(e instanceof Error ? e.message : "Load failed");
@@ -413,10 +424,20 @@ export default function DocumentRoute() {
   }, [editor, title, docId]);
 
   const handleRenameSave = useCallback((nextName: string) => {
-    const next = { name: nextName, color: identity.color };
-    storeIdentity(next);
-    setIdentity(next);
-  }, [identity.color]);
+    setIdentity((prev) => {
+      const next = { ...prev, name: nextName };
+      storeIdentity(next);
+      return next;
+    });
+  }, []);
+
+  const handleColorChange = useCallback((nextColor: string) => {
+    setIdentity((prev) => {
+      const next = { ...prev, color: nextColor };
+      storeIdentity(next);
+      return next;
+    });
+  }, []);
 
   // --- Render branches ---
   if (loadError) {
@@ -440,12 +461,11 @@ export default function DocumentRoute() {
   const avatarSlot = (
     <AvatarDropdown
       identity={identity}
-      account={auth.user ? { name: auth.user.name, email: auth.user.email } : null}
       onSignOut={() => void auth.signOut()}
       theme={theme}
       onThemeChange={setTheme}
-      onRenameSave={handleRenameSave}
-      onDownloadClick={handleDownload}
+      onNameChange={handleRenameSave}
+      onColorChange={handleColorChange}
       trigger={
         <AvatarButton
           name={identity.name}
@@ -470,6 +490,7 @@ export default function DocumentRoute() {
         panelOpen={panelOpen}
         onTogglePanel={togglePanel}
         onSaveSnapshot={handleSaveSnapshot}
+        onExportMarkdown={handleDownload}
         avatarSlot={avatarSlot}
       />
 
@@ -528,7 +549,9 @@ export default function DocumentRoute() {
           commentCount={unresolvedCount + suggestions.length}
           hasNewCommentActivity={false}
         >
-          {activeTab === "documents" && <DocsTab />}
+          {activeTab === "documents" && docId && (
+            <DocsTab docId={docId} state={projectDocs} />
+          )}
           {activeTab === "comments" && (
             <CommentsTab
               threads={threads}

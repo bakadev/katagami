@@ -35,15 +35,21 @@ describe("AvatarDropdown with an account", () => {
     const onSignOut = vi.fn();
     render(
       <MemoryRouter>
-        <AuthProvider initial={null}>
+        <AuthProvider
+          initial={{
+            user: { id: "u1", email: "priya@acme.co", name: "Priya Raman", avatarUrl: null, color: null },
+            teams: [],
+            plan: "free",
+            isAdmin: false,
+          }}
+        >
           <AvatarDropdown
             identity={{ name: "Priya Raman", color: "#123" }}
-            account={{ name: "Priya Raman", email: "priya@acme.co" }}
             onSignOut={onSignOut}
             theme="system"
             onThemeChange={() => {}}
-            onRenameSave={() => {}}
-            onDownloadClick={() => {}}
+            onNameChange={() => {}}
+            onColorChange={() => {}}
             trigger={<AvatarButton name="Priya Raman" active={false} />}
             __testDefaultOpen
           />

@@ -29,7 +29,7 @@ function ProjectRow({ project, h }: { project: ProjectCardData; h: ProjectRowHan
           className="bg-destructive/5 px-3 py-3"
         />
       ) : (
-        <div className="flex items-center gap-4 py-3 hover:bg-muted/40">
+        <div className="flex items-center gap-4 px-3 py-3 hover:bg-muted/40">
           <div className="min-w-0 flex-1">
             {h.renaming ? (
               <InlineName

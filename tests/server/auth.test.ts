@@ -292,6 +292,55 @@ describe("teams and claim", () => {
     expect(again.json().projects).toHaveLength(0);
   });
 
+  it("claims into the default project when no teamId is given (Free)", async () => {
+    const { cookie } = await signIn(app);
+    const p1 = (await app.inject({ method: "POST", url: "/api/projects" })).json();
+    const p2 = (await app.inject({ method: "POST", url: "/api/projects" })).json();
+    await db.document.updateMany({ where: { projectId: p1.project.id }, data: { title: "Free draft" } });
+
+    const claim = await app.inject({
+      method: "POST",
+      url: "/api/claim",
+      headers: { cookie },
+      payload: {
+        projects: [
+          { projectId: p1.project.id, token: p1.creatorToken },
+          { projectId: p2.project.id, token: "wrong" },
+        ],
+      },
+    });
+    expect(claim.statusCode).toBe(200);
+    expect(claim.json().moved).toEqual([p1.project.id]);
+
+    // The claimed project is gone; its document lives in the default project now.
+    expect(await db.project.findUnique({ where: { id: p1.project.id } })).toBeNull();
+    const me = await db.user.findUniqueOrThrow({ where: { email: "priya@acme.co" } });
+    const home = await db.project.findFirstOrThrow({ where: { ownerId: me.id, isDefault: true } });
+    const doc = await db.document.findUniqueOrThrow({ where: { id: p1.document.id } });
+    expect(doc.projectId).toBe(home.id);
+    expect(doc.title).toBe("Free draft");
+
+    // The unmatched one is untouched.
+    expect((await db.project.findUnique({ where: { id: p2.project.id } }))!.ownerId).toBeNull();
+
+    // It shows on the Free home and is no longer claimable.
+    const homeRes = await app.inject({ method: "GET", url: "/api/home", headers: { cookie } });
+    expect(homeRes.json().documents.map((d: { id: string }) => d.id)).toContain(p1.document.id);
+    const again = await app.inject({
+      method: "POST",
+      url: "/api/claim/lookup",
+      headers: { cookie },
+      payload: { projects: [{ projectId: p1.project.id, token: p1.creatorToken }] },
+    });
+    expect(again.json().projects).toHaveLength(0);
+  });
+
+  it("rejects a non-string teamId", async () => {
+    const { cookie } = await signIn(app);
+    const res = await app.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { teamId: 7, projects: [] } });
+    expect(res.statusCode).toBe(400);
+  });
+
   it("refuses to move projects into a team the user isn't in", async () => {
     const { cookie } = await signIn(app);
     const other = await db.workspace.create({ data: { name: "Other", slug: "other" } });

@@ -1,8 +1,7 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { createTeam } from "~/lib/api/auth";
-import { listCreatorTokens } from "~/lib/creator-token";
 import { initialsOf } from "~/lib/user/initials";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
@@ -11,12 +10,11 @@ import { NotchCard } from "~/components/site/NotchCard";
 import { RegMark } from "~/components/site/RegMark";
 
 /**
- * After sign-in, option A: a full-page stepper on the asanoha ground.
- *
- * Three steps across the top: 1 Sign in (done), 2 Name your team
- * (active), 3 Invite people (later). Only step 2 is live. The greeting
- * shows the provider avatar and name so the person can see which identity
- * they came in with. The team name is prefilled from the email domain.
+ * After sign-in: a greeting and one card, "Name your team", on the asanoha
+ * ground. The team name is prefilled from the email domain. Both ways out
+ * ("Create team" and "Skip for now") land on /documents; documents from
+ * before sign-in are offered there by the claim strip, so there is no
+ * stepper to sequence.
  */
 
 const SERIF =
@@ -50,7 +48,6 @@ export default function Welcome() {
   });
   const { user, loading, refresh } = useAuth();
   const navigate = useNavigate();
-  const hasUnclaimed = useMemo(() => listCreatorTokens().length > 0, []);
   const [name, setName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +56,6 @@ export default function Welcome() {
   if (!user) return null;
 
   const value = name ?? guessTeamName(user.email, user.name);
-  const STEPS = [
-    { n: 1, label: "Sign in", state: "done" as const },
-    { n: 2, label: "Name your team", state: "active" as const },
-    hasUnclaimed
-      ? { n: 3, label: "Move your documents", state: "later" as const }
-      : { n: 3, label: "Invite people", state: "later" as const },
-  ];
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -75,7 +65,7 @@ export default function Welcome() {
     try {
       await createTeam(value.trim());
       await refresh();
-      navigate(hasUnclaimed ? "/claim" : "/documents", { replace: true });
+      navigate("/documents", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't create the team");
       setBusy(false);
@@ -102,66 +92,9 @@ export default function Welcome() {
           }}
         />
 
-        <div className="relative mx-auto max-w-3xl px-6 pb-24 pt-12 md:pt-16">
-          {/* Stepper */}
-          <ol className="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Setup steps">
-            {STEPS.map((s) => (
-              <li key={s.n} className="flex items-center gap-3">
-                {s.state === "active" ? (
-                  <NotchCard
-                    as="span"
-                    tone="indigo"
-                    outerClassName="size-8 shrink-0"
-                    style={{ fontFamily: SERIF }}
-                    className="flex items-center justify-center text-sm text-[var(--indigo)] dark:text-blue-300"
-                  >
-                    {s.n}
-                  </NotchCard>
-                ) : (
-                  <span
-                    style={{ fontFamily: SERIF, clipPath: NOTCH }}
-                    className={
-                      "flex size-8 shrink-0 items-center justify-center text-sm " +
-                      (s.state === "done"
-                        ? "bg-[var(--indigo)] text-white"
-                        : "bg-muted text-muted-foreground")
-                    }
-                  >
-                    {s.state === "done" ? <Check /> : s.n}
-                  </span>
-                )}
-                <span
-                  className={
-                    "text-xs sm:text-sm " +
-                    (s.state === "active"
-                      ? "font-medium"
-                      : s.state === "done"
-                        ? "text-foreground/80"
-                        : "text-muted-foreground")
-                  }
-                >
-                  {s.label}
-                  {s.state === "later" && (
-                    <span className="hidden text-muted-foreground sm:inline"> · later</span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-4" aria-hidden>
-            {STEPS.map((s) => (
-              <div
-                key={s.n}
-                className={
-                  "h-0.5 " +
-                  (s.state === "later" ? "bg-border" : "bg-[var(--indigo)] dark:bg-blue-300")
-                }
-              />
-            ))}
-          </div>
-
+        <div className="relative mx-auto max-w-3xl px-6 pb-24 pt-16 md:pt-24">
           {/* Greeting */}
-          <div className="mt-14 flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <span
               style={{ fontFamily: SERIF, clipPath: NOTCH }}
               className="flex size-14 shrink-0 items-center justify-center bg-[var(--indigo-tint)] text-xl text-[var(--indigo)] dark:text-blue-300"
@@ -179,7 +112,7 @@ export default function Welcome() {
             </div>
           </div>
 
-          {/* Step 2 */}
+          {/* Name your team */}
           <div className="relative mt-10">
             <RegMark className="-left-3 -top-3" />
             <RegMark className="-right-3 -top-3" />
@@ -192,8 +125,7 @@ export default function Welcome() {
               className="p-6 sm:p-8"
               onSubmit={submit}
             >
-              <p className="text-xs text-muted-foreground">Step 2 of 3</p>
-              <h2 style={{ fontFamily: SERIF }} className="mt-2 text-2xl">
+              <h2 style={{ fontFamily: SERIF }} className="text-2xl">
                 Name your team
               </h2>
               <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">
@@ -225,7 +157,7 @@ export default function Welcome() {
                   {busy ? "Creating…" : "Create team"}
                 </button>
                 <Link
-                  to={hasUnclaimed ? "/claim" : "/documents"}
+                  to="/documents"
                   className="text-sm text-[var(--indigo)] underline underline-offset-4 dark:text-blue-300"
                 >
                   Skip for now
@@ -241,26 +173,12 @@ export default function Welcome() {
           )}
 
           <p className="mt-6 text-xs text-muted-foreground">
-            {hasUnclaimed
-              ? "Step 3 moves the documents this browser created before you signed in. "
-              : "Step 3, inviting people, can wait. "}
-            5 seats are included on Team and you can add people any time. 5 seats are included on Team and you
-            can add people any time.
+            5 seats are included on Team and you can add people any time.
           </p>
         </div>
       </main>
 
       <SiteFooter />
     </div>
-  );
-}
-
-/* ---- pieces ------------------------------------------------------------- */
-
-function Check() {
-  return (
-    <svg aria-hidden viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.75">
-      <path d="M3 8.5l3 3 7-7" />
-    </svg>
   );
 }

@@ -14,7 +14,12 @@ import { usePageMeta } from "~/hooks/usePageMeta";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { AppHeader } from "~/components/app/AppHeader";
 import { SERIF } from "~/components/app/serif";
-import { ClaimStrip, claimState, dismissClaim } from "~/components/app/documents/ClaimStrip";
+import {
+  ClaimStrip,
+  dismissClaim,
+  verifyClaims,
+  type VerifiedClaims,
+} from "~/components/app/documents/ClaimStrip";
 import { DashedNotch } from "~/components/app/documents/DashedNotch";
 import { DocumentsTable, type RowActions } from "~/components/app/documents/DocumentsTable";
 import { EmptyState } from "~/components/app/documents/EmptyState";
@@ -102,9 +107,23 @@ function Home() {
 
   const free = (home?.plan ?? "free") === "free";
 
-  /* Claim strip: creator keys still in this browser, until dismissed. */
-  const [claim, setClaim] = useState(() => claimState());
-  const showClaim = claim.count > 0 && !claim.dismissed;
+  /* Claim strip: creator keys still in this browser that the server confirms
+     still open an unclaimed project, until dismissed. Stale keys are dropped
+     by the lookup. A failed lookup just shows no strip. */
+  const [claim, setClaim] = useState<VerifiedClaims | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    verifyClaims()
+      .then((c) => {
+        if (!cancelled) setClaim(c);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const unclaimed = claim?.documentCount ?? 0;
+  const showClaim = claim !== null && claim.projects.length > 0 && !claim.dismissed;
 
   /* Documents: search, sort, row lifecycle. */
   const [q, setQ] = useState("");
@@ -279,10 +298,10 @@ function Home() {
           {showClaim && (
             <div className="mt-6">
               <ClaimStrip
-                count={claim.count}
+                count={unclaimed}
                 onDismiss={() => {
                   dismissClaim(claim.fingerprint);
-                  setClaim((c) => ({ ...c, dismissed: true }));
+                  setClaim((c) => (c ? { ...c, dismissed: true } : c));
                 }}
               />
             </div>
@@ -411,7 +430,7 @@ function Home() {
               <p className="mt-4 py-6 text-sm text-muted-foreground">Loading…</p>
             ) : nothingAtAll ? (
               <div className="mt-4">
-                <EmptyState unclaimed={claim.count} />
+                <EmptyState unclaimed={unclaimed} />
               </div>
             ) : (
               <div className="mt-4">

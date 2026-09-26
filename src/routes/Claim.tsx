@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { claimProjects, lookupClaims } from "~/lib/api/auth";
 import { clearCreatorToken, listCreatorTokens } from "~/lib/creator-token";
+import { pruneStaleTokens } from "~/components/app/documents/ClaimStrip";
 import type { ClaimLookupResponse } from "../../shared/types";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
@@ -18,6 +19,10 @@ import { StencilMark } from "~/components/site/StencilMark";
  * browser as a notched table with checkboxes, all checked by default, so
  * the person can leave one behind. The primary button counts what's
  * selected. On a komon band like the Contact form.
+ *
+ * On Team the projects join the person's first team. On Free there are no
+ * projects, so the server moves the documents into their default bucket.
+ * Keys the lookup doesn't confirm are stale and get dropped from storage.
  */
 
 const SERIF =
@@ -48,7 +53,7 @@ function formatEdited(iso: string): string {
 export default function Claim() {
   usePageMeta({
     title: "Claim your documents",
-    description: "Move documents from this browser into your team.",
+    description: "Move documents from this browser into your account.",
   });
   const { user, loading, teams, refresh } = useAuth();
   const navigate = useNavigate();
@@ -68,6 +73,7 @@ export default function Claim() {
     let cancelled = false;
     lookupClaims(candidates)
       .then((res) => {
+        pruneStaleTokens(candidates, res.projects);
         if (cancelled) return;
         setFound(res.projects);
         setPicked(new Set(res.projects.map((p) => p.id)));
@@ -81,21 +87,20 @@ export default function Claim() {
   }, [user]);
 
   if (!loading && !user) return <Navigate to="/signin?next=%2Fclaim" replace />;
-  if (!loading && user && !workspace) return <Navigate to="/welcome" replace />;
-  if (!user || !workspace) return null;
+  if (!user) return null;
 
   const FOUND = found ?? [];
-  const WORKSPACE = workspace.name;
+  const WORKSPACE = workspace?.name ?? null;
   const all = FOUND.length > 0 && picked.size === FOUND.length;
 
   async function move() {
-    if (busy || picked.size === 0 || !workspace) return;
+    if (busy || picked.size === 0) return;
     setBusy(true);
     setError(null);
     try {
       const tokens = listCreatorTokens().filter((c) => picked.has(c.projectId));
-      const res = await claimProjects(workspace.id, tokens);
-      // The key has done its job; the team owns these now.
+      const res = await claimProjects(tokens, workspace?.id);
+      // The key has done its job; the account owns these now.
       for (const id of res.moved) clearCreatorToken(id);
       await refresh();
       navigate("/documents", { replace: true });
@@ -129,12 +134,14 @@ export default function Claim() {
             <StencilMark className="size-6" />
             <p className="mt-4 text-xs text-muted-foreground">Found in this browser</p>
             <h1 style={{ fontFamily: SERIF }} className="mt-2 text-3xl leading-tight sm:text-4xl">
-              Bring your documents into {WORKSPACE}
+              {WORKSPACE ? `Bring your documents into ${WORKSPACE}` : "Bring your documents in"}
             </h1>
             <p className="mt-5 max-w-[46ch] leading-relaxed text-muted-foreground">
               You wrote these before you had an account. This browser still holds the
-              creator key for each one, which is how we know they're yours. Moving them
-              in gives them the same seats and named history as the rest of the team.
+              creator key for each one, which is how we know they're yours.{" "}
+              {WORKSPACE
+                ? "Moving them in gives them the same seats and named history as the rest of the team."
+                : "Moving them in puts them on your documents page, where they stay even when this browser forgets them."}
             </p>
             <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
@@ -260,7 +267,9 @@ export default function Claim() {
                   >
                     {busy
                       ? "Moving…"
-                      : `Move ${all ? "these" : picked.size} into ${WORKSPACE}`}
+                      : WORKSPACE
+                        ? `Move ${all ? "these" : picked.size} into ${WORKSPACE}`
+                        : `Move ${all ? "these" : picked.size} in`}
                   </button>
                 </div>
               </div>

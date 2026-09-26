@@ -59,8 +59,9 @@ export function lookupClaims(projects: ClaimCandidate[]): Promise<ClaimLookupRes
   return post("/api/claim/lookup", { projects });
 }
 
-export function claimProjects(teamId: string, projects: ClaimCandidate[]): Promise<ClaimResponse> {
-  return post("/api/claim", { teamId, projects });
+/** Claim projects; with a team they join it, without one (Free) their documents land in the default project. */
+export function claimProjects(projects: ClaimCandidate[], teamId?: string): Promise<ClaimResponse> {
+  return post("/api/claim", teamId ? { teamId, projects } : { projects });
 }
 
 /* ---- signed-in home ----------------------------------------------------------- */

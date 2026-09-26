@@ -17,6 +17,7 @@ const EXACT = new Set([
   "/welcome",
   "/claim",
   "/documents",
+  "/admin",
   "/design",
 ]);
 

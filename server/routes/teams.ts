@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
 import { getSessionUser } from "../auth/session.js";
+import { getOrCreateDefaultProject } from "../auth/access.js";
 import { randomToken } from "../lib/random.js";
 import type {
   ApiError,
@@ -102,7 +103,7 @@ export async function teamRoutes(app: FastifyInstance) {
       return reply.code(400).send(body);
     }
     const projects = await db.project.findMany({
-      where: { id: { in: claims.map((c) => c.projectId) }, workspaceId: null },
+      where: { id: { in: claims.map((c) => c.projectId) }, workspaceId: null, isDefault: false },
       include: {
         documents: { orderBy: { updatedAt: "desc" }, select: { title: true, updatedAt: true } },
       },
@@ -121,36 +122,52 @@ export async function teamRoutes(app: FastifyInstance) {
     return body;
   });
 
-  /** Move projects into a team the user belongs to. Invalid tokens are skipped. */
+  /**
+   * Claim projects whose creator token the browser holds. With a teamId the
+   * projects join that team (Team). Without one (Free) the person has no
+   * projects of their own, so the documents move into their default project
+   * and the emptied claimed projects are deleted. Invalid tokens are skipped.
+   */
   app.post<{ Body: ClaimRequest }>("/api/claim", async (req, reply) => {
     const user = await getSessionUser(req, reply);
     if (!user) return reply.code(401).send(unauthenticated());
     const claims = validClaims(req.body?.projects);
     const workspaceId = req.body?.teamId;
-    if (!claims || typeof workspaceId !== "string") {
+    if (!claims || (workspaceId !== undefined && typeof workspaceId !== "string")) {
       const body: ApiError = {
         error: "invalid_body",
-        message: "Expected teamId and projects[]",
+        message: "Expected projects[] and an optional teamId",
       };
       return reply.code(400).send(body);
     }
-    const membership = await db.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: user.id } },
-    });
-    if (!membership) {
-      const body: ApiError = { error: "forbidden", message: "Not a member of that team" };
-      return reply.code(403).send(body);
+    if (workspaceId !== undefined) {
+      const membership = await db.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId: user.id } },
+      });
+      if (!membership) {
+        const body: ApiError = { error: "forbidden", message: "Not a member of that team" };
+        return reply.code(403).send(body);
+      }
     }
     const projects = await db.project.findMany({
-      where: { id: { in: claims.map((c) => c.projectId) }, workspaceId: null },
+      where: { id: { in: claims.map((c) => c.projectId) }, workspaceId: null, isDefault: false },
     });
     const byId = new Map(claims.map((c) => [c.projectId, c.token]));
     const ids = projects.filter((p) => byId.get(p.id) === p.creatorToken).map((p) => p.id);
     if (ids.length > 0) {
-      await db.project.updateMany({
-        where: { id: { in: ids } },
-        data: { workspaceId, ownerId: user.id },
-      });
+      if (workspaceId !== undefined) {
+        await db.project.updateMany({
+          where: { id: { in: ids } },
+          data: { workspaceId, ownerId: user.id },
+        });
+      } else {
+        const home = await getOrCreateDefaultProject(user.id);
+        await db.$transaction([
+          db.project.updateMany({ where: { id: { in: ids } }, data: { ownerId: user.id } }),
+          db.document.updateMany({ where: { projectId: { in: ids } }, data: { projectId: home.id } }),
+          db.project.deleteMany({ where: { id: { in: ids }, isDefault: false } }),
+        ]);
+      }
     }
     const body: ClaimResponse = { moved: ids };
     return body;

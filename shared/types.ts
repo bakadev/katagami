@@ -148,7 +148,9 @@ export interface ClaimLookupResponse {
 }
 
 export interface ClaimRequest {
-  teamId: string;
+  /** Team to move the projects into. Absent on Free: the documents land in
+   *  the person's default project instead. */
+  teamId?: string;
   projects: ClaimCandidate[];
 }
 

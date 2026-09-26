@@ -17,6 +17,7 @@ vi.mock("../../src/lib/api/auth", () => ({
   deleteProject: vi.fn(),
   deleteDocument: vi.fn(),
   moveDocument: vi.fn(),
+  lookupClaims: vi.fn(),
 }));
 
 import * as api from "../../src/lib/api/auth";
@@ -206,23 +207,63 @@ describe("/documents", () => {
     expect(screen.queryByText(/from this browser/)).toBeNull();
   });
 
-  it("shows the claim strip while creator keys are held, until dismissed", async () => {
-    localStorage.setItem("katagami:creator-token:11111111-1111-1111-1111-111111111111", "tok");
+  it("shows the claim strip only for keys the server verifies, until dismissed", async () => {
+    const P1 = "11111111-1111-1111-1111-111111111111";
+    const STALE = "99999999-9999-9999-9999-999999999999";
+    localStorage.setItem(`katagami:creator-token:${P1}`, "tok");
+    localStorage.setItem(`katagami:creator-token:${STALE}`, "gone");
     mocked.getHome.mockResolvedValue(FREE_HOME);
+    mocked.lookupClaims.mockResolvedValue({
+      projects: [{ id: P1, title: "Draft", documentCount: 1, updatedAt: iso(5) }],
+    });
     const { unmount } = renderHome({ user, teams: [], plan: "free" });
     await screen.findByText("Pricing page copy");
+    expect(await screen.findByRole("link", { name: "Bring it in" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Bring it in" }).getAttribute("href")).toBe("/claim");
+    expect(mocked.lookupClaims).toHaveBeenCalledTimes(1);
+    expect(mocked.lookupClaims.mock.calls[0][0]).toHaveLength(2);
+    // The key the server didn't return is dropped; the verified one stays.
+    expect(localStorage.getItem(`katagami:creator-token:${STALE}`)).toBeNull();
+    expect(localStorage.getItem(`katagami:creator-token:${P1}`)).toBe("tok");
     fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByText(/still on this browser/)).toBeNull();
     unmount();
 
-    /* Same keys: stays dismissed. A new key: comes back. */
+    /* Same verified projects: stays dismissed. */
     renderHome({ user, teams: [], plan: "free" });
     await screen.findByText("Pricing page copy");
+    await waitFor(() => expect(mocked.lookupClaims).toHaveBeenCalledTimes(2));
     expect(screen.queryByText(/still on this browser/)).toBeNull();
-    localStorage.setItem("katagami:creator-token:22222222-2222-2222-2222-222222222222", "tok2");
+
+    /* A new verified key with two documents: comes back, and counts documents. */
+    const P2 = "22222222-2222-2222-2222-222222222222";
+    localStorage.setItem(`katagami:creator-token:${P2}`, "tok2");
+    mocked.lookupClaims.mockResolvedValue({
+      projects: [
+        { id: P1, title: "Draft", documentCount: 1, updatedAt: iso(5) },
+        { id: P2, title: "Other", documentCount: 2, updatedAt: iso(1) },
+      ],
+    });
     renderHome({ user, teams: [], plan: "free" });
     await screen.findAllByText("Pricing page copy");
-    expect(screen.getByText(/2 documents from before you signed in/)).toBeTruthy();
+    expect(await screen.findByText(/3 documents from before you signed in/)).toBeTruthy();
+  });
+
+  it("shows no strip when every key is stale", async () => {
+    localStorage.setItem("katagami:creator-token:11111111-1111-1111-1111-111111111111", "tok");
+    mocked.getHome.mockResolvedValue(FREE_HOME);
+    mocked.lookupClaims.mockResolvedValue({ projects: [] });
+    renderHome({ user, teams: [], plan: "free" });
+    await screen.findByText("Pricing page copy");
+    await waitFor(() => expect(mocked.lookupClaims).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/still on this browser/)).toBeNull();
+    expect(localStorage.getItem("katagami:creator-token:11111111-1111-1111-1111-111111111111")).toBeNull();
+  });
+
+  it("makes no lookup when the browser holds no keys", async () => {
+    mocked.getHome.mockResolvedValue(FREE_HOME);
+    renderHome({ user, teams: [], plan: "free" });
+    await screen.findByText("Pricing page copy");
+    expect(mocked.lookupClaims).not.toHaveBeenCalled();
   });
 });

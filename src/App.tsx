@@ -15,6 +15,7 @@ import SignIn from "./routes/SignIn";
 import Welcome from "./routes/Welcome";
 import Claim from "./routes/Claim";
 import Documents from "./routes/Documents";
+import Admin from "./routes/Admin";
 import Project from "./routes/Project";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
@@ -28,7 +29,10 @@ function SiteChrome() {
   const { pathname } = useLocation();
   // The editor and the signed-in home carry the app header instead.
   const inApp =
-    pathname.startsWith("/p/") || pathname === "/documents" || pathname.startsWith("/documents/");
+    pathname.startsWith("/p/") ||
+    pathname === "/documents" ||
+    pathname.startsWith("/documents/") ||
+    pathname === "/admin";
   const inDesign = pathname.startsWith("/design");
   // Sign-in carries its own wordmark; the audience switch would be noise there.
   const inAuth = pathname === "/signin";
@@ -53,6 +57,7 @@ export default function App() {
       <Route path="/claim" element={<Claim />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/documents/:projectId" element={<Project />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/p/:projectId" element={<Navigate to="." replace />} />
         <Route path="/p/:projectId/d/:docId" element={<Document />} />
         {/* Design explorations — public but unlinked.

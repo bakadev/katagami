@@ -130,7 +130,7 @@ Free tier rule (`?plan=free`, or the "Plan: Free / Team" switch beside "Show emp
 
 ## Round 6 — Authentication (closed)
 
-**Outcome (2026-09-25):** Sign in B shipped as `/signin`, Welcome A as `/welcome`, Claim B as `/claim` (`src/routes/SignIn.tsx`, `Welcome.tsx`, `Claim.tsx`). All seven variants stay under `/design/auth/*`. The B statement copy was changed to "Sign in to use Team. Free documents never need an account." (2026-09-25)
+**Outcome (2026-09-25):** Sign in B shipped as `/signin`, Welcome A as `/welcome`, Claim B as `/claim` (`src/routes/SignIn.tsx`, `Welcome.tsx`, `Claim.tsx`). All seven variants stay under `/design/auth/*`. The B statement copy was changed to "Sign in to use Team. Free documents never need an account." (2026-09-25) The Welcome stepper was dropped on 2026-09-26: `/welcome` is now the greeting and the "Name your team" card alone, and claiming happens from the strip on `/documents` (which counts only keys the server verifies) rather than as a setup step.
 
 The account pages that arrive with OAuth (`two-tier-proposal.md` section 5: OAuth first, GitHub and Google, Free needs no account, Team requires one). There is no email and password, so there is no password reset and no "create account" form: the first sign-in with a provider is the sign-up. Three surfaces, seven variants, all under `/design/auth/*` and rendered by `src/routes/design/auth/AuthExploration.tsx`. Style is locked to Product v2; the options differ in layout and how much they say.
 

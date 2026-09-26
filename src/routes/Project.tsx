@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
-import { ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
+import { ChevronRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import type { DocumentRow, ProjectCard as ProjectCardData } from "../../shared/types";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { deleteDocument, deleteProject, getHome, getProject, moveDocument, renameProject } from "~/lib/api/auth";
@@ -228,22 +228,46 @@ function ProjectPage({ projectId }: { projectId: string }) {
       {/* Header row */}
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-3xl leading-tight sm:text-4xl">
-            {project ? (
-              <InlineName
-                value={name}
-                onChange={(v) => void rename(v)}
-                editing={renaming}
-                onEditingChange={setRenaming}
-                className="text-3xl sm:text-4xl"
-                inputClassName="max-w-lg"
-              />
-            ) : (
-              <span style={{ fontFamily: SERIF }} className="text-muted-foreground">
-                Loading…
-              </span>
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="min-w-0 text-3xl leading-tight sm:text-4xl">
+              {project ? (
+                <InlineName
+                  value={name}
+                  onChange={(v) => void rename(v)}
+                  editing={renaming}
+                  onEditingChange={setRenaming}
+                  showButton={false}
+                  className="text-3xl sm:text-4xl"
+                  inputClassName="max-w-lg"
+                />
+              ) : (
+                <span style={{ fontFamily: SERIF }} className="text-muted-foreground">
+                  Loading…
+                </span>
+              )}
+            </h1>
+            {!renaming && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label="More actions for this project"
+                  disabled={!project}
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                >
+                  <MoreHorizontal className="size-4" aria-hidden />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem onSelect={() => setRenaming(true)}>
+                    <Pencil className="size-3.5" aria-hidden />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive" onSelect={() => setConfirmingProject(true)}>
+                    <Trash2 className="size-3.5" aria-hidden />
+                    Delete project
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          </h1>
+          </div>
           {project && (
             <p className="mt-2 text-sm text-muted-foreground">
               {countLabel(n)}
@@ -253,21 +277,6 @@ function ProjectPage({ projectId }: { projectId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <NewSpecButton projectId={projectId} />
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="More actions for this project"
-              disabled={!project}
-              className="inline-flex size-10 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            >
-              <MoreHorizontal className="size-4" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmingProject(true)}>
-                <Trash2 className="size-3.5" aria-hidden />
-                Delete project
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -278,7 +287,7 @@ function ProjectPage({ projectId }: { projectId: string }) {
       )}
 
       {confirmingProject && (
-        <NotchCard tone="indigo" className="mt-6 px-4 py-3">
+        <NotchCard tone="indigo" outerClassName="mt-6" className="px-4 py-3">
           <ConfirmInline
             question={<>Delete “{name}”?</>}
             note={deleteProjectNote(n)}

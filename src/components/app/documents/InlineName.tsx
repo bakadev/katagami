@@ -16,6 +16,7 @@ export function InlineName({
   className,
   inputClassName,
   label = "Rename project",
+  showButton = true,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -24,6 +25,8 @@ export function InlineName({
   className?: string;
   inputClassName?: string;
   label?: string;
+  /** Hide the pencil when another control (a menu) starts the rename. */
+  showButton?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +79,7 @@ export function InlineName({
       <span style={{ fontFamily: SERIF }} className={cn("truncate leading-tight", className)}>
         {value}
       </span>
+      {showButton && (
       <button
         type="button"
         aria-label={label}
@@ -85,6 +89,7 @@ export function InlineName({
       >
         <Pencil className="size-3.5" aria-hidden />
       </button>
+      )}
     </span>
   );
 }

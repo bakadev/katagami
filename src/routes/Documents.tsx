@@ -279,7 +279,6 @@ function Home() {
   });
 
   const loaded = home !== null;
-  const nothingAtAll = loaded && docs.length === 0 && projects.length === 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -430,7 +429,7 @@ function Home() {
 
             {!loaded ? (
               <p className="mt-4 py-6 text-sm text-muted-foreground">Loading…</p>
-            ) : nothingAtAll ? (
+            ) : docs.length === 0 ? (
               <div className="mt-4">
                 <EmptyState unclaimed={unclaimed} />
               </div>

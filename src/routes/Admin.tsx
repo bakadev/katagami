@@ -159,7 +159,7 @@ function Overview({ selfId }: { selfId: string }) {
                 </span>
               )}
             </div>
-            <NotchCard className="mt-4 overflow-x-auto">
+            <NotchCard outerClassName="mt-4" className="overflow-x-auto">
               {!data ? (
                 <p className="px-4 py-8 text-sm text-muted-foreground">Loading…</p>
               ) : users.length === 0 ? (
@@ -214,7 +214,7 @@ function Overview({ selfId }: { selfId: string }) {
                 </span>
               )}
             </div>
-            <NotchCard className="mt-4 overflow-x-auto">
+            <NotchCard outerClassName="mt-4" className="overflow-x-auto">
               {!data ? (
                 <p className="px-4 py-8 text-sm text-muted-foreground">Loading…</p>
               ) : teams.length === 0 ? (

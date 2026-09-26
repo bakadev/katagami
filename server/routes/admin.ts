@@ -95,12 +95,19 @@ export async function adminRoutes(app: FastifyInstance) {
       }),
       Promise.all([
         db.user.count(),
-        db.workspace.count(),
+        Promise.resolve(0),
         db.project.count({ where: { isDefault: false, ownerId: { not: null } } }),
         db.document.count(),
         db.document.count({ where: { project: { ownerId: null, workspaceId: null } } }),
       ]),
     ]);
+
+    // A "team" for admin purposes is a paid one: its owner is on the Team
+    // plan. Every account has a personal team row, so unfiltered counts
+    // would just mirror the user count.
+    const paidTeams = teams.filter((t) =>
+      t.members.some((m) => m.role === "owner" && planFor(m.user, 1) === "team"),
+    );
 
     const body: AdminOverviewResponse = {
       users: users.map((u) => ({
@@ -114,7 +121,7 @@ export async function adminRoutes(app: FastifyInstance) {
         teams: u.workspaces.map((m) => ({ id: m.workspace.id, name: m.workspace.name, role: m.role })),
         documentCount: u.projects.reduce((n, p) => n + p._count.documents, 0),
       })),
-      teams: teams.map((t) => ({
+      teams: paidTeams.map((t) => ({
         id: t.id,
         name: t.name,
         slug: t.slug,
@@ -130,7 +137,7 @@ export async function adminRoutes(app: FastifyInstance) {
       })),
       totals: {
         users: totals[0],
-        teams: totals[1],
+        teams: paidTeams.length,
         projects: totals[2],
         documents: totals[3],
         anonymousDocuments: totals[4],

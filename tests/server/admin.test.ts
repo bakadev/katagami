@@ -84,6 +84,9 @@ describe("admin", () => {
 
     const before = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
     expect(before.totals.users).toBe(2);
+    // Everyone has a personal team, but only paid ones count as teams.
+    expect(before.totals.teams).toBe(0);
+    expect(before.teams).toEqual([]);
     // Default buckets and anonymous projects don't count as projects.
     await testerApp.inject({ method: "POST", url: "/api/documents", headers: { cookie: tester }, payload: {} });
     await testerApp.inject({ method: "POST", url: "/api/projects" });
@@ -109,9 +112,15 @@ describe("admin", () => {
     expect((await testerApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie: tester }, payload: { name: "Q" } })).statusCode).toBe(403);
 
     const after = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
-    expect(after.teams).toHaveLength(2);
-    const testerTeam = after.teams.find((t: { members: { email: string }[] }) => t.members[0].email === "tester@acme.co");
-    expect(testerTeam.projectCount).toBe(1);
+    // Tester was forced back to Free, so no paid teams remain.
+    expect(after.teams).toHaveLength(0);
+    expect(after.totals.teams).toBe(0);
+    const whileTeam = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "team" } });
+    expect(whileTeam.statusCode).toBe(200);
+    const paid = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
+    expect(paid.totals.teams).toBe(1);
+    expect(paid.teams[0].members[0].email).toBe("tester@acme.co");
+    expect(paid.teams[0].projectCount).toBe(1);
 
     const bad = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "gold" } });
     expect(bad.statusCode).toBe(400);

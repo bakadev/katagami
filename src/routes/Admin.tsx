@@ -219,7 +219,7 @@ function Overview({ selfId }: { selfId: string }) {
                 <p className="px-4 py-8 text-sm text-muted-foreground">Loading…</p>
               ) : teams.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {needle ? "No team matches." : "No teams yet."}
+                  {needle ? "No team matches." : "No paid teams yet. Switch someone to Team above and their team appears here."}
                 </p>
               ) : (
                 <table className="w-full min-w-[720px] text-sm">

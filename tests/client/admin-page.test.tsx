@@ -115,7 +115,16 @@ describe("/admin", () => {
   });
 
   it("changing a user's plan calls setUserPlan and updates the chip", async () => {
-    mocked.getAdminOverview.mockResolvedValue(OVERVIEW);
+    // The page refetches the overview after a change so totals and the
+    // paid-teams table follow; the second answer reflects the new plan.
+    const AFTER = {
+      ...OVERVIEW,
+      users: OVERVIEW.users.map((u) =>
+        u.id === "u2" ? { ...u, plan: "team" as const, planOverride: "team" as const } : u,
+      ),
+      totals: { ...OVERVIEW.totals, teams: OVERVIEW.totals.teams + 1 },
+    };
+    mocked.getAdminOverview.mockResolvedValueOnce(OVERVIEW).mockResolvedValue(AFTER);
     mocked.setUserPlan.mockResolvedValue({ id: "u2", planOverride: "team", plan: "team" });
     renderAdmin({ user, teams: [], plan: "free", isAdmin: true });
 
@@ -128,6 +137,9 @@ describe("/admin", () => {
     expect(await within(row).findByText("Saved")).toBeTruthy();
     expect(within(row).getByText("Team", { selector: "span" })).toBeTruthy();
     expect(within(group).getByRole("radio", { name: "Team" }).getAttribute("aria-checked")).toBe("true");
+    await waitFor(() => expect(mocked.getAdminOverview).toHaveBeenCalledTimes(2));
+    const teamsTile = within(screen.getByLabelText("Totals")).getByText("Teams").closest("div")!;
+    expect(within(teamsTile).getByText(String(AFTER.totals.teams))).toBeTruthy();
 
     // Back to Auto sends null.
     mocked.setUserPlan.mockResolvedValue({ id: "u2", planOverride: null, plan: "free" });

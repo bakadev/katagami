@@ -42,6 +42,7 @@ type DocWithTokens = {
   id: string;
   projectId: string;
   title: string | null;
+  createdAt: Date;
   updatedAt: Date;
   lastEditedByName: string | null;
   lastEditedByColor: string | null;
@@ -54,6 +55,7 @@ const DOC_SELECT = {
   id: true,
   projectId: true,
   title: true,
+  createdAt: true,
   updatedAt: true,
   lastEditedByName: true,
   lastEditedByColor: true,
@@ -73,6 +75,7 @@ function toRow(d: DocWithTokens): DocumentRow {
     id: d.id,
     projectId: d.projectId,
     title: d.title,
+    createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
     lastEditedBy: editorOf(d),
     openComments: d.openComments,

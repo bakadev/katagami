@@ -38,6 +38,7 @@ function doc(id: string, title: string, minutesAgo: number, extra: Partial<HomeR
     id,
     projectId: "default",
     title,
+    createdAt: iso(minutesAgo + 60),
     updatedAt: iso(minutesAgo),
     lastEditedBy: priya,
     openComments: 0,

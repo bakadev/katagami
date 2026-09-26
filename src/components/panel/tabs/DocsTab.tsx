@@ -89,9 +89,10 @@ export function DocsTab({ docId, state, currentTitle, onRenamed }: DocsTabProps)
 
   const { project, documents } = state.data;
   // The open document's title comes from the editor, not the cached list.
-  const rows = documents.map((d) =>
-    d.id === docId && currentTitle !== undefined ? { ...d, title: currentTitle } : d,
-  );
+  // Creation order, so the list never reshuffles as people edit.
+  const rows = [...documents]
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((d) => (d.id === docId && currentTitle !== undefined ? { ...d, title: currentTitle } : d));
   return (
     <div className="flex h-full flex-col">
       <ProjectHeader project={project} count={documents.length} onRenamed={onRenamed} />

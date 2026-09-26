@@ -181,6 +181,7 @@ export interface DocumentRow {
   id: string;
   projectId: string;
   title: string | null;
+  createdAt: string;
   updatedAt: string;
   lastEditedBy: EditorRef | null;
   openComments: number;

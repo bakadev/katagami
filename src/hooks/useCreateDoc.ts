@@ -25,6 +25,7 @@ export function useCreateDoc(projectId?: string) {
       navigate(
         `/p/${body.project.id}/d/${body.document.id}?key=${body.permissions.editToken}`,
       );
+      setLoading(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setLoading(false);

@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { FolderOpen, Lock, LogIn, Pencil, type LucideIcon } from "lucide-react";
+import { FolderOpen, Lock, LogIn, Pencil, Plus, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { PanelFiller } from "~/components/panel/PanelFiller";
 import { renameProject } from "~/lib/api/auth";
+import { useCreateDoc } from "~/hooks/useCreateDoc";
 import { EditorName } from "~/components/app/documents/EditorName";
 import { countLabel, docTitle, docUrl, projectName } from "~/components/app/documents/lib";
 import { useRelativeTime } from "~/hooks/useRelativeTime";
@@ -91,24 +92,40 @@ export function DocsTab({ docId, state, currentTitle, onRenamed }: DocsTabProps)
   const rows = documents.map((d) =>
     d.id === docId && currentTitle !== undefined ? { ...d, title: currentTitle } : d,
   );
-  const others = documents.filter((d) => d.id !== docId);
-
   return (
     <div className="flex h-full flex-col">
       <ProjectHeader project={project} count={documents.length} onRenamed={onRenamed} />
-      {others.length === 0 ? (
-        <EmptyPanel icon={FolderOpen} title="Nothing else here yet">
-          <p>Nothing else in this project yet.</p>
-        </EmptyPanel>
-      ) : (
-        <>
-          <ul className="p-2" aria-label="Documents in this project">
-            {rows.map((d) => (
-              <DocRow key={d.id} doc={d} current={d.id === docId} />
-            ))}
-          </ul>
-          <PanelFiller />
-        </>
+      <ul className="p-2" aria-label="Documents in this project">
+        {rows.map((d) => (
+          <DocRow key={d.id} doc={d} current={d.id === docId} />
+        ))}
+      </ul>
+      <NewSpecInProject projectId={project.id} onCreated={onRenamed} />
+      <PanelFiller />
+    </div>
+  );
+}
+
+/** Start another spec in this project without leaving the editor. */
+function NewSpecInProject({ projectId, onCreated }: { projectId: string; onCreated?: () => void }) {
+  const { create, loading, error } = useCreateDoc(projectId);
+  return (
+    <div className="px-2 pb-2">
+      <button
+        type="button"
+        onClick={() => {
+          void create().then(onCreated);
+        }}
+        disabled={loading}
+        className="notch-sm flex w-full items-center gap-2 px-3 py-2 text-sm text-brand-ink hover:bg-brand-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+      >
+        <Plus className="size-4" aria-hidden />
+        {loading ? "Opening…" : "New spec in this project"}
+      </button>
+      {error && (
+        <p role="alert" className="px-3 pt-1 text-xs text-destructive">
+          {error}
+        </p>
       )}
     </div>
   );

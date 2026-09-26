@@ -466,7 +466,7 @@ function Home() {
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter tone="indigo" />
     </div>
   );
 }

@@ -58,7 +58,7 @@ function Shell({ children }: { children: ReactNode }) {
       <main className="flex-1">
         <div className="mx-auto max-w-5xl px-6 pb-24 pt-8 md:px-10 sm:pt-12">{children}</div>
       </main>
-      <SiteFooter />
+      <SiteFooter tone="indigo" />
     </div>
   );
 }

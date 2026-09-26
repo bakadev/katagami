@@ -32,10 +32,19 @@ const LINKS: { title: string; items: { label: string; to: string }[] }[] = [
   },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ tone = "plain" }: { tone?: "plain" | "indigo" }) {
+  // Indigo: the signed-in pages, where the footer must read as a different
+  // surface from the page. The on-indigo scheme remaps the text tokens.
+  const indigo = tone === "indigo";
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-[2fr_1fr_1fr_1fr] md:px-10">
+    <footer className={indigo ? "on-indigo relative bg-brand" : "border-t border-border"}>
+      {indigo && (
+        <div
+          aria-hidden
+          className="seigaiha pointer-events-none absolute inset-0 text-white opacity-[0.12]"
+        />
+      )}
+      <div className="relative mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-[2fr_1fr_1fr_1fr] md:px-10">
         <div>
           <Link to="/" className="inline-flex items-center gap-2">
             <StencilMark className="size-4" />
@@ -63,7 +72,7 @@ export function SiteFooter() {
           </nav>
         ))}
       </div>
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 pb-8 text-xs text-muted-foreground md:px-10">
+      <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 pb-8 text-xs text-muted-foreground md:px-10">
         <span>© {new Date().getFullYear()} Katagami</span>
         <span>Made for teams that argue in the margins.</span>
       </div>

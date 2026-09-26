@@ -51,7 +51,7 @@ function AdminsOnly() {
           </p>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter tone="indigo" />
     </div>
   );
 }
@@ -254,7 +254,7 @@ function Overview({ selfId }: { selfId: string }) {
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter tone="indigo" />
     </div>
   );
 }

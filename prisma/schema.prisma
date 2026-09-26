@@ -37,6 +37,10 @@ model User {
   email      String    @unique
   name       String
   avatarUrl  String?   @map("avatar_url")
+  // Caret and comment colour, chosen in the account menu.
+  color      String?
+  // Admin override of the plan: "free" | "team" | null (derive from teams).
+  planOverride String? @map("plan_override")
   createdAt  DateTime  @default(now()) @map("created_at")
 
   accounts   Account[]

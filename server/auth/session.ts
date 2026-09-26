@@ -45,6 +45,8 @@ export interface SessionUser {
   email: string;
   name: string;
   avatarUrl: string | null;
+  color: string | null;
+  planOverride: string | null;
 }
 
 /**
@@ -71,5 +73,12 @@ export async function getSessionUser(
     reply?.setCookie(SESSION_COOKIE, token, sessionCookieOptions());
   }
   const { user } = session;
-  return { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatarUrl: user.avatarUrl,
+    color: user.color,
+    planOverride: user.planOverride,
+  };
 }

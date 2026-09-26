@@ -8,6 +8,9 @@ import type {
   ProjectCard,
   ProjectPageResponse,
   MeResponse,
+  SessionUser,
+  UpdateMeRequest,
+  AdminOverviewResponse,
 } from "../../../shared/types";
 
 /** Who is signed in, or null. Never throws for the signed-out case. */
@@ -96,3 +99,14 @@ export const deleteProject = (id: string) => del(`/api/projects/${id}`);
 export const deleteDocument = (id: string) => del(`/api/docs/${id}`);
 export const moveDocument = (id: string, projectId: string | null) =>
   patch<{ ok: true; projectId: string }>(`/api/docs/${id}/project`, { projectId });
+
+export const updateMe = (body: UpdateMeRequest) => patch<{ user: SessionUser }>("/api/auth/me", body);
+
+/* ---- admin ---------------------------------------------------------------------- */
+
+export const getAdminOverview = () => getJson<AdminOverviewResponse>("/api/admin/overview");
+export const setUserPlan = (userId: string, planOverride: "free" | "team" | null) =>
+  patch<{ id: string; planOverride: string | null; plan: "free" | "team" }>(
+    `/api/admin/users/${userId}/plan`,
+    { planOverride },
+  );

@@ -163,3 +163,26 @@ describe("signed-in home", () => {
     expect(countOpenItems(ydoc)).toEqual({ openComments: 1, openSuggestions: 1 });
   });
 });
+
+describe("profile and admin", () => {
+  let app: FastifyInstance;
+  beforeAll(async () => {
+    app = await buildServer({ providers: { github: fake(PRIYA) } });
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  it("updates the visible name and colour", async () => {
+    const cookie = await signIn(app);
+    const bad = await app.inject({ method: "PATCH", url: "/api/auth/me", headers: { cookie }, payload: { color: "red" } });
+    expect(bad.statusCode).toBe(400);
+    const ok = await app.inject({ method: "PATCH", url: "/api/auth/me", headers: { cookie }, payload: { name: "Pri", color: "#ff66aa" } });
+    expect(ok.json().user).toMatchObject({ name: "Pri", color: "#ff66aa" });
+    const me = await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } });
+    expect(me.json().user.color).toBe("#ff66aa");
+  });
+});

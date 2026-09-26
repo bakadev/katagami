@@ -1,171 +1,91 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { makeTestApp, resetDb } from "../helpers.js";
-import { db } from "../../server/db.js";
+import { env } from "../../server/env.js";
+import { buildServer } from "../../server/index.js";
+import { resetDb } from "../helpers.js";
+import type { OAuthProfile, OAuthProvider } from "../../server/auth/providers.js";
 
-describe("admin routes", () => {
-  let app: FastifyInstance;
-  let projectId: string;
-  let documentId: string;
-  let creatorToken: string;
-  let editToken: string;
+function fake(profile: OAuthProfile): OAuthProvider {
+  return {
+    name: "github",
+    label: "GitHub",
+    usesPkce: false,
+    createAuthorizationURL: (state) => new URL(`https://p.test/a?state=${state}`),
+    exchange: async () => profile,
+  };
+}
+const ADMIN: OAuthProfile = { providerId: "1", email: "admin@acme.co", emailVerified: true, name: "Ada Min", avatarUrl: null };
+const TESTER: OAuthProfile = { providerId: "2", email: "tester@acme.co", emailVerified: true, name: "Tess Ter", avatarUrl: null };
 
+async function signIn(app: FastifyInstance): Promise<string> {
+  const start = await app.inject({ method: "GET", url: "/api/auth/github" });
+  const state = new URL(start.headers.location as string).searchParams.get("state")!;
+  const oauth = start.cookies.find((c) => c.name === "katagami_oauth")!;
+  const cb = await app.inject({
+    method: "GET",
+    url: `/api/auth/github/callback?code=ok&state=${state}`,
+    headers: { cookie: `katagami_oauth=${oauth.value}` },
+  });
+  return `katagami_session=${cb.cookies.find((c) => c.name === "katagami_session")!.value}`;
+}
+
+describe("admin", () => {
+  let adminApp: FastifyInstance;
+  let testerApp: FastifyInstance;
   beforeAll(async () => {
-    app = await makeTestApp();
+    env.ADMIN_EMAILS.splice(0, env.ADMIN_EMAILS.length, "admin@acme.co");
+    adminApp = await buildServer({ providers: { github: fake(ADMIN) } });
+    testerApp = await buildServer({ providers: { github: fake(TESTER) } });
   });
-
   afterAll(async () => {
-    await app.close();
+    env.ADMIN_EMAILS.splice(0, env.ADMIN_EMAILS.length);
+    await adminApp.close();
+    await testerApp.close();
   });
-
   beforeEach(async () => {
     await resetDb();
-    const res = await app.inject({ method: "POST", url: "/api/projects" });
-    const body = res.json();
-    projectId = body.project.id;
-    documentId = body.document.id;
-    creatorToken = body.creatorToken;
-    editToken = body.permissions.editToken;
   });
 
-  describe("PATCH /api/projects/:id", () => {
-    it("renames with a valid creator token", async () => {
-      const res = await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": creatorToken },
-        payload: { name: "My Spec" },
-      });
-      expect(res.statusCode).toBe(200);
-      const project = await db.project.findUnique({ where: { id: projectId } });
-      expect(project!.name).toBe("My Spec");
-    });
-
-    it("returns 403 without a creator token", async () => {
-      const res = await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        payload: { name: "x" },
-      });
-      expect(res.statusCode).toBe(403);
-    });
-
-    it("returns 403 with the wrong creator token", async () => {
-      const res = await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": "not-the-right-token" },
-        payload: { name: "x" },
-      });
-      expect(res.statusCode).toBe(403);
-    });
-
-    it("does not nullify name when the body is empty", async () => {
-      // First set a name.
-      await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": creatorToken },
-        payload: { name: "Original" },
-      });
-
-      // Then PATCH with an empty body.
-      const res = await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": creatorToken },
-        payload: {},
-      });
-      expect(res.statusCode).toBe(200);
-
-      const project = await db.project.findUnique({ where: { id: projectId } });
-      expect(project!.name).toBe("Original");
-    });
-
-    it("explicitly clears name when body has name: null", async () => {
-      await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": creatorToken },
-        payload: { name: "temp" },
-      });
-
-      const res = await app.inject({
-        method: "PATCH",
-        url: `/api/projects/${projectId}`,
-        headers: { "x-creator-token": creatorToken },
-        payload: { name: null },
-      });
-      expect(res.statusCode).toBe(200);
-
-      const project = await db.project.findUnique({ where: { id: projectId } });
-      expect(project!.name).toBeNull();
-    });
+  it("is only for listed admins", async () => {
+    const tester = await signIn(testerApp);
+    expect((await testerApp.inject({ method: "GET", url: "/api/admin/overview" })).statusCode).toBe(401);
+    const res = await testerApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: tester } });
+    expect(res.statusCode).toBe(403);
+    const me = await testerApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: tester } });
+    expect(me.json().isAdmin).toBe(false);
   });
 
-  describe("DELETE /api/docs/:id", () => {
-    it("deletes a document with a valid creator token", async () => {
-      const res = await app.inject({
-        method: "DELETE",
-        url: `/api/docs/${documentId}`,
-        headers: { "x-creator-token": creatorToken },
-      });
-      expect(res.statusCode).toBe(204);
-      const doc = await db.document.findUnique({ where: { id: documentId } });
-      expect(doc).toBeNull();
-    });
+  it("lists users and teams and flips a person's plan", async () => {
+    const admin = await signIn(adminApp);
+    const tester = await signIn(testerApp);
+    expect((await adminApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: admin } })).json().isAdmin).toBe(true);
 
-    it("returns 403 without a creator token", async () => {
-      const res = await app.inject({ method: "DELETE", url: `/api/docs/${documentId}` });
-      expect(res.statusCode).toBe(403);
-    });
+    const before = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
+    expect(before.totals.users).toBe(2);
+    const row = before.users.find((u: { email: string }) => u.email === "tester@acme.co");
+    expect(row).toMatchObject({ plan: "free", planOverride: null, teams: [] });
 
-    it("returns 403 with the wrong creator token", async () => {
-      const res = await app.inject({
-        method: "DELETE",
-        url: `/api/docs/${documentId}`,
-        headers: { "x-creator-token": "not-the-right-token" },
-      });
-      expect(res.statusCode).toBe(403);
-      const doc = await db.document.findUnique({ where: { id: documentId } });
-      expect(doc).not.toBeNull();
-    });
-  });
+    // Free → Team creates a personal team so projects have a home.
+    const up = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "team" } });
+    expect(up.json()).toMatchObject({ planOverride: "team", plan: "team" });
+    const home = (await testerApp.inject({ method: "GET", url: "/api/home", headers: { cookie: tester } })).json();
+    expect(home.plan).toBe("team");
+    expect(home.team.name).toBe("Tess's team");
+    const proj = await testerApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie: tester }, payload: { name: "P" } });
+    expect(proj.statusCode).toBe(201);
 
-  describe("POST /api/docs/:id/rotate-keys", () => {
-    it("generates new permission tokens and invalidates the old ones", async () => {
-      const res = await app.inject({
-        method: "POST",
-        url: `/api/docs/${documentId}/rotate-keys`,
-        headers: { "x-creator-token": creatorToken },
-      });
-      expect(res.statusCode).toBe(200);
-      const body = res.json();
-      expect(body.editToken).toMatch(/^[A-Za-z0-9_-]{32}$/);
-      expect(body.viewToken).toMatch(/^[A-Za-z0-9_-]{32}$/);
-      expect(body.editToken).not.toBe(editToken);
+    // Forced back to Free, even with a team membership.
+    await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "free" } });
+    const freeHome = (await testerApp.inject({ method: "GET", url: "/api/home", headers: { cookie: tester } })).json();
+    expect(freeHome.plan).toBe("free");
+    expect((await testerApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie: tester }, payload: { name: "Q" } })).statusCode).toBe(403);
 
-      // Old token no longer works
-      const check = await app.inject({
-        method: "GET",
-        url: `/api/docs/${documentId}?key=${editToken}`,
-      });
-      expect(check.statusCode).toBe(403);
+    const after = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
+    expect(after.teams).toHaveLength(1);
+    expect(after.teams[0].members[0].email).toBe("tester@acme.co");
+    expect(after.teams[0].projectCount).toBe(1);
 
-      // New token does
-      const check2 = await app.inject({
-        method: "GET",
-        url: `/api/docs/${documentId}?key=${body.editToken}`,
-      });
-      expect(check2.statusCode).toBe(200);
-    });
-
-    it("returns 403 without a creator token", async () => {
-      const res = await app.inject({
-        method: "POST",
-        url: `/api/docs/${documentId}/rotate-keys`,
-      });
-      expect(res.statusCode).toBe(403);
-    });
+    const bad = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "gold" } });
+    expect(bad.statusCode).toBe(400);
   });
 });

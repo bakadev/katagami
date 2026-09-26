@@ -3,6 +3,7 @@ import { db } from "../db.js";
 import { getSessionUser } from "../auth/session.js";
 import {
   getOrCreateDefaultProject,
+  planFor,
   teamIdsFor,
   visibleProject,
 } from "../auth/access.js";
@@ -164,7 +165,7 @@ export async function homeRoutes(app: FastifyInstance) {
     });
 
     const body: HomeResponse = {
-      plan: teamIds.length > 0 ? "team" : "free",
+      plan: planFor(user, teamIds.length),
       team,
       projects: projects
         .map((p) => toCard(p, p.documents))
@@ -216,7 +217,9 @@ export async function homeRoutes(app: FastifyInstance) {
     const user = await getSessionUser(req, reply);
     if (!user) return reply.code(401).send(unauthenticated());
     const teamIds = await teamIdsFor(user.id);
-    if (teamIds.length === 0) return reply.code(403).send(teamOnly());
+    if (planFor(user, teamIds.length) !== "team" || teamIds.length === 0) {
+      return reply.code(403).send(teamOnly());
+    }
     const name = validName(req.body?.name);
     if (!name) {
       const body: ApiError = { error: "invalid_name", message: `Name must be 1 to ${NAME_MAX} characters` };
@@ -257,7 +260,7 @@ export async function homeRoutes(app: FastifyInstance) {
         target = await getOrCreateDefaultProject(user.id);
       } else {
         const teamIds = await teamIdsFor(user.id);
-        if (teamIds.length === 0) return reply.code(403).send(teamOnly());
+        if (planFor(user, teamIds.length) !== "team") return reply.code(403).send(teamOnly());
         target = await visibleProject(user, req.body.projectId);
         if (!target) return reply.code(404).send(notFound());
       }

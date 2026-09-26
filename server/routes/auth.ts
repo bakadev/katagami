@@ -2,7 +2,8 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import * as arctic from "arctic";
 import { db } from "../db.js";
 import { env } from "../env.js";
-import type { ApiError, MeResponse } from "../../shared/types.js";
+import type { ApiError, MeResponse, UpdateMeRequest } from "../../shared/types.js";
+import { planFor } from "../auth/access.js";
 import type { OAuthProfile, ProviderMap, ProviderName } from "../auth/providers.js";
 import {
   SESSION_COOKIE,
@@ -179,16 +180,47 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions) 
       orderBy: { createdAt: "asc" },
     });
     const body: MeResponse = {
-      user,
+      user: { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatarUrl, color: user.color },
       teams: memberships.map((m) => ({
         id: m.workspace.id,
         name: m.workspace.name,
         slug: m.workspace.slug,
         role: m.role as "owner" | "editor",
       })),
-      plan: memberships.length > 0 ? "team" : "free",
+      plan: planFor(user, memberships.length),
+      isAdmin: env.ADMIN_EMAILS.includes(user.email.toLowerCase()),
     };
     return body;
+  });
+
+  /** Visible name and caret colour. */
+  app.patch<{ Body: UpdateMeRequest }>("/api/auth/me", async (req, reply) => {
+    const user = await getSessionUser(req, reply);
+    if (!user) {
+      const body: ApiError = { error: "unauthenticated", message: "Not signed in" };
+      return reply.code(401).send(body);
+    }
+    const data: { name?: string; color?: string } = {};
+    if (req.body?.name !== undefined) {
+      const name = String(req.body.name).trim();
+      if (name.length < 1 || name.length > 40) {
+        const body: ApiError = { error: "invalid_name", message: "Name must be 1 to 40 characters" };
+        return reply.code(400).send(body);
+      }
+      data.name = name;
+    }
+    if (req.body?.color !== undefined) {
+      const color = String(req.body.color).trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+        const body: ApiError = { error: "invalid_color", message: "Colour must be a hex value" };
+        return reply.code(400).send(body);
+      }
+      data.color = color;
+    }
+    const updated = await db.user.update({ where: { id: user.id }, data });
+    return {
+      user: { id: updated.id, email: updated.email, name: updated.name, avatarUrl: updated.avatarUrl, color: updated.color },
+    };
   });
 
   app.post("/api/auth/signout", async (req, reply) => {

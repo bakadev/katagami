@@ -22,6 +22,7 @@ export interface AuthState {
   user: SessionUser | null;
   teams: TeamSummary[];
   plan: "free" | "team";
+  isAdmin: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -64,6 +65,7 @@ export function AuthProvider({
       user: me?.user ?? null,
       teams: me?.teams ?? [],
       plan: me?.plan ?? "free",
+      isAdmin: me?.isAdmin ?? false,
       refresh,
       signOut,
     }),
@@ -78,6 +80,7 @@ const SIGNED_OUT: AuthState = {
   user: null,
   teams: [],
   plan: "free",
+  isAdmin: false,
   refresh: async () => undefined,
   signOut: async () => undefined,
 };

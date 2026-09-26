@@ -15,6 +15,7 @@ import { projectAdminRoutes } from "./routes/project-admin.js";
 import { authRoutes } from "./routes/auth.js";
 import { teamRoutes } from "./routes/teams.js";
 import { homeRoutes } from "./routes/home.js";
+import { adminRoutes } from "./routes/admin.js";
 import { providersFromEnv, type ProviderMap } from "./auth/providers.js";
 import { registerYjsHandler } from "./ws/yjs-handler.js";
 import type { ApiError } from "../shared/types.js";
@@ -52,6 +53,7 @@ export async function buildServer(opts: BuildServerOptions = {}) {
   await app.register(authRoutes, { providers: opts.providers ?? providersFromEnv() });
   await app.register(teamRoutes);
   await app.register(homeRoutes);
+  await app.register(adminRoutes);
 
   registerYjsHandler(app);
 

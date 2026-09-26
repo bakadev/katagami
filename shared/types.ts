@@ -64,6 +64,8 @@ export interface SessionUser {
   email: string;
   name: string;
   avatarUrl: string | null;
+  /** Caret and comment colour, when the person has picked one. */
+  color: string | null;
 }
 
 export interface TeamSummary {
@@ -76,8 +78,47 @@ export interface TeamSummary {
 export interface MeResponse {
   user: SessionUser;
   teams: TeamSummary[];
-  /** "team" when the person belongs to at least one team. */
+  /** Admin override, else "team" when the person belongs to at least one team. */
   plan: "free" | "team";
+  isAdmin: boolean;
+}
+
+export interface UpdateMeRequest {
+  name?: string;
+  color?: string;
+}
+
+/* ---- admin ---------------------------------------------------------------------- */
+
+export interface AdminUserRow {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+  plan: "free" | "team";
+  planOverride: "free" | "team" | null;
+  teams: { id: string; name: string; role: string }[];
+  documentCount: number;
+}
+
+export interface AdminTeamRow {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  members: { id: string; name: string; email: string; role: string }[];
+  projectCount: number;
+  documentCount: number;
+}
+
+export interface AdminOverviewResponse {
+  users: AdminUserRow[];
+  teams: AdminTeamRow[];
+  totals: { users: number; teams: number; projects: number; documents: number };
+}
+
+export interface AdminSetPlanRequest {
+  planOverride: "free" | "team" | null;
 }
 
 export interface CreateTeamRequest {

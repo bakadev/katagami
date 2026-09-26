@@ -37,4 +37,9 @@ export const env = {
   GITHUB_CLIENT_SECRET: optional("GITHUB_CLIENT_SECRET"),
   GOOGLE_CLIENT_ID: optional("GOOGLE_CLIENT_ID"),
   GOOGLE_CLIENT_SECRET: optional("GOOGLE_CLIENT_SECRET"),
+  /** Comma-separated emails allowed into /admin. */
+  ADMIN_EMAILS: (optional("ADMIN_EMAILS") ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
 };

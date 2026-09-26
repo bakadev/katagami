@@ -8,6 +8,14 @@ import type { SessionUser } from "./session.js";
  * project"; it is created on first use.
  */
 
+export type Plan = "free" | "team";
+
+/** Admin override first, otherwise Team means "belongs to at least one team". */
+export function planFor(user: { planOverride: string | null }, teamCount: number): Plan {
+  if (user.planOverride === "free" || user.planOverride === "team") return user.planOverride;
+  return teamCount > 0 ? "team" : "free";
+}
+
 export async function teamIdsFor(userId: string): Promise<string[]> {
   const rows = await db.workspaceMember.findMany({
     where: { userId },

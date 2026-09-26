@@ -35,6 +35,8 @@ const ROUNDS: Round[] = [
     id: "documents",
     surface: "Signed-in home (/documents)",
     date: "2026-09-25",
+    outcome:
+      "Locked in on 2026-09-26: option D is /documents and /documents/:projectId. All four variants are kept here.",
     options: [
       {
         slug: "documents-a",
@@ -63,6 +65,7 @@ const ROUNDS: Round[] = [
         title: "Projects as cards, documents as a table",
         blurb:
           "The owner's composite: B's header and claim strip, C's tiles for projects (count, last update, editor dots), A's text sort over C's flat table for documents in no project. Open comment and suggestion counts on each row. Move and delete animate the row out with inline confirmation; no status, no switcher. ?plan=free locks Projects; ?projects=many shows the six freshest of fourteen, with a link to a compact, paginated table.",
+        liveAt: "/documents",
       },
       {
         slug: "documents-d-project",

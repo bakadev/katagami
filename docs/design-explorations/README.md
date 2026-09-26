@@ -92,7 +92,9 @@ Should the editor's header take the utility bar's indigo? There is no mock: each
 | `/design/editor-header/b` | **B. Indigo plain.** | Same header, solid indigo, no pattern. |
 | `/design/editor-header/c` | **C. Rail.** | The site's 32px utility bar carried into the app above the current dark header: home link, live connection state, log-in slot, the mark. The document header itself stays quiet. |
 
-## Round 7 — Signed-in home (/documents) (2026-09-25) — option D specified
+## Round 7 — Signed-in home (/documents) (2026-09-25) — option D specified (closed)
+
+**Outcome (2026-09-26):** Option D shipped as `/documents` and `/documents/:projectId` (`src/routes/Documents.tsx`, `Project.tsx`, `src/components/app/**`), on top of `GET /api/home` and friends. A, B, C and D stay under `/design/documents/*`.
 
 The page a signed-in person lands on: after sign-in, from the wordmark, and as the first item in the avatar menu. Marketing home stays at `/`. It answers "what am I working on" before anything else. Three options under `/design/documents/*`, rendered by `src/routes/design/documents/DocumentsExploration.tsx`, with fake data in `data.ts` (team "Acme", projects "Checkout redesign" ×3 and "Onboarding emails" ×2 plus four single-document projects, four people, edits from 12 minutes to 3 weeks ago) and the pieces every option must show identically in `pieces.tsx` (app header with avatar menu, claim strip, empty state, search, sort, share and overflow). Style is locked to Product v2; the options differ in layout and in how much they say.
 

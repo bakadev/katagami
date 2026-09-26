@@ -1,3 +1,4 @@
+import { PanelFiller } from "~/components/panel/PanelFiller";
 import { useCallback, type ReactElement } from "react";
 import { AlertTriangle, History as HistoryIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -199,7 +200,7 @@ export function HistoryTab({
        * banner pinning above cached cards and disorienting the user
        * about "what's current."
        */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto">
         {error && (
           <ErrorBanner
             message="Couldn’t load history"
@@ -228,6 +229,7 @@ export function HistoryTab({
             pinned below the list so the list itself doesn't carry the
             explainer. Only rendered once there's something in the list;
             the empty state carries its own copy. */}
+        {snapshots.length > 0 && <PanelFiller />}
         {snapshots.length > 0 && (
           <HistoryFooterNote count={snapshots.length} />
         )}

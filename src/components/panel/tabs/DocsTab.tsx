@@ -1,19 +1,26 @@
-import type { ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { FolderOpen, Lock, LogIn, type LucideIcon } from "lucide-react";
+import { FolderOpen, Lock, LogIn, Pencil, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
+import { PanelFiller } from "~/components/panel/PanelFiller";
+import { renameProject } from "~/lib/api/auth";
 import { EditorName } from "~/components/app/documents/EditorName";
 import { countLabel, docTitle, docUrl, projectName } from "~/components/app/documents/lib";
 import { useRelativeTime } from "~/hooks/useRelativeTime";
 import type { ProjectDocsState } from "~/hooks/useProjectDocuments";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { cn } from "~/lib/utils";
-import type { DocumentRow } from "@shared/types";
+import type { DocumentRow, ProjectCard } from "@shared/types";
 
 export interface DocsTabProps {
   /** The open document, marked in the list. */
   docId: string;
   /** From the route's `useProjectDocuments`; the tab only renders it. */
   state: ProjectDocsState;
+  /** The open document's live title, so a rename shows here at once. */
+  currentTitle?: string | null;
+  /** Called after the project is renamed from the tab, to refetch. */
+  onRenamed?: () => void;
 }
 
 /**
@@ -28,7 +35,7 @@ export interface DocsTabProps {
  *
  * The empty states keep the komon tile vocabulary shared with {@link AiTab}.
  */
-export function DocsTab({ docId, state }: DocsTabProps) {
+export function DocsTab({ docId, state, currentTitle, onRenamed }: DocsTabProps) {
   const { user, plan } = useAuth();
   const location = useLocation();
 
@@ -80,25 +87,132 @@ export function DocsTab({ docId, state }: DocsTabProps) {
   }
 
   const { project, documents } = state.data;
+  // The open document's title comes from the editor, not the cached list.
+  const rows = documents.map((d) =>
+    d.id === docId && currentTitle !== undefined ? { ...d, title: currentTitle } : d,
+  );
   const others = documents.filter((d) => d.id !== docId);
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="truncate text-sm font-semibold text-foreground">{projectName(project)}</h3>
-        <p className="text-xs text-muted-foreground">{countLabel(documents.length)}</p>
-      </div>
+      <ProjectHeader project={project} count={documents.length} onRenamed={onRenamed} />
       {others.length === 0 ? (
         <EmptyPanel icon={FolderOpen} title="Nothing else here yet">
           <p>Nothing else in this project yet.</p>
         </EmptyPanel>
       ) : (
-        <ul className="p-2" aria-label="Documents in this project">
-          {documents.map((d) => (
-            <DocRow key={d.id} doc={d} current={d.id === docId} />
-          ))}
-        </ul>
+        <>
+          <ul className="p-2" aria-label="Documents in this project">
+            {rows.map((d) => (
+              <DocRow key={d.id} doc={d} current={d.id === docId} />
+            ))}
+          </ul>
+          <PanelFiller />
+        </>
       )}
+    </div>
+  );
+}
+
+/** Project name and count, with an inline rename like the account menu's. */
+function ProjectHeader({
+  project,
+  count,
+  onRenamed,
+}: {
+  project: ProjectCard;
+  count: number;
+  onRenamed?: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(projectName(project));
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+
+  useEffect(() => {
+    if (!editing) return;
+    setDraft(projectName(project));
+    const t = setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 10);
+    return () => clearTimeout(t);
+  }, [editing, project]);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const next = draft.trim();
+    if (!next || next === projectName(project)) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    try {
+      await renameProject(project.id, next);
+      onRenamed?.();
+      setEditing(false);
+    } catch {
+      toast.error("Couldn't rename the project");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-2 border-b border-border px-4 py-3">
+        <label htmlFor={inputId} className="text-xs font-medium text-foreground">
+          Rename project
+        </label>
+        <input
+          id={inputId}
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setEditing(false);
+          }}
+          maxLength={80}
+          disabled={busy}
+          className="h-8 w-full border border-border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            disabled={busy}
+            className="notch-sm px-3 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={busy || draft.trim().length === 0}
+            className="notch-sm bg-brand px-3 py-1 text-xs font-medium text-brand-foreground hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="group/project flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+      <div className="min-w-0">
+        <h3 className="truncate text-sm font-semibold text-foreground">{projectName(project)}</h3>
+        <p className="text-xs text-muted-foreground">{countLabel(count)}</p>
+      </div>
+      <button
+        type="button"
+        aria-label="Rename project"
+        title="Rename project"
+        onClick={() => setEditing(true)}
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-70 hover:bg-muted hover:text-foreground hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Pencil className="size-3.5" aria-hidden />
+      </button>
     </div>
   );
 }
@@ -152,7 +266,7 @@ function EmptyPanel({
   children: ReactNode;
 }) {
   return (
-    <div className="relative min-h-[280px] flex-1 overflow-hidden">
+    <div className="relative h-full min-h-[280px] flex-1 overflow-hidden">
       <div
         aria-hidden
         className="komon pointer-events-none absolute inset-0 -z-0 text-brand-ink opacity-[0.10] dark:opacity-[0.16]"

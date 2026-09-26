@@ -1,3 +1,4 @@
+import { PanelFiller } from "~/components/panel/PanelFiller";
 import { useMemo, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { ThreadCard } from "~/components/comments/ThreadCard";
@@ -232,7 +233,7 @@ export function CommentsTab({
        * resolved-view — a whisper rather than the full empty-state
        * treatment, because the global state is "working," not "fresh."
        */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto">
         {suggestionList}
         {visible.length === 0 && suggestions.length === 0 ? (
           <div className="flex h-full min-h-[200px] flex-col items-center justify-center px-6 text-center">
@@ -281,6 +282,7 @@ export function CommentsTab({
             ))}
           </ul>
         )}
+        {visible.length > 0 && <PanelFiller />}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ProjectPageResponse } from "@shared/types";
 import { getProject } from "~/lib/api/auth";
 import { useAuth } from "~/lib/auth/AuthProvider";
@@ -21,10 +21,13 @@ export type ProjectDocsState =
 export function useProjectDocuments(
   projectId: string | null,
   enabled: boolean,
-): ProjectDocsState {
+): { state: ProjectDocsState; refresh: () => void } {
   const userId = useAuth().user?.id ?? null;
   const [state, setState] = useState<ProjectDocsState>({ status: "idle" });
   const fetchedFor = useRef<string | null>(null);
+  // Bumped by refresh() to refetch (after a rename from the tab).
+  const [tick, setTick] = useState(0);
+  const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     if (!projectId || !userId || !enabled) return;
@@ -45,7 +48,7 @@ export function useProjectDocuments(
       cancelled = true;
     };
     // Re-run when the tab opens again (enabled flips) so the list stays fresh.
-  }, [projectId, userId, enabled]);
+  }, [projectId, userId, enabled, tick]);
 
   // Signed out (or signed out later): nothing to show.
   useEffect(() => {
@@ -55,5 +58,5 @@ export function useProjectDocuments(
     }
   }, [userId]);
 
-  return state;
+  return { state, refresh };
 }

@@ -95,7 +95,7 @@ export default function DocumentRoute() {
   }, [auth.user]);
 
   // The right rail's Documents tab: fetched the first time it's opened.
-  const projectDocs = useProjectDocuments(
+  const { state: projectDocs, refresh: refreshProjectDocs } = useProjectDocuments(
     projectId,
     panelOpen && activeTab === "documents",
   );
@@ -550,7 +550,12 @@ export default function DocumentRoute() {
           hasNewCommentActivity={false}
         >
           {activeTab === "documents" && docId && (
-            <DocsTab docId={docId} state={projectDocs} />
+            <DocsTab
+              docId={docId}
+              state={projectDocs}
+              currentTitle={title}
+              onRenamed={refreshProjectDocs}
+            />
           )}
           {activeTab === "comments" && (
             <CommentsTab

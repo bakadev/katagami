@@ -188,10 +188,14 @@ function Overview({ selfId }: { selfId: string }) {
                         key={u.id}
                         user={u}
                         self={u.id === selfId}
-                        onChange={(patch) => updateUser(u.id, patch)}
+                        onChange={(patch) => {
+                          updateUser(u.id, patch);
+                          // A plan change moves their team in or out of the
+                          // paid list; refresh totals and the teams table.
+                          void getAdminOverview().then(setData).catch(() => undefined);
+                        }}
                         onRemoved={() => {
                           removeUser(u.id);
-                          // Totals and the teams table may have changed too.
                           void getAdminOverview().then(setData).catch(() => undefined);
                         }}
                       />

@@ -68,14 +68,15 @@ describe("admin", () => {
     const counted = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
     expect(counted.totals).toMatchObject({ projects: 0, documents: 2, anonymousDocuments: 1 });
     const row = before.users.find((u: { email: string }) => u.email === "tester@acme.co");
-    expect(row).toMatchObject({ plan: "free", planOverride: null, teams: [] });
+    expect(row).toMatchObject({ plan: "free", planOverride: null });
+    expect(row.teams).toHaveLength(1);
 
-    // Free → Team creates a personal team so projects have a home.
+    // Free → Team: the team made at sign-up becomes usable.
     const up = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "team" } });
     expect(up.json()).toMatchObject({ planOverride: "team", plan: "team" });
     const home = (await testerApp.inject({ method: "GET", url: "/api/home", headers: { cookie: tester } })).json();
     expect(home.plan).toBe("team");
-    expect(home.team.name).toBe("Tess's team");
+    expect(home.team.name).toBe("Acme");
     const proj = await testerApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie: tester }, payload: { name: "P" } });
     expect(proj.statusCode).toBe(201);
 
@@ -86,9 +87,9 @@ describe("admin", () => {
     expect((await testerApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie: tester }, payload: { name: "Q" } })).statusCode).toBe(403);
 
     const after = (await adminApp.inject({ method: "GET", url: "/api/admin/overview", headers: { cookie: admin } })).json();
-    expect(after.teams).toHaveLength(1);
-    expect(after.teams[0].members[0].email).toBe("tester@acme.co");
-    expect(after.teams[0].projectCount).toBe(1);
+    expect(after.teams).toHaveLength(2);
+    const testerTeam = after.teams.find((t: { members: { email: string }[] }) => t.members[0].email === "tester@acme.co");
+    expect(testerTeam.projectCount).toBe(1);
 
     const bad = await adminApp.inject({ method: "PATCH", url: `/api/admin/users/${row.id}/plan`, headers: { cookie: admin }, payload: { planOverride: "gold" } });
     expect(bad.statusCode).toBe(400);

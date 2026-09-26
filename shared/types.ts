@@ -137,6 +137,10 @@ export interface CreateTeamResponse {
   team: TeamSummary;
 }
 
+export interface RenameTeamRequest {
+  name: string;
+}
+
 export interface ClaimCandidate {
   projectId: string;
   token: string;

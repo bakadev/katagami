@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
 import { getSessionUser } from "../auth/session.js";
+import { planFor } from "../auth/access.js";
 import { getOrCreateDefaultProject } from "../auth/access.js";
 import { randomToken } from "../lib/random.js";
 import type {
@@ -60,7 +61,53 @@ function validClaims(raw: unknown): { projectId: string; token: string }[] | nul
   return out;
 }
 
+/** Every account gets one team, named from the email. Free can't use it yet. */
+export async function createTeamFor(userId: string, name: string) {
+  const base = slugify(name);
+  return db.$transaction(async (tx) => {
+    let slug = base;
+    while (await tx.workspace.findUnique({ where: { slug } })) {
+      slug = `${base}-${slugSuffix()}`;
+    }
+    const ws = await tx.workspace.create({ data: { name, slug } });
+    await tx.workspaceMember.create({
+      data: { workspaceId: ws.id, userId, role: "owner" },
+    });
+    return ws;
+  });
+}
+
 export async function teamRoutes(app: FastifyInstance) {
+  /** Rename a team you own. Team plan only: Free never sees the name. */
+  app.patch<{ Params: { id: string }; Body: { name?: string } }>(
+    "/api/teams/:id",
+    async (req, reply) => {
+      const user = await getSessionUser(req, reply);
+      if (!user) return reply.code(401).send(unauthenticated());
+      const membership = await db.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId: req.params.id, userId: user.id } },
+      });
+      if (!membership || membership.role !== "owner") {
+        const body: ApiError = { error: "forbidden", message: "Only the team owner can rename it" };
+        return reply.code(403).send(body);
+      }
+      if (planFor(user, 1) !== "team") {
+        const body: ApiError = { error: "team_required", message: "Renaming a team comes with Team" };
+        return reply.code(403).send(body);
+      }
+      const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+      if (name.length === 0 || name.length > NAME_MAX) {
+        const body: ApiError = { error: "invalid_name", message: `Name must be 1 to ${NAME_MAX} characters` };
+        return reply.code(400).send(body);
+      }
+      const ws = await db.workspace.update({ where: { id: req.params.id }, data: { name } });
+      const body: CreateTeamResponse = {
+        team: { id: ws.id, name: ws.name, slug: ws.slug, role: "owner" },
+      };
+      return body;
+    },
+  );
+
   app.post<{ Body: CreateTeamRequest }>("/api/teams", async (req, reply) => {
     const user = await getSessionUser(req, reply);
     if (!user) return reply.code(401).send(unauthenticated());
@@ -74,18 +121,7 @@ export async function teamRoutes(app: FastifyInstance) {
       return reply.code(400).send(body);
     }
 
-    const base = slugify(name);
-    const workspace = await db.$transaction(async (tx) => {
-      let slug = base;
-      while (await tx.workspace.findUnique({ where: { slug } })) {
-        slug = `${base}-${slugSuffix()}`;
-      }
-      const ws = await tx.workspace.create({ data: { name, slug } });
-      await tx.workspaceMember.create({
-        data: { workspaceId: ws.id, userId: user.id, role: "owner" },
-      });
-      return ws;
-    });
+    const workspace = await createTeamFor(user.id, name);
 
     const body: CreateTeamResponse = {
       team: { id: workspace.id, name: workspace.name, slug: workspace.slug, role: "owner" },

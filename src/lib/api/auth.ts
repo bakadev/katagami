@@ -55,6 +55,9 @@ export function createTeam(name: string): Promise<CreateTeamResponse> {
   return post("/api/teams", { name });
 }
 
+export const renameTeam = (id: string, name: string) =>
+  patch<CreateTeamResponse>(`/api/teams/${id}`, { name });
+
 export function lookupClaims(projects: ClaimCandidate[]): Promise<ClaimLookupResponse> {
   return post("/api/claim/lookup", { projects });
 }

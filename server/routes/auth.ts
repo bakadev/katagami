@@ -4,6 +4,8 @@ import { db } from "../db.js";
 import { env } from "../env.js";
 import type { ApiError, MeResponse, UpdateMeRequest } from "../../shared/types.js";
 import { planFor } from "../auth/access.js";
+import { createTeamFor } from "./teams.js";
+import { guessTeamName } from "../lib/team-name.js";
 import type { OAuthProfile, ProviderMap, ProviderName } from "../auth/providers.js";
 import {
   SESSION_COOKIE,
@@ -161,10 +163,15 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions) 
     if (!profile.email || !profile.emailVerified) return fail(reply, "email_unverified");
 
     const { userId, created } = await upsertUserFromProfile(name, profile);
+    if (created) {
+      // Every account gets a team, named from the email. Free never sees
+      // it; Team can rename it from the account menu.
+      await createTeamFor(userId, guessTeamName(profile.email, profile.name));
+    }
     const session = await createSession(userId);
     reply.setCookie(SESSION_COOKIE, session.token, sessionCookieOptions());
 
-    const next = handshake.next || (created ? "/welcome" : "/documents");
+    const next = handshake.next || "/documents";
     return appRedirect(reply, next);
   });
 

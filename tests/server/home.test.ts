@@ -35,6 +35,10 @@ async function signIn(app: FastifyInstance): Promise<string> {
   return `katagami_session=${session.value}`;
 }
 
+async function upgrade(email: string) {
+  await db.user.update({ where: { email }, data: { planOverride: "team" } });
+}
+
 describe("signed-in home", () => {
   let priyaApp: FastifyInstance;
   let tomApp: FastifyInstance;
@@ -58,7 +62,8 @@ describe("signed-in home", () => {
     const cookie = await signIn(priyaApp);
     const home = await priyaApp.inject({ method: "GET", url: "/api/home", headers: { cookie } });
     expect(home.statusCode).toBe(200);
-    expect(home.json()).toMatchObject({ plan: "free", team: null, projects: [], documents: [] });
+    expect(home.json()).toMatchObject({ plan: "free", projects: [], documents: [] });
+    expect(home.json().team.name).toBe("Acme");
 
     const created = await priyaApp.inject({ method: "POST", url: "/api/documents", headers: { cookie }, payload: {} });
     expect(created.statusCode).toBe(201);
@@ -79,7 +84,7 @@ describe("signed-in home", () => {
 
   it("on Team: creates, lists, renames, moves into and deletes projects", async () => {
     const cookie = await signIn(priyaApp);
-    await priyaApp.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "Acme" } });
+    await upgrade("priya@acme.co");
     const doc = (await priyaApp.inject({ method: "POST", url: "/api/documents", headers: { cookie }, payload: {} })).json();
 
     const proj = await priyaApp.inject({ method: "POST", url: "/api/projects/new", headers: { cookie }, payload: { name: "Checkout redesign" } });
@@ -125,7 +130,9 @@ describe("signed-in home", () => {
   it("keeps default projects private but shares team projects", async () => {
     const priya = await signIn(priyaApp);
     const tom = await signIn(tomApp);
-    const team = (await priyaApp.inject({ method: "POST", url: "/api/teams", headers: { cookie: priya }, payload: { name: "Acme" } })).json().team;
+    await upgrade("priya@acme.co");
+    await upgrade("tom@acme.co");
+    const team = (await priyaApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie: priya } })).json().teams[0];
     await db.workspaceMember.create({ data: { workspaceId: team.id, userId: (await db.user.findUnique({ where: { email: "tom@acme.co" } }))!.id, role: "editor" } });
 
     await priyaApp.inject({ method: "POST", url: "/api/documents", headers: { cookie: priya }, payload: {} });
@@ -146,7 +153,8 @@ describe("signed-in home", () => {
 
   it("claiming a project makes the claimer its owner", async () => {
     const cookie = await signIn(priyaApp);
-    const team = (await priyaApp.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "Acme" } })).json().team;
+    await upgrade("priya@acme.co");
+    const team = (await priyaApp.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } })).json().teams[0];
     const anon = (await priyaApp.inject({ method: "POST", url: "/api/projects" })).json();
     await priyaApp.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { teamId: team.id, projects: [{ projectId: anon.project.id, token: anon.creatorToken }] } });
     const home = (await priyaApp.inject({ method: "GET", url: "/api/home", headers: { cookie } })).json();

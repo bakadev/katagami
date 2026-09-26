@@ -101,7 +101,7 @@ describe("auth", () => {
 
   it("creates a user and account on first sign-in and sends them to /welcome", async () => {
     const { cookie, location } = await signIn(app);
-    expect(location).toBe("http://localhost:5173/welcome");
+    expect(location).toBe("http://localhost:5173/documents");
     expect(cookie).toMatch(/^katagami_session=/);
 
     const user = await db.user.findUnique({ where: { email: "priya@acme.co" } });
@@ -113,7 +113,9 @@ describe("auth", () => {
     const me = await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } });
     expect(me.statusCode).toBe(200);
     expect(me.json().user.email).toBe("priya@acme.co");
-    expect(me.json().teams).toEqual([]);
+    // Every account gets a team named from the email; the plan stays Free.
+    expect(me.json().teams).toHaveLength(1);
+    expect(me.json().teams[0]).toMatchObject({ name: "Acme", role: "owner" });
     expect(me.json().plan).toBe("free");
   });
 
@@ -250,11 +252,30 @@ describe("teams and claim", () => {
     expect(b.json().team.slug).toMatch(/^acme-co-[a-z0-9]{4}$/);
 
     const me = await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } });
-    expect(me.json().teams).toHaveLength(2);
-    expect(me.json().plan).toBe("team");
+    expect(me.json().teams).toHaveLength(3);
+    // Membership alone never upgrades the plan.
+    expect(me.json().plan).toBe("free");
 
     const bad = await app.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "   " } });
     expect(bad.statusCode).toBe(400);
+  });
+
+  it("renames a team for its owner on the Team plan only", async () => {
+    const { cookie } = await signIn(app);
+    const me = (await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } })).json();
+    const teamId = me.teams[0].id as string;
+
+    const onFree = await app.inject({ method: "PATCH", url: `/api/teams/${teamId}`, headers: { cookie }, payload: { name: "Acme Labs" } });
+    expect(onFree.statusCode).toBe(403);
+
+    await db.user.update({ where: { email: "priya@acme.co" }, data: { planOverride: "team" } });
+    const ok = await app.inject({ method: "PATCH", url: `/api/teams/${teamId}`, headers: { cookie }, payload: { name: "Acme Labs" } });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().team.name).toBe("Acme Labs");
+
+    const other = await db.workspace.create({ data: { name: "Other", slug: "other-x" } });
+    const notMine = await app.inject({ method: "PATCH", url: `/api/teams/${other.id}`, headers: { cookie }, payload: { name: "Nope" } });
+    expect(notMine.statusCode).toBe(403);
   });
 
   it("slugifies names", () => {

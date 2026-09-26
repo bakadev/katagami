@@ -10,10 +10,14 @@ import type { SessionUser } from "./session.js";
 
 export type Plan = "free" | "team";
 
-/** Admin override first, otherwise Team means "belongs to at least one team". */
-export function planFor(user: { planOverride: string | null }, teamCount: number): Plan {
+/**
+ * Everyone has a team (made at sign-up), so membership says nothing about
+ * the plan. Team comes from the admin override today and from a
+ * subscription later. The teamCount argument is kept for that future.
+ */
+export function planFor(user: { planOverride: string | null }, _teamCount: number): Plan {
   if (user.planOverride === "free" || user.planOverride === "team") return user.planOverride;
-  return teamCount > 0 ? "team" : "free";
+  return "free";
 }
 
 export async function teamIdsFor(userId: string): Promise<string[]> {

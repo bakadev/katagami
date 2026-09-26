@@ -17,6 +17,7 @@ import {
   PenLine,
   Settings,
   Shield,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,7 +32,7 @@ import { Button } from "~/components/ui/button";
 import { ThemeTriState, type Theme } from "~/components/avatar-menu/ThemeTriState";
 import { ThemeContext } from "~/lib/theme/ThemeProvider";
 import { useAuth } from "~/lib/auth/AuthProvider";
-import { updateMe } from "~/lib/api/auth";
+import { renameTeam, updateMe } from "~/lib/api/auth";
 import { CURSOR_COLORS } from "~/lib/user/names";
 import { cn } from "~/lib/utils";
 
@@ -57,7 +58,7 @@ export interface AccountMenuProps {
 const NAME_MIN = 1;
 const NAME_MAX = 40;
 
-type View = "menu" | "rename" | "colour";
+type View = "menu" | "rename" | "colour" | "team";
 
 /**
  * AccountMenu: the one account dropdown, shared by the editor's avatar button
@@ -98,6 +99,12 @@ export function AccountMenu({
     if (!open) setView("menu");
   }, [open]);
 
+  // Free never sees its team; Team can rename it.
+  const team =
+    auth.user && auth.plan === "team" && auth.teams[0]
+      ? { id: auth.teams[0].id, name: auth.teams[0].name }
+      : null;
+
   const persist = async (patch: { name?: string; color?: string }) => {
     if (!auth.user) return;
     try {
@@ -116,12 +123,14 @@ export function AccountMenu({
           <MenuView
             identity={identity}
             account={auth.user ? { name: auth.user.name, email: auth.user.email } : null}
+            team={team}
             isAdmin={auth.isAdmin}
             signInTo={signInTo}
             theme={theme}
             onThemeChange={onThemeChange}
             onRenameClick={() => setView("rename")}
             onColourClick={() => setView("colour")}
+            onTeamClick={() => setView("team")}
             onSignOut={() => {
               setOpen(false);
               onSignOut?.();
@@ -135,6 +144,24 @@ export function AccountMenu({
             onSave={(next) => {
               onNameChange(next);
               void persist({ name: next });
+              setOpen(false);
+            }}
+          />
+        )}
+        {view === "team" && team && (
+          <RenameView
+            label="Rename your team"
+            initialName={team.name}
+            onCancel={() => setView("menu")}
+            onSave={(next) => {
+              void (async () => {
+                try {
+                  await renameTeam(team.id, next);
+                  await auth.refresh();
+                } catch {
+                  toast.error("Couldn't rename the team");
+                }
+              })();
               setOpen(false);
             }}
           />
@@ -162,12 +189,15 @@ export function AccountMenu({
 interface MenuViewProps {
   identity: { name: string; color: string };
   account: { name: string; email: string } | null;
+  /** The person's team, shown and renameable on the Team plan only. */
+  team: { id: string; name: string } | null;
   isAdmin: boolean;
   signInTo: string;
   theme: Theme;
   onThemeChange: (next: Theme) => void;
   onRenameClick: () => void;
   onColourClick: () => void;
+  onTeamClick: () => void;
   onSignOut: () => void;
 }
 
@@ -177,12 +207,14 @@ const ICON = "size-4 text-muted-foreground";
 function MenuView({
   identity,
   account,
+  team,
   isAdmin,
   signInTo,
   theme,
   onThemeChange,
   onRenameClick,
   onColourClick,
+  onTeamClick,
   onSignOut,
 }: MenuViewProps) {
   return (
@@ -202,6 +234,11 @@ function MenuView({
             <div className="mt-0.5 truncate text-xs leading-tight text-muted-foreground">
               {account.email}
             </div>
+            {team && (
+              <div className="mt-0.5 truncate text-xs leading-tight text-muted-foreground">
+                Team · {team.name}
+              </div>
+            )}
           </div>
         ) : (
           <div className="inline-flex min-w-0 flex-1 items-baseline justify-between gap-2">
@@ -247,6 +284,18 @@ function MenuView({
           <Palette className={ICON} />
           <span>Change colour</span>
         </DropdownMenuItem>
+        {team && (
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              onTeamClick();
+            }}
+            className={ITEM}
+          >
+            <Users className={ICON} />
+            <span>Rename team</span>
+          </DropdownMenuItem>
+        )}
       </div>
 
       <DropdownMenuSeparator className="my-0" />
@@ -304,11 +353,12 @@ function MenuView({
 
 interface RenameViewProps {
   initialName: string;
+  label?: string;
   onCancel: () => void;
   onSave: (name: string) => void;
 }
 
-function RenameView({ initialName, onCancel, onSave }: RenameViewProps) {
+function RenameView({ initialName, label = "Change your name", onCancel, onSave }: RenameViewProps) {
   const [draft, setDraft] = useState(initialName);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -357,7 +407,7 @@ function RenameView({ initialName, onCancel, onSave }: RenameViewProps) {
       className="flex flex-col gap-2 p-3"
     >
       <label htmlFor={inputId} className="text-xs font-medium text-foreground">
-        Change your name
+        {label}
       </label>
       <input
         id={inputId}

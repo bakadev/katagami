@@ -5,9 +5,11 @@ Status: in progress, 2026-09-26. Design: Round 7 option D (`/design/documents/do
 ## Rules the code follows
 
 - **Team** is the word for what the database still calls a workspace. API fields and copy say team; tables stay.
+- Every account gets a team at sign-up, named from the email domain ("Acme") or the first name ("Priya's team"). The plan does not follow membership: it is Free unless an admin override (later, a subscription) says Team. Free never sees the team name; Team users rename it from the account menu (`PATCH /api/teams/:id`, owner only).
+- `/welcome` and `POST /api/teams` are kept but not linked from anywhere.
 - Every document lives in a project. A person's **default project** (one per user, hidden) holds documents "not in a project". On Free that is the only project a person has. Projects the person creates or that belong to their team are the visible ones.
 - A person sees: projects they own, projects in their teams, and their default project's documents. Team-mates' default projects are private to them.
-- **Free** cannot create projects, move documents, or see anyone else's default project. **Team** (a person with at least one team membership) can.
+- **Free** cannot create projects, move documents, or see anyone else's default project. **Team** (plan override today, subscription later) can.
 - "Last edited" is anyone's edit: the name and colour of whoever made the most recent change, recorded from the WebSocket session's awareness state when the document persists.
 - Open comment and suggestion counts are counted from the Yjs maps when the document persists and stored on the document row, so listing never decodes Yjs.
 - Deleting a project moves its documents to the deleter's default project. The default project cannot be deleted.

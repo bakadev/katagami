@@ -48,11 +48,11 @@ function formatEdited(iso: string): string {
 export default function Claim() {
   usePageMeta({
     title: "Claim your documents",
-    description: "Move documents from this browser into your workspace.",
+    description: "Move documents from this browser into your team.",
   });
-  const { user, loading, workspaces } = useAuth();
+  const { user, loading, teams, refresh } = useAuth();
   const navigate = useNavigate();
-  const workspace = workspaces[0] ?? null;
+  const workspace = teams[0] ?? null;
   const [found, setFound] = useState<Found[] | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -95,9 +95,10 @@ export default function Claim() {
     try {
       const tokens = listCreatorTokens().filter((c) => picked.has(c.projectId));
       const res = await claimProjects(workspace.id, tokens);
-      // The key has done its job; the workspace owns these now.
+      // The key has done its job; the team owns these now.
       for (const id of res.moved) clearCreatorToken(id);
-      navigate("/", { replace: true });
+      await refresh();
+      navigate("/documents", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't move the documents");
       setBusy(false);
@@ -133,7 +134,7 @@ export default function Claim() {
             <p className="mt-5 max-w-[46ch] leading-relaxed text-muted-foreground">
               You wrote these before you had an account. This browser still holds the
               creator key for each one, which is how we know they're yours. Moving them
-              in gives them the same seats and named history as the rest of the workspace.
+              in gives them the same seats and named history as the rest of the team.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
               <li className="flex gap-3">
@@ -239,7 +240,7 @@ export default function Claim() {
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
-                    to="/"
+                    to="/documents"
                     style={{ clipPath: NOTCH }}
                     className="group inline-block bg-border p-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >

@@ -18,11 +18,51 @@ export async function loadDocState(docId: string): Promise<Uint8Array | null> {
   return new Uint8Array(doc.yjsState);
 }
 
-async function writeState(docId: string, state: Uint8Array) {
+export interface Editor {
+  name: string;
+  color: string;
+}
+
+/** Who last changed each live document, from their awareness state. */
+const lastEditors = new Map<string, Editor>();
+
+export function noteEditor(docId: string, editor: Editor) {
+  lastEditors.set(docId, editor);
+}
+
+export function forgetEditor(docId: string) {
+  lastEditors.delete(docId);
+}
+
+/**
+ * Open comment threads and suggestions, read from the Yjs maps the client
+ * writes (see src/lib/comments/threads.ts and src/lib/suggestions). Stored
+ * on the document row so the home page can list counts without Yjs.
+ */
+export function countOpenItems(ydoc: Y.Doc): { openComments: number; openSuggestions: number } {
+  let openComments = 0;
+  ydoc.getMap<string>("threads").forEach((raw) => {
+    try {
+      const t = JSON.parse(raw) as { resolved?: boolean };
+      if (!t.resolved) openComments++;
+    } catch {
+      // ignore malformed entries
+    }
+  });
+  return { openComments, openSuggestions: ydoc.getMap<string>("suggestions").size };
+}
+
+async function writeState(docId: string, ydoc: Y.Doc) {
+  const state = Y.encodeStateAsUpdate(ydoc);
+  const editor = lastEditors.get(docId);
   try {
     await db.document.update({
       where: { id: docId },
-      data: { yjsState: Buffer.from(state) },
+      data: {
+        yjsState: Buffer.from(state),
+        ...countOpenItems(ydoc),
+        ...(editor ? { lastEditedByName: editor.name, lastEditedByColor: editor.color } : {}),
+      },
     });
   } catch (err) {
     if (isRecordNotFound(err)) {
@@ -40,7 +80,7 @@ export function schedulePersist(docId: string, ydoc: Y.Doc) {
   const timer = setTimeout(async () => {
     pending.delete(docId);
     try {
-      await writeState(docId, Y.encodeStateAsUpdate(ydoc));
+      await writeState(docId, ydoc);
     } catch (err) {
       console.error("[persistence] failed to save Y.Doc for", docId, err);
     }
@@ -56,5 +96,5 @@ export async function flushPersist(docId: string, ydoc: Y.Doc) {
     clearTimeout(existing);
     pending.delete(docId);
   }
-  await writeState(docId, Y.encodeStateAsUpdate(ydoc));
+  await writeState(docId, ydoc);
 }

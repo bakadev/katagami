@@ -6,7 +6,7 @@ import * as awarenessProtocol from "y-protocols/awareness";
 import { encoding, decoding } from "lib0";
 import { validatePermissionToken } from "../auth/permission-token.js";
 import type { PermissionLevel } from "../../shared/types.js";
-import { loadDocState, schedulePersist, flushPersist } from "./persistence.js";
+import { loadDocState, schedulePersist, flushPersist, noteEditor, forgetEditor } from "./persistence.js";
 import { resetIdleTimer, clearIdleTimer } from "./snapshot-timer.js";
 
 const MSG_SYNC = 0;
@@ -15,8 +15,10 @@ const MSG_AWARENESS = 1;
 interface Room {
   ydoc: Y.Doc;
   awareness: awarenessProtocol.Awareness;
+  /** Awareness client ids each socket introduced, to name the last editor. */
+  socketClients: Map<unknown, Set<number>>;
   connections: Set<WebSocket>;
-  persistListener: (update: Uint8Array) => void;
+  persistListener: (update: Uint8Array, origin: unknown) => void;
 }
 
 // Map holds a Promise<Room> so that concurrent connects for the same docId
@@ -69,7 +71,24 @@ function createRoom(docId: string): Promise<Room> {
     if (existingState) Y.applyUpdate(ydoc, existingState);
 
     const awareness = new awarenessProtocol.Awareness(ydoc);
-    const persistListener = () => schedulePersist(docId, ydoc);
+    const socketClients = new Map<unknown, Set<number>>();
+    const persistListener = (_update: Uint8Array, origin: unknown) => {
+      // Remember who made this change: the origin is the socket that sent
+      // it, and its awareness state carries the user's name and colour.
+      const ids = socketClients.get(origin);
+      if (ids) {
+        for (const id of ids) {
+          const user = awareness.getStates().get(id)?.user as
+            | { name?: unknown; color?: unknown }
+            | undefined;
+          if (typeof user?.name === "string" && typeof user.color === "string") {
+            noteEditor(docId, { name: user.name, color: user.color });
+            break;
+          }
+        }
+      }
+      schedulePersist(docId, ydoc);
+    };
     ydoc.on("update", persistListener);
 
     // Idle-snapshot timer: added AFTER the applyUpdate above so the initial
@@ -77,7 +96,7 @@ function createRoom(docId: string): Promise<Room> {
     const idleListener = () => resetIdleTimer(docId);
     ydoc.on("update", idleListener);
 
-    return { ydoc, awareness, connections: new Set(), persistListener };
+    return { ydoc, awareness, socketClients, connections: new Set(), persistListener };
   })();
 }
 
@@ -133,6 +152,7 @@ export function registerYjsHandler(app: FastifyInstance) {
       // Tracks awareness clientIDs this socket introduced, so we can
       // remove them when the socket disconnects.
       const controlledClientIds = new Set<number>();
+      room.socketClients.set(socket, controlledClientIds);
 
       // Send sync step 1 to kick off state exchange
       {
@@ -248,6 +268,7 @@ export function registerYjsHandler(app: FastifyInstance) {
           );
         }
         room.connections.delete(socket);
+        room.socketClients.delete(socket);
         if (room.connections.size === 0) {
           try {
             await flushPersist(docId, room.ydoc);
@@ -262,6 +283,7 @@ export function registerYjsHandler(app: FastifyInstance) {
             room.awareness.destroy();
             rooms.delete(docId);
             liveDocs.delete(docId);
+            forgetEditor(docId);
             clearIdleTimer(docId);
           }
         }

@@ -8,13 +8,13 @@ import type {
   ClaimLookupResponse,
   ClaimRequest,
   ClaimResponse,
-  CreateWorkspaceRequest,
-  CreateWorkspaceResponse,
+  CreateTeamRequest,
+  CreateTeamResponse,
 } from "../../shared/types.js";
 
 /**
- * Workspaces (the Team plan's home for projects) and the claim flow that
- * moves Free documents a browser created into one.
+ * Teams (the Team plan's home for projects; the tables still say workspace)
+ * and the claim flow that moves Free documents a browser created into one.
  */
 
 const NAME_MAX = 80;
@@ -59,8 +59,8 @@ function validClaims(raw: unknown): { projectId: string; token: string }[] | nul
   return out;
 }
 
-export async function workspaceRoutes(app: FastifyInstance) {
-  app.post<{ Body: CreateWorkspaceRequest }>("/api/workspaces", async (req, reply) => {
+export async function teamRoutes(app: FastifyInstance) {
+  app.post<{ Body: CreateTeamRequest }>("/api/teams", async (req, reply) => {
     const user = await getSessionUser(req, reply);
     if (!user) return reply.code(401).send(unauthenticated());
 
@@ -86,8 +86,8 @@ export async function workspaceRoutes(app: FastifyInstance) {
       return ws;
     });
 
-    const body: CreateWorkspaceResponse = {
-      workspace: { id: workspace.id, name: workspace.name, slug: workspace.slug, role: "owner" },
+    const body: CreateTeamResponse = {
+      team: { id: workspace.id, name: workspace.name, slug: workspace.slug, role: "owner" },
     };
     return reply.code(201).send(body);
   });
@@ -121,16 +121,16 @@ export async function workspaceRoutes(app: FastifyInstance) {
     return body;
   });
 
-  /** Move projects into a workspace the user belongs to. Invalid tokens are skipped. */
+  /** Move projects into a team the user belongs to. Invalid tokens are skipped. */
   app.post<{ Body: ClaimRequest }>("/api/claim", async (req, reply) => {
     const user = await getSessionUser(req, reply);
     if (!user) return reply.code(401).send(unauthenticated());
     const claims = validClaims(req.body?.projects);
-    const workspaceId = req.body?.workspaceId;
+    const workspaceId = req.body?.teamId;
     if (!claims || typeof workspaceId !== "string") {
       const body: ApiError = {
         error: "invalid_body",
-        message: "Expected workspaceId and projects[]",
+        message: "Expected teamId and projects[]",
       };
       return reply.code(400).send(body);
     }
@@ -138,7 +138,7 @@ export async function workspaceRoutes(app: FastifyInstance) {
       where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
     if (!membership) {
-      const body: ApiError = { error: "forbidden", message: "Not a member of that workspace" };
+      const body: ApiError = { error: "forbidden", message: "Not a member of that team" };
       return reply.code(403).send(body);
     }
     const projects = await db.project.findMany({
@@ -147,7 +147,10 @@ export async function workspaceRoutes(app: FastifyInstance) {
     const byId = new Map(claims.map((c) => [c.projectId, c.token]));
     const ids = projects.filter((p) => byId.get(p.id) === p.creatorToken).map((p) => p.id);
     if (ids.length > 0) {
-      await db.project.updateMany({ where: { id: { in: ids } }, data: { workspaceId } });
+      await db.project.updateMany({
+        where: { id: { in: ids } },
+        data: { workspaceId, ownerId: user.id },
+      });
     }
     const body: ClaimResponse = { moved: ids };
     return body;

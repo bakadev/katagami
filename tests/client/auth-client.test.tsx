@@ -5,15 +5,15 @@ import { MemoryRouter } from "react-router";
 import { AuthProvider } from "../../src/lib/auth/AuthProvider";
 import { AvatarButton } from "../../src/components/header/AvatarButton";
 import { AvatarDropdown } from "../../src/components/avatar-menu/AvatarDropdown";
-import { guessWorkspaceName } from "../../src/routes/Welcome";
+import { guessTeamName } from "../../src/routes/Welcome";
 import { listCreatorTokens, storeCreatorToken } from "../../src/lib/creator-token";
 
-describe("guessWorkspaceName", () => {
+describe("guessTeamName", () => {
   it("uses the company from a work email", () => {
-    expect(guessWorkspaceName("priya@acme.co", "Priya Raman")).toBe("Acme");
+    expect(guessTeamName("priya@acme.co", "Priya Raman")).toBe("Acme");
   });
   it("falls back to the first name for personal mail", () => {
-    expect(guessWorkspaceName("travis@gmail.com", "Travis Wilson")).toBe("Travis's workspace");
+    expect(guessTeamName("travis@gmail.com", "Travis Wilson")).toBe("Travis's team");
   });
 });
 

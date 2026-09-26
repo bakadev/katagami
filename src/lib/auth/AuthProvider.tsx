@@ -7,12 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { MeResponse, SessionUser, WorkspaceSummary } from "../../../shared/types";
+import type { MeResponse, SessionUser, TeamSummary } from "../../../shared/types";
 import { getMe, signOut as apiSignOut } from "~/lib/api/auth";
 
 /**
  * Who is signed in, app-wide. Fetched once on mount; `refresh()` after
- * anything that changes it (creating a workspace, claiming documents).
+ * anything that changes it (creating a team, claiming documents).
  * `loading` is true only until the first answer arrives, so pages that
  * need a user can wait before redirecting to /signin.
  */
@@ -20,7 +20,8 @@ import { getMe, signOut as apiSignOut } from "~/lib/api/auth";
 export interface AuthState {
   loading: boolean;
   user: SessionUser | null;
-  workspaces: WorkspaceSummary[];
+  teams: TeamSummary[];
+  plan: "free" | "team";
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -61,7 +62,8 @@ export function AuthProvider({
     () => ({
       loading,
       user: me?.user ?? null,
-      workspaces: me?.workspaces ?? [],
+      teams: me?.teams ?? [],
+      plan: me?.plan ?? "free",
       refresh,
       signOut,
     }),
@@ -74,7 +76,8 @@ export function AuthProvider({
 const SIGNED_OUT: AuthState = {
   loading: false,
   user: null,
-  workspaces: [],
+  teams: [],
+  plan: "free",
   refresh: async () => undefined,
   signOut: async () => undefined,
 };

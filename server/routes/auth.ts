@@ -163,7 +163,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions) 
     const session = await createSession(userId);
     reply.setCookie(SESSION_COOKIE, session.token, sessionCookieOptions());
 
-    const next = handshake.next || (created ? "/welcome" : "/");
+    const next = handshake.next || (created ? "/welcome" : "/documents");
     return appRedirect(reply, next);
   });
 
@@ -180,12 +180,13 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions) 
     });
     const body: MeResponse = {
       user,
-      workspaces: memberships.map((m) => ({
+      teams: memberships.map((m) => ({
         id: m.workspace.id,
         name: m.workspace.name,
         slug: m.workspace.slug,
         role: m.role as "owner" | "editor",
       })),
+      plan: memberships.length > 0 ? "team" : "free",
     };
     return body;
   });

@@ -60,7 +60,9 @@ export default function SignIn() {
     if (error) document.getElementById("signin-error")?.focus();
   }, [error]);
 
-  if (!loading && user) return <Navigate to={next && next.startsWith("/") ? next : "/"} replace />;
+  if (!loading && user) {
+    return <Navigate to={next && next.startsWith("/") ? next : "/documents"} replace />;
+  }
 
   return (
     <div

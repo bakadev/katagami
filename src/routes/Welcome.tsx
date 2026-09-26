@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
 import { useAuth } from "~/lib/auth/AuthProvider";
-import { createWorkspace } from "~/lib/api/auth";
+import { createTeam } from "~/lib/api/auth";
 import { listCreatorTokens } from "~/lib/creator-token";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
@@ -12,10 +12,10 @@ import { RegMark } from "~/components/site/RegMark";
 /**
  * After sign-in, option A: a full-page stepper on the asanoha ground.
  *
- * Three steps across the top: 1 Sign in (done), 2 Name your workspace
+ * Three steps across the top: 1 Sign in (done), 2 Name your team
  * (active), 3 Invite people (later). Only step 2 is live. The greeting
  * shows the provider avatar and name so the person can see which identity
- * they came in with. The workspace name is prefilled from the email domain.
+ * they came in with. The team name is prefilled from the email domain.
  */
 
 const SERIF =
@@ -27,7 +27,7 @@ const NOTCH =
   "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)";
 
 /** "priya@acme.co" → "Acme"; personal mailboxes fall back to the first name. */
-export function guessWorkspaceName(email: string, name: string): string {
+export function guessTeamName(email: string, name: string): string {
   const domain = email.split("@")[1]?.toLowerCase() ?? "";
   const label = domain.split(".")[0] ?? "";
   const personal = new Set([
@@ -38,7 +38,7 @@ export function guessWorkspaceName(email: string, name: string): string {
     return label.charAt(0).toUpperCase() + label.slice(1);
   }
   const first = name.trim().split(/\s+/)[0] || "My";
-  return `${first}'s workspace`;
+  return `${first}'s team`;
 }
 
 function initialsOf(name: string): string {
@@ -53,7 +53,7 @@ function initialsOf(name: string): string {
 export default function Welcome() {
   usePageMeta({
     title: "Welcome",
-    description: "You're signed in. Name your workspace.",
+    description: "You're signed in. Name your team.",
   });
   const { user, loading, refresh } = useAuth();
   const navigate = useNavigate();
@@ -65,10 +65,10 @@ export default function Welcome() {
   if (!loading && !user) return <Navigate to="/signin?next=%2Fwelcome" replace />;
   if (!user) return null;
 
-  const value = name ?? guessWorkspaceName(user.email, user.name);
+  const value = name ?? guessTeamName(user.email, user.name);
   const STEPS = [
     { n: 1, label: "Sign in", state: "done" as const },
-    { n: 2, label: "Name your workspace", state: "active" as const },
+    { n: 2, label: "Name your team", state: "active" as const },
     hasUnclaimed
       ? { n: 3, label: "Move your documents", state: "later" as const }
       : { n: 3, label: "Invite people", state: "later" as const },
@@ -80,11 +80,11 @@ export default function Welcome() {
     setBusy(true);
     setError(null);
     try {
-      await createWorkspace(value.trim());
+      await createTeam(value.trim());
       await refresh();
-      navigate(hasUnclaimed ? "/claim" : "/", { replace: true });
+      navigate(hasUnclaimed ? "/claim" : "/documents", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't create the workspace");
+      setError(err instanceof Error ? err.message : "Couldn't create the team");
       setBusy(false);
     }
   }
@@ -201,15 +201,15 @@ export default function Welcome() {
             >
               <p className="text-xs text-muted-foreground">Step 2 of 3</p>
               <h2 style={{ fontFamily: SERIF }} className="mt-2 text-2xl">
-                Name your workspace
+                Name your team
               </h2>
               <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">
-                A workspace holds your projects and the people on them. We guessed
-                from your email; change it if that's not the team.
+                A team holds your projects and the people on them. We guessed the
+                name from your email; change it if that's not right.
               </p>
 
               <label className="mt-6 grid gap-1.5 text-sm">
-                <span className="font-medium">Workspace name</span>
+                <span className="font-medium">Team name</span>
                 <input
                   value={value}
                   onChange={(e) => setName(e.target.value)}
@@ -229,10 +229,10 @@ export default function Welcome() {
                   style={{ clipPath: NOTCH }}
                   className="h-11 bg-[var(--indigo)] px-6 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                 >
-                  {busy ? "Creating…" : "Create workspace"}
+                  {busy ? "Creating…" : "Create team"}
                 </button>
                 <Link
-                  to={hasUnclaimed ? "/claim" : "/"}
+                  to={hasUnclaimed ? "/claim" : "/documents"}
                   className="text-sm text-[var(--indigo)] underline underline-offset-4 dark:text-blue-300"
                 >
                   Skip for now

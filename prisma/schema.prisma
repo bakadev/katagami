@@ -12,15 +12,21 @@ model Project {
   name          String?
   creatorToken  String    @map("creator_token")
   workspaceId   String?   @map("workspace_id") @db.Uuid
+  ownerId       String?   @map("owner_id") @db.Uuid
+  // One hidden default project per user holds their documents "not in a
+  // project". On Free it is the only project they have.
+  isDefault     Boolean   @default(false) @map("is_default")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   documents     Document[]
   workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  owner         User?      @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@map("projects")
   @@index([creatorToken])
   @@index([workspaceId])
+  @@index([ownerId])
 }
 
 // ---- accounts ---------------------------------------------------------------
@@ -36,6 +42,7 @@ model User {
   accounts   Account[]
   sessions   Session[]
   workspaces WorkspaceMember[]
+  projects   Project[]
 
   @@map("users")
 }
@@ -96,6 +103,11 @@ model Document {
   projectId   String    @map("project_id") @db.Uuid
   title       String?
   yjsState    Bytes?    @map("yjs_state")
+  // Denormalised at persist time so listings never decode Yjs.
+  lastEditedByName   String?  @map("last_edited_by_name")
+  lastEditedByColor  String?  @map("last_edited_by_color")
+  openComments       Int      @default(0) @map("open_comments")
+  openSuggestions    Int      @default(0) @map("open_suggestions")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 

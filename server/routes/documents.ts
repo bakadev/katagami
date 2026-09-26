@@ -1,5 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db.js";
+import { getSessionUser } from "../auth/session.js";
+import { canSeeDocument } from "../auth/access.js";
 import { validatePermissionToken } from "../auth/permission-token.js";
 import {
   validateCreatorTokenForDocument,
@@ -99,7 +101,10 @@ export async function documentRoutes(app: FastifyInstance) {
 
   app.delete<{ Params: { id: string } }>("/api/docs/:id", async (req, reply) => {
     const { id } = req.params;
-    const ok = await validateCreatorTokenForDocument(id, getCreatorTokenHeader(req));
+    const user = await getSessionUser(req, reply);
+    const ok =
+      (user && (await canSeeDocument(user, id))) ||
+      (await validateCreatorTokenForDocument(id, getCreatorTokenHeader(req)));
     if (!ok) {
       const err: ApiError = {
         error: "forbidden",

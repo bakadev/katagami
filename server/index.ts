@@ -13,7 +13,8 @@ import { documentRoutes } from "./routes/documents.js";
 import { snapshotRoutes } from "./routes/snapshots.js";
 import { projectAdminRoutes } from "./routes/project-admin.js";
 import { authRoutes } from "./routes/auth.js";
-import { workspaceRoutes } from "./routes/workspaces.js";
+import { teamRoutes } from "./routes/teams.js";
+import { homeRoutes } from "./routes/home.js";
 import { providersFromEnv, type ProviderMap } from "./auth/providers.js";
 import { registerYjsHandler } from "./ws/yjs-handler.js";
 import type { ApiError } from "../shared/types.js";
@@ -49,7 +50,8 @@ export async function buildServer(opts: BuildServerOptions = {}) {
   await app.register(snapshotRoutes);
   await app.register(projectAdminRoutes);
   await app.register(authRoutes, { providers: opts.providers ?? providersFromEnv() });
-  await app.register(workspaceRoutes);
+  await app.register(teamRoutes);
+  await app.register(homeRoutes);
 
   registerYjsHandler(app);
 

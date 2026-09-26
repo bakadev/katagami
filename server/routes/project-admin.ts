@@ -6,13 +6,20 @@ import {
   getCreatorTokenHeader,
 } from "../auth/creator-token.js";
 import type { ApiError } from "../../shared/types.js";
+import { getSessionUser } from "../auth/session.js";
+import { visibleProject } from "../auth/access.js";
 
 export async function projectAdminRoutes(app: FastifyInstance) {
   app.patch<{ Params: { id: string }; Body: { name?: string | null } }>(
     "/api/projects/:id",
     async (req, reply) => {
       const { id } = req.params;
-      const ok = await validateCreatorTokenForProject(id, getCreatorTokenHeader(req));
+      // Either the browser that created it (creator token) or a signed-in
+      // person who can see it may rename a project.
+      const user = await getSessionUser(req, reply);
+      const ok =
+        (user && (await visibleProject(user, id)) !== null) ||
+        (await validateCreatorTokenForProject(id, getCreatorTokenHeader(req)));
       if (!ok) {
         const err: ApiError = {
           error: "forbidden",

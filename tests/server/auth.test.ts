@@ -6,7 +6,7 @@ import { db } from "../../server/db.js";
 import type { OAuthProfile, OAuthProvider, ProviderMap } from "../../server/auth/providers.js";
 import { hashToken } from "../../server/auth/session.js";
 import { safeNext } from "../../server/routes/auth.js";
-import { slugify } from "../../server/routes/workspaces.js";
+import { slugify } from "../../server/routes/teams.js";
 
 /**
  * Sign-in against fake providers: the handshake, the user/account upsert,
@@ -113,13 +113,14 @@ describe("auth", () => {
     const me = await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } });
     expect(me.statusCode).toBe(200);
     expect(me.json().user.email).toBe("priya@acme.co");
-    expect(me.json().workspaces).toEqual([]);
+    expect(me.json().teams).toEqual([]);
+    expect(me.json().plan).toBe("free");
   });
 
   it("sends a returning user home, or to a safe ?next", async () => {
     await signIn(app);
     const again = await signIn(app);
-    expect(again.location).toBe("http://localhost:5173/");
+    expect(again.location).toBe("http://localhost:5173/documents");
     expect(await db.user.count()).toBe(1);
 
     const withNext = await signIn(app, "github", "/p/abc/d/def?key=x");
@@ -222,7 +223,7 @@ describe("auth", () => {
   });
 });
 
-describe("workspaces and claim", () => {
+describe("teams and claim", () => {
   let app: FastifyInstance;
   beforeAll(async () => {
     app = await buildServer({ providers: { github: fakeProvider("github", PRIYA) } });
@@ -235,23 +236,24 @@ describe("workspaces and claim", () => {
   });
 
   it("requires a session", async () => {
-    const res = await app.inject({ method: "POST", url: "/api/workspaces", payload: { name: "Acme" } });
+    const res = await app.inject({ method: "POST", url: "/api/teams", payload: { name: "Acme" } });
     expect(res.statusCode).toBe(401);
   });
 
-  it("creates a workspace with the user as owner and a unique slug", async () => {
+  it("creates a team with the user as owner and a unique slug", async () => {
     const { cookie } = await signIn(app);
-    const a = await app.inject({ method: "POST", url: "/api/workspaces", headers: { cookie }, payload: { name: "Acme Co." } });
+    const a = await app.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "Acme Co." } });
     expect(a.statusCode).toBe(201);
-    expect(a.json().workspace).toMatchObject({ name: "Acme Co.", slug: "acme-co", role: "owner" });
+    expect(a.json().team).toMatchObject({ name: "Acme Co.", slug: "acme-co", role: "owner" });
 
-    const b = await app.inject({ method: "POST", url: "/api/workspaces", headers: { cookie }, payload: { name: "Acme Co." } });
-    expect(b.json().workspace.slug).toMatch(/^acme-co-[a-z0-9]{4}$/);
+    const b = await app.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "Acme Co." } });
+    expect(b.json().team.slug).toMatch(/^acme-co-[a-z0-9]{4}$/);
 
     const me = await app.inject({ method: "GET", url: "/api/auth/me", headers: { cookie } });
-    expect(me.json().workspaces).toHaveLength(2);
+    expect(me.json().teams).toHaveLength(2);
+    expect(me.json().plan).toBe("team");
 
-    const bad = await app.inject({ method: "POST", url: "/api/workspaces", headers: { cookie }, payload: { name: "   " } });
+    const bad = await app.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "   " } });
     expect(bad.statusCode).toBe(400);
   });
 
@@ -263,7 +265,7 @@ describe("workspaces and claim", () => {
 
   it("looks up and moves only projects whose creator token matches", async () => {
     const { cookie } = await signIn(app);
-    const ws = (await app.inject({ method: "POST", url: "/api/workspaces", headers: { cookie }, payload: { name: "Acme" } })).json().workspace;
+    const ws = (await app.inject({ method: "POST", url: "/api/teams", headers: { cookie }, payload: { name: "Acme" } })).json().team;
 
     const p1 = (await app.inject({ method: "POST", url: "/api/projects" })).json();
     const p2 = (await app.inject({ method: "POST", url: "/api/projects" })).json();
@@ -279,7 +281,7 @@ describe("workspaces and claim", () => {
     expect(lookup.json().projects).toHaveLength(1);
     expect(lookup.json().projects[0]).toMatchObject({ id: p1.project.id, title: "Checkout PRD", documentCount: 1 });
 
-    const claim = await app.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { workspaceId: ws.id, projects: candidates } });
+    const claim = await app.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { teamId: ws.id, projects: candidates } });
     expect(claim.statusCode).toBe(200);
     expect(claim.json().moved).toEqual([p1.project.id]);
     expect((await db.project.findUnique({ where: { id: p1.project.id } }))!.workspaceId).toBe(ws.id);
@@ -290,11 +292,11 @@ describe("workspaces and claim", () => {
     expect(again.json().projects).toHaveLength(0);
   });
 
-  it("refuses to move projects into a workspace the user isn't in", async () => {
+  it("refuses to move projects into a team the user isn't in", async () => {
     const { cookie } = await signIn(app);
     const other = await db.workspace.create({ data: { name: "Other", slug: "other" } });
     const p = (await app.inject({ method: "POST", url: "/api/projects" })).json();
-    const res = await app.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { workspaceId: other.id, projects: [{ projectId: p.project.id, token: p.creatorToken }] } });
+    const res = await app.inject({ method: "POST", url: "/api/claim", headers: { cookie }, payload: { teamId: other.id, projects: [{ projectId: p.project.id, token: p.creatorToken }] } });
     expect(res.statusCode).toBe(403);
   });
 });

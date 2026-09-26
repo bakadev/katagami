@@ -2,7 +2,11 @@ import type {
   ClaimCandidate,
   ClaimLookupResponse,
   ClaimResponse,
-  CreateWorkspaceResponse,
+  CreateTeamResponse,
+  CreateProjectResponse,
+  HomeResponse,
+  ProjectCard,
+  ProjectPageResponse,
   MeResponse,
 } from "../../../shared/types";
 
@@ -44,17 +48,51 @@ async function post<T>(url: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
-export function createWorkspace(name: string): Promise<CreateWorkspaceResponse> {
-  return post("/api/workspaces", { name });
+export function createTeam(name: string): Promise<CreateTeamResponse> {
+  return post("/api/teams", { name });
 }
 
 export function lookupClaims(projects: ClaimCandidate[]): Promise<ClaimLookupResponse> {
   return post("/api/claim/lookup", { projects });
 }
 
-export function claimProjects(
-  workspaceId: string,
-  projects: ClaimCandidate[],
-): Promise<ClaimResponse> {
-  return post("/api/claim", { workspaceId, projects });
+export function claimProjects(teamId: string, projects: ClaimCandidate[]): Promise<ClaimResponse> {
+  return post("/api/claim", { teamId, projects });
 }
+
+/* ---- signed-in home ----------------------------------------------------------- */
+
+async function getJson<T>(url: string): Promise<T> {
+  const res = await fetch(url, { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return (await res.json()) as T;
+}
+
+async function del(url: string): Promise<void> {
+  const res = await fetch(url, { method: "DELETE", credentials: "same-origin" });
+  if (!res.ok && res.status !== 204) throw new Error(`${res.status}`);
+}
+
+async function patch<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method: "PATCH",
+    credentials: "same-origin",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return (await res.json()) as T;
+}
+
+export const getHome = () => getJson<HomeResponse>("/api/home");
+export const getProject = (id: string) => getJson<ProjectPageResponse>(`/api/projects/${id}`);
+export const createDocument = (projectId?: string) =>
+  post<CreateProjectResponse>("/api/documents", projectId ? { projectId } : {});
+export const createProject = (name: string) =>
+  post<{ project: ProjectCard }>("/api/projects/new", { name });
+export const renameProject = (id: string, name: string) =>
+  patch<{ project: { id: string; name: string | null } }>(`/api/projects/${id}`, { name });
+export const deleteProject = (id: string) => del(`/api/projects/${id}`);
+export const deleteDocument = (id: string) => del(`/api/docs/${id}`);
+export const moveDocument = (id: string, projectId: string | null) =>
+  patch<{ ok: true; projectId: string }>(`/api/docs/${id}/project`, { projectId });

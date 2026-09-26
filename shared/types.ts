@@ -66,7 +66,7 @@ export interface SessionUser {
   avatarUrl: string | null;
 }
 
-export interface WorkspaceSummary {
+export interface TeamSummary {
   id: string;
   name: string;
   slug: string;
@@ -75,15 +75,17 @@ export interface WorkspaceSummary {
 
 export interface MeResponse {
   user: SessionUser;
-  workspaces: WorkspaceSummary[];
+  teams: TeamSummary[];
+  /** "team" when the person belongs to at least one team. */
+  plan: "free" | "team";
 }
 
-export interface CreateWorkspaceRequest {
+export interface CreateTeamRequest {
   name: string;
 }
 
-export interface CreateWorkspaceResponse {
-  workspace: WorkspaceSummary;
+export interface CreateTeamResponse {
+  team: TeamSummary;
 }
 
 export interface ClaimCandidate {
@@ -105,10 +107,66 @@ export interface ClaimLookupResponse {
 }
 
 export interface ClaimRequest {
-  workspaceId: string;
+  teamId: string;
   projects: ClaimCandidate[];
 }
 
 export interface ClaimResponse {
   moved: string[];
+}
+
+/* ---- signed-in home ----------------------------------------------------------- */
+
+export interface EditorRef {
+  name: string;
+  color: string;
+}
+
+export interface DocumentRow {
+  id: string;
+  projectId: string;
+  title: string | null;
+  updatedAt: string;
+  lastEditedBy: EditorRef | null;
+  openComments: number;
+  openSuggestions: number;
+  /** Lets the owner open the editor straight from the list. */
+  editToken: string;
+}
+
+export interface ProjectCard {
+  id: string;
+  name: string | null;
+  documentCount: number;
+  /** Latest document update, or the project's own timestamp when empty. */
+  updatedAt: string;
+  lastEditedBy: EditorRef | null;
+  /** Distinct recent editors, newest first, at most five. */
+  editors: EditorRef[];
+}
+
+export interface HomeResponse {
+  plan: "free" | "team";
+  team: TeamSummary | null;
+  projects: ProjectCard[];
+  /** Documents in the person's default project ("not in a project"). */
+  documents: DocumentRow[];
+}
+
+export interface ProjectPageResponse {
+  project: ProjectCard;
+  documents: DocumentRow[];
+}
+
+export interface CreateDocumentRequest {
+  projectId?: string;
+}
+
+export interface CreateProjectRequest {
+  name: string;
+}
+
+export interface MoveDocumentRequest {
+  /** null moves the document back to the default project. */
+  projectId: string | null;
 }

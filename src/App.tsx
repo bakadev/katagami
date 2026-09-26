@@ -14,6 +14,8 @@ import DocumentsExploration from "./routes/design/documents/DocumentsExploration
 import SignIn from "./routes/SignIn";
 import Welcome from "./routes/Welcome";
 import Claim from "./routes/Claim";
+import Documents from "./routes/Documents";
+import Project from "./routes/Project";
 import Document from "./routes/Document";
 import NotFound from "./routes/NotFound";
 import DesignIndex from "./routes/design/DesignIndex";
@@ -24,7 +26,9 @@ import { UtilityBar } from "./components/site/UtilityBar";
  *  design explorations (which render their own bar variants). */
 function SiteChrome() {
   const { pathname } = useLocation();
-  const inApp = pathname.startsWith("/p/");
+  // The editor and the signed-in home carry the app header instead.
+  const inApp =
+    pathname.startsWith("/p/") || pathname === "/documents" || pathname.startsWith("/documents/");
   const inDesign = pathname.startsWith("/design");
   // Sign-in carries its own wordmark; the audience switch would be noise there.
   const inAuth = pathname === "/signin";
@@ -47,6 +51,8 @@ export default function App() {
       <Route path="/signin" element={<SignIn />} />
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/claim" element={<Claim />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/:projectId" element={<Project />} />
         <Route path="/p/:projectId" element={<Navigate to="." replace />} />
         <Route path="/p/:projectId/d/:docId" element={<Document />} />
         {/* Design explorations — public but unlinked.

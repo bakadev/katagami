@@ -16,10 +16,11 @@ const EXACT = new Set([
   "/signin",
   "/welcome",
   "/claim",
+  "/documents",
   "/design",
 ]);
 
-const PREFIXES = ["/p/", "/design/"];
+const PREFIXES = ["/p/", "/design/", "/documents/"];
 
 export function isClientRoute(url: string): boolean {
   const path = url.split(/[?#]/, 1)[0].replace(/\/+$/, "") || "/";

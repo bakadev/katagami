@@ -1,7 +1,7 @@
 /**
  * Round 7 — signed-in home. Fake data shared by the three options.
  *
- * One workspace ("Acme"), two multi-document projects and four single-doc
+ * One team ("Acme", called a workspace in options A to C), two multi-document projects and four single-doc
  * projects, four people, edits from 12 minutes to 3 weeks ago. Everything is
  * relative to "now" so the relative times stay believable.
  */
@@ -200,3 +200,35 @@ export function filterDocs(docs: Doc[], q: string): Doc[] {
   if (!needle) return docs;
   return docs.filter((d) => d.title.toLowerCase().includes(needle));
 }
+
+/* ---- Option D (composite) --------------------------------------------- */
+
+/**
+ * D calls the container a "team", never a workspace, and has no switcher.
+ * Only projects the person made explicitly exist: "Checkout redesign" and
+ * "Onboarding emails". Every other document sits in the Documents bucket,
+ * marked with `NO_PROJECT`.
+ */
+export const NO_PROJECT = "";
+
+export const D_PROJECTS: Project[] = PROJECTS.slice(0, 2);
+
+const D_PROJECT_IDS = new Set(D_PROJECTS.map((p) => p.id));
+
+export const D_DOCS: Doc[] = DOCS.map((d) =>
+  D_PROJECT_IDS.has(d.projectId) ? d : { ...d, projectId: NO_PROJECT },
+);
+
+/** Free has no projects: the server keeps every document in one hidden default project. */
+export const D_FREE_DOCS: Doc[] = DOCS.map((d) => ({ ...d, projectId: NO_PROJECT }));
+
+/** Freshest document in a list, or undefined. */
+export function latestDoc(docs: Doc[]): Doc | undefined {
+  return docs.reduce<Doc | undefined>(
+    (best, d) => (!best || d.editedMinutesAgo < best.editedMinutesAgo ? d : best),
+    undefined,
+  );
+}
+
+export const D_HOME = "/design/documents/documents-d";
+export const D_PROJECT_PAGE = "/design/documents/documents-d-project";

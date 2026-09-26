@@ -57,6 +57,20 @@ const ROUNDS: Round[] = [
         blurb:
           "Recently opened as four tiles, then Waiting on you with counts of open comments and suggestions on the yellow anchor, then everything else as a flat list.",
       },
+      {
+        slug: "documents-d",
+        persona: "D · Composite",
+        title: "Projects as cards, documents as a table",
+        blurb:
+          "The owner's composite: B's header and claim strip, C's tiles for projects (count, last update, editor dots), A's text sort over C's flat table for documents in no project. Move and delete animate the row out with inline confirmation; no status, no switcher. ?plan=free locks Projects.",
+      },
+      {
+        slug: "documents-d-project",
+        persona: "D · Project page",
+        title: "One project, same table",
+        blurb:
+          "Breadcrumb back to the home, the project name in serif with inline rename, a meta line, New spec and Delete project, then the same search, sort and table with Remove from project.",
+      },
     ],
   },
   {

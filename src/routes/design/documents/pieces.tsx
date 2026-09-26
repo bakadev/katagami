@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Search,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -49,6 +50,43 @@ export function useEmptyState(): [boolean, () => void] {
   return [empty, toggle];
 }
 
+/** `?plan=free` shows the Free tier (option D); the toggle in `AppHeader` flips it. */
+export type Plan = "free" | "team";
+export function usePlan(): [Plan, () => void] {
+  const [params, setParams] = useSearchParams();
+  const plan: Plan = params.get("plan") === "free" ? "free" : "team";
+  const toggle = () => {
+    const next = new URLSearchParams(params);
+    if (plan === "free") next.delete("plan");
+    else next.set("plan", "free");
+    setParams(next, { replace: true });
+  };
+  return [plan, toggle];
+}
+
+/** "Plan: Free / Team" reviewer switch, beside "Show empty state". Exploration chrome. */
+export function PlanToggle({ plan, onToggle }: { plan: Plan; onToggle: () => void }) {
+  return (
+    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span>Plan:</span>
+      {(["free", "team"] as Plan[]).map((k) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => plan !== k && onToggle()}
+          aria-pressed={plan === k}
+          className={
+            "px-1 underline-offset-4 hover:text-foreground " +
+            (plan === k ? "text-foreground underline" : "")
+          }
+        >
+          {k === "free" ? "Free" : "Team"}
+        </button>
+      ))}
+    </p>
+  );
+}
+
 function initialsOf(name: string): string {
   return name
     .split(/\s+/)
@@ -63,16 +101,29 @@ function initialsOf(name: string): string {
  * avatar menu whose first item is "Your documents". Beside it the reviewer's
  * "Show empty state" switch, which is exploration chrome, not product.
  */
-export function AppHeader({ empty, onToggleEmpty }: { empty: boolean; onToggleEmpty: () => void }) {
+export function AppHeader({
+  empty,
+  onToggleEmpty,
+  homeTo = "#",
+  children,
+}: {
+  empty: boolean;
+  onToggleEmpty: () => void;
+  /** Where the wordmark and "Your documents" go. */
+  homeTo?: string;
+  /** Extra reviewer chrome (option D's plan switch). */
+  children?: ReactNode;
+}) {
   return (
-    <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 md:px-10">
-      <Link to="#" className="flex items-center gap-2.5" aria-label="Your documents">
+    <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-5 md:px-10">
+      <Link to={homeTo} className="flex items-center gap-2.5" aria-label="Your documents">
         <StencilMark />
         <span style={{ fontFamily: SERIF }} className="text-xl">
           Katagami
         </span>
       </Link>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+        {children}
         <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
           <input
             type="checkbox"
@@ -95,7 +146,7 @@ export function AppHeader({ empty, onToggleEmpty }: { empty: boolean; onToggleEm
               {ME.name}
             </DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link to="#">Your documents</Link>
+              <Link to={homeTo}>Your documents</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/">Marketing home</Link>
@@ -157,7 +208,8 @@ export function WorkspaceSwitcher() {
 }
 
 /** The slim indigo-tinted strip about documents still on this browser. */
-export function ClaimBanner() {
+/** With `onDismiss` it gets a close button (option D: persists until dismissed). */
+export function ClaimBanner({ onDismiss }: { onDismiss?: () => void }) {
   return (
     <NotchCard tone="indigo" fill="tint" className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 text-sm">
       <p className="flex items-center gap-3">
@@ -166,12 +218,25 @@ export function ClaimBanner() {
           {UNCLAIMED_COUNT} documents from before you signed in are still on this browser.
         </span>
       </p>
-      <Link
-        to="/claim"
-        className="font-medium text-brand-ink underline underline-offset-4 hover:opacity-80"
-      >
-        Bring them in
-      </Link>
+      <span className="flex items-center gap-2">
+        <Link
+          to="/claim"
+          className="font-medium text-brand-ink underline underline-offset-4 hover:opacity-80"
+        >
+          Bring them in
+        </Link>
+        {onDismiss && (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="Dismiss"
+            title="Dismiss"
+            className="-mr-1.5 inline-flex size-7 items-center justify-center rounded-sm text-muted-foreground hover:bg-brand-ink/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        )}
+      </span>
     </NotchCard>
   );
 }
@@ -263,6 +328,31 @@ export function SortMenu({ value, onChange }: { value: SortKey; onChange: (v: So
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** Sort as plain text (option A's control): "Sort by last edited · title". */
+export function SortText({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
+  return (
+    <p className="flex items-center gap-1 text-xs text-muted-foreground">
+      <span>Sort by</span>
+      {(["edited", "title"] as SortKey[]).map((k, i) => (
+        <span key={k} className="flex items-center gap-1">
+          {i > 0 && <span aria-hidden>·</span>}
+          <button
+            type="button"
+            onClick={() => onChange(k)}
+            aria-pressed={value === k}
+            className={
+              "px-1 py-0.5 underline-offset-4 hover:text-foreground " +
+              (value === k ? "text-foreground underline" : "")
+            }
+          >
+            {k === "edited" ? "last edited" : "title"}
+          </button>
+        </span>
+      ))}
+    </p>
   );
 }
 

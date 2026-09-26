@@ -79,7 +79,9 @@ export function UtilityBar() {
           </span>
           {user ? (
             <span className="hidden items-center gap-2 sm:inline-flex">
-              <span className="max-w-[16ch] truncate text-white">{user.name}</span>
+              <Link to="/documents" className="max-w-[16ch] truncate text-white hover:underline">
+                Your documents
+              </Link>
               <span aria-hidden>·</span>
               <button type="button" onClick={() => void signOut()} className="hover:text-white">
                 Sign out

@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Download, LogIn, LogOut, PenLine } from "lucide-react";
+import { Download, Files, LogIn, LogOut, PenLine } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,13 +186,21 @@ function MenuView({
       {/* 4. Account: sign in, or sign out of the current account */}
       <div className="p-1">
         {account ? (
-          <DropdownMenuItem
-            onSelect={() => onSignOut?.()}
-            className="gap-2 px-2 py-1.5 text-sm"
-          >
-            <LogOut className="size-4 text-muted-foreground" />
-            <span>Sign out</span>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem asChild className="gap-2 px-2 py-1.5 text-sm">
+              <Link to="/documents">
+                <Files className="size-4 text-muted-foreground" />
+                <span>Your documents</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => onSignOut?.()}
+              className="gap-2 px-2 py-1.5 text-sm"
+            >
+              <LogOut className="size-4 text-muted-foreground" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          </>
         ) : (
           <DropdownMenuItem asChild className="gap-2 px-2 py-1.5 text-sm">
             <Link to={`/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`}>

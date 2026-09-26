@@ -9,6 +9,7 @@ import {
 import { cn } from "~/lib/utils";
 import { Link } from "react-router";
 import { StencilMark } from "~/components/site/StencilMark";
+import { useAuth } from "~/lib/auth/AuthProvider";
 import { MetaLine, type ConnectionState, type Permission } from "./MetaLine";
 import { PanelToggle } from "./PanelToggle";
 import { SaveSnapshotButton } from "./SaveSnapshotButton";
@@ -160,6 +161,7 @@ export function DocHeader({
   onSaveSnapshot,
   avatarSlot,
 }: DocHeaderProps) {
+  const signedIn = useAuth().user !== null;
   return (
     <header
       role="banner"
@@ -185,8 +187,8 @@ export function DocHeader({
         {/* ---- LEFT: document identity ---- */}
         <div className="flex min-w-0 basis-full items-center gap-3 md:flex-1 md:basis-auto">
           <Link
-            to="/"
-            aria-label="Katagami home"
+            to={signedIn ? "/documents" : "/"}
+            aria-label={signedIn ? "Your documents" : "Katagami home"}
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             <StencilMark />

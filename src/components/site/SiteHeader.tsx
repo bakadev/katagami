@@ -36,7 +36,7 @@ export function SiteHeader() {
   return (
     <header className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10">
       <div className="flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to={user ? "/documents" : "/"} className="flex items-center gap-2.5">
           <StencilMark />
           <span style={{ fontFamily: SERIF }} className="text-xl">
             Katagami
@@ -88,9 +88,14 @@ export function SiteHeader() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {user ? (
-                <DropdownMenuItem onSelect={() => void signOut()}>
-                  Sign out ({user.name})
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/documents">Your documents</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void signOut()}>
+                    Sign out ({user.name})
+                  </DropdownMenuItem>
+                </>
               ) : (
                 <DropdownMenuItem asChild>
                   <Link to="/signin">Sign in</Link>

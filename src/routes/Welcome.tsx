@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router";
 import { useAuth } from "~/lib/auth/AuthProvider";
 import { createTeam } from "~/lib/api/auth";
 import { listCreatorTokens } from "~/lib/creator-token";
+import { initialsOf } from "~/lib/user/initials";
 import { SiteFooter } from "~/components/site/SiteFooter";
 import { usePageMeta } from "~/hooks/usePageMeta";
 import { ASANOHA } from "~/components/site/patterns";
@@ -41,14 +42,6 @@ export function guessTeamName(email: string, name: string): string {
   return `${first}'s team`;
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
-    .join("");
-}
 
 export default function Welcome() {
   usePageMeta({

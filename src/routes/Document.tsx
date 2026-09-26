@@ -25,6 +25,7 @@ import { NotchCard } from "~/components/site/NotchCard";
 import { RegMarks } from "~/components/site/RegMark";
 import { AvatarButton } from "~/components/header/AvatarButton";
 import { useAuth } from "~/lib/auth/AuthProvider";
+import { initialsOf } from "~/lib/user/initials";
 import { AvatarDropdown } from "~/components/avatar-menu/AvatarDropdown";
 import { RightPanel } from "~/components/panel/RightPanel";
 import { DocsTab } from "~/components/panel/tabs/DocsTab";
@@ -445,7 +446,13 @@ export default function DocumentRoute() {
       onThemeChange={setTheme}
       onRenameSave={handleRenameSave}
       onDownloadClick={handleDownload}
-      trigger={<AvatarButton name={identity.name} active={false} />}
+      trigger={
+        <AvatarButton
+          name={identity.name}
+          initials={auth.user ? initialsOf(auth.user.name) : undefined}
+          active={false}
+        />
+      }
     />
   );
 

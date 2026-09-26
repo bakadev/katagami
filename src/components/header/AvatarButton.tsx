@@ -6,6 +6,8 @@ export interface AvatarButtonProps
   extends Omit<ComponentPropsWithoutRef<"button">, "ref"> {
   /** Display name — used to compose the aria-label. */
   name: string;
+  /** Signed in: show initials in serif instead of the generic icon. */
+  initials?: string;
   /** Whether the menu it triggers is currently open. */
   active: boolean;
   /** React 19 ref-as-prop. Radix's `asChild` Slot wires this up. */
@@ -28,6 +30,7 @@ export interface AvatarButtonProps
  */
 export function AvatarButton({
   name,
+  initials,
   active: _active,
   className,
   ref,
@@ -50,7 +53,13 @@ export function AvatarButton({
         className,
       )}
     >
-      <User aria-hidden className="size-4" strokeWidth={1.75} />
+      {initials ? (
+        <span aria-hidden className="font-serif text-sm leading-none">
+          {initials}
+        </span>
+      ) : (
+        <User aria-hidden className="size-4" strokeWidth={1.75} />
+      )}
     </button>
   );
 }

@@ -98,6 +98,7 @@ export default function DocumentRoute() {
   const { state: projectDocs, refresh: refreshProjectDocs } = useProjectDocuments(
     projectId,
     panelOpen && activeTab === "documents",
+    docId,
   );
 
   const editorHostRef = useRef<HTMLDivElement | null>(null);
@@ -384,12 +385,14 @@ export default function DocumentRoute() {
       try {
         const res = await updateDocumentTitle(docId, key, next);
         setUpdatedAt(res.updatedAt);
+        // The sidebar caches the project's titles; keep it honest.
+        refreshProjectDocs();
       } catch {
         setTitle(prev);
         toast.error("Couldn't save title");
       }
     },
-    [docId, key, title],
+    [docId, key, title, refreshProjectDocs],
   );
 
   // --- Snapshot handlers ---

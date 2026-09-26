@@ -21,6 +21,8 @@ export type ProjectDocsState =
 export function useProjectDocuments(
   projectId: string | null,
   enabled: boolean,
+  /** The open document; switching to another one refetches quietly. */
+  docId?: string | null,
 ): { state: ProjectDocsState; refresh: () => void } {
   const userId = useAuth().user?.id ?? null;
   const [state, setState] = useState<ProjectDocsState>({ status: "idle" });
@@ -48,7 +50,7 @@ export function useProjectDocuments(
       cancelled = true;
     };
     // Re-run when the tab opens again (enabled flips) so the list stays fresh.
-  }, [projectId, userId, enabled, tick]);
+  }, [projectId, userId, enabled, tick, docId]);
 
   // Signed out (or signed out later): nothing to show.
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
-import { Check, Link2, MessageSquare, MoreHorizontal, PenLine, Trash2 } from "lucide-react";
+import { Check, FolderInput, FolderMinus, Link2, MessageSquare, MoreHorizontal, PenLine, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -77,7 +77,10 @@ function RowMenu({ doc, actions }: { doc: DocumentRow; actions: RowActions }) {
       <DropdownMenuContent align="end" className="w-52">
         {hasMove && (
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Move to project</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>
+              <FolderInput className="size-3.5" aria-hidden />
+              Move to project
+            </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-52">
               {(projects ?? []).map((p) => (
                 <DropdownMenuItem
@@ -93,6 +96,7 @@ function RowMenu({ doc, actions }: { doc: DocumentRow; actions: RowActions }) {
                 <>
                   {(projects ?? []).length > 0 && <DropdownMenuSeparator />}
                   <DropdownMenuItem onSelect={() => onMove(doc, null)}>
+                    <FolderMinus className="size-3.5" aria-hidden />
                     Remove from project
                   </DropdownMenuItem>
                 </>
